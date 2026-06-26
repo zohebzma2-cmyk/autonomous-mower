@@ -22,7 +22,7 @@ CL_WALL   = 5;                         // frame-tube clamp wall thickness
 CL_LEN    = 50;                        // clamp length along the tube axis (Y)
 CL_BW     = FRAME_TUBE_W + 2*CL_WALL;  // clamp block outer width (X)
 CL_EAR    = 16;                        // bolt-ear width each side
-POST_H    = 100;                       // pedestal post height
+POST_H    = 94;                        // pedestal post height (keeps part <145mm bed)
 POST_LEAN = 18;                        // post lean angle (toward the operator)
 
 ESTOP_FACE       = [ESTOP_BEZEL_DIA+18, ESTOP_BEZEL_DIA+18]; // panel plate (~58 sq)

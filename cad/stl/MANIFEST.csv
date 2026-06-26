@@ -12,3 +12,13 @@ PRINT_gps_top_plate,stl/PRINT_gps_top_plate.stl,60.0,60.0,24.0,YES
 PRINT_lidar_base_a,stl/PRINT_lidar_base_a.stl,60.0,88.8,28.4,YES
 PRINT_lidar_base_b,stl/PRINT_lidar_base_b.stl,64.0,88.8,34.4,YES
 PRINT_lidar_mast_lower,stl/PRINT_lidar_mast_lower.stl,82.0,82.0,112.0,YES
+PRINT_lidar_mast_upper,stl/PRINT_lidar_mast_upper.stl,82.0,82.0,112.0,YES
+PRINT_lidar_top_plate,stl/PRINT_lidar_top_plate.stl,126.0,126.0,14.0,YES
+PRINT_camera_base,stl/PRINT_camera_base.stl,44.0,44.0,50.0,YES
+PRINT_camera_cradle,stl/PRINT_camera_cradle.stl,31.0,50.0,28.0,YES
+PRINT_estop_face,stl/PRINT_estop_face.stl,58.0,58.0,4.0,YES
+PRINT_estop_pedestal_a,stl/PRINT_estop_pedestal_a.stl,92.8,83.1,139.1,YES
+PRINT_estop_pedestal_b,stl/PRINT_estop_pedestal_b.stl,92.8,50.0,30.4,YES
+PRINT_relay_box,stl/PRINT_relay_box.stl,76.0,56.0,45.0,YES
+PRINT_relay_lid,stl/PRINT_relay_lid.stl,76.0,56.0,6.0,YES
+PRINT_throttle_servo_bracket,stl/PRINT_throttle_servo_bracket.stl,56.9,44.0,42.0,YES
