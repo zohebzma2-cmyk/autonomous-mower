@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Autonomous ZTR Retrofit — Parts Cart</title>
+<style>
+  :root{
+    --bg:#0f1216; --card:#171c22; --card2:#1d242c; --ink:#e8edf2; --mut:#9aa7b4;
+    --line:#283139; --acc:#36c08a; --acc2:#3a8ddb; --warn:#e0a23a; --danger:#e0584a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{padding:28px 22px 18px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#131922,#0f1216)}
+  h1{margin:0 0 4px;font-size:22px;letter-spacing:.2px}
+  .sub{color:var(--mut);font-size:13px}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px}
+  .totbar{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0 4px}
+  .pill{background:var(--card2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 14px;font-size:13px}
+  .pill b{font-size:18px;color:var(--acc)}
+  .phase{margin:26px 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--mut);display:flex;align-items:center;gap:10px}
+  .phase .ln{flex:1;height:1px;background:var(--line)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;overflow:hidden}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);background:#10151b}
+  tr:last-child td{border-bottom:none}
+  .part{font-weight:600}
+  .spec{color:var(--mut);font-size:12.5px}
+  .price{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .src{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line);white-space:nowrap}
+  .src.new{color:#bfe9d6;border-color:#2c5b48;background:#13241d}
+  .src.used{color:#cfe0f2;border-color:#2c4660;background:#13202c}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  a.buy,button.copy{font-size:11.5px;text-decoration:none;border-radius:7px;padding:5px 9px;
+    border:1px solid var(--line);background:var(--card2);color:var(--ink);cursor:pointer}
+  a.buy:hover,button.copy:hover{border-color:var(--acc2)}
+  a.buy{color:#bcd6f0}
+  .note{background:#1a1410;border:1px solid #4a3a1c;color:#e8d3a6;border-radius:10px;
+    padding:12px 14px;font-size:13px;margin:18px 0}
+  .danger{background:#1f1311;border:1px solid #5a2a24;color:#f0b9b1}
+  .foot{color:var(--mut);font-size:12px;margin-top:26px;line-height:1.7}
+  code{background:#10151b;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);
+    color:#04130c;font-weight:600;padding:9px 16px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding:0">
+    <h1>Autonomous Zero-Turn Retrofit — Parts Cart</h1>
+    <div class="sub">Gravely ZT 52" · ArduPilot Rover core + Pi 5 / Hailo · GPS · LiDAR · camera · AI &nbsp;•&nbsp; prices are estimates, not live-verified</div>
+    <div class="totbar">
+      <div class="pill">Grand total <b>≈ $1,048</b></div>
+      <div class="pill">Phase 1 (drive+safety) <b>$751</b></div>
+      <div class="pill">Phase 2 (perception) <b>$192</b></div>
+      <div class="pill">Phase 3 (AI) <b>$105</b></div>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+  <div class="note danger"><b>Safety sourcing rule:</b> never buy <b>used</b> the RTK GPS, actuators, e-stop, or motor driver — those failing means a 52" blade runs away. Used is fine only for compute (flight controller, Pi).</div>
+
+  <div id="tables"></div>
+
+  <div class="note">
+    <b>Trim levers to get under $1,000 (you asked for &lt;$1k; Hailo pushes it to ~$1,048):</b><br>
+    • Defer Hailo + Camera (Phase 3) → <b>$943</b> &nbsp;•&nbsp; Single-band RTK (LC29H ~$50 vs ArduSimple ~$190) → <b>−$140</b> &nbsp;•&nbsp; Skip conformal coating → −$15. Any one gets you under.
+  </div>
+
+  <div class="phase">One-click actions <span class="ln"></span></div>
+  <div class="btns" style="margin:10px 0 4px">
+    <button class="copy" onclick="copyAll()">Copy entire shopping list</button>
+    <button class="copy" onclick="openAllAmazon()">Open all Amazon searches in tabs</button>
+  </div>
+  <div class="sub" style="margin-top:6px">“Open all” fires ~16 tabs — your browser may ask to allow pop-ups the first time.</div>
+
+  <div class="foot">
+    Free software (not in cart): <b>ArduPilot Rover</b> firmware · <b>Mission Planner / QGroundControl</b> · <b>NTRIP</b> RTK corrections (often free via your state DOT CORS network).<br>
+    You already have / fabricate: 3D-printed brackets &amp; enclosure plate (ASA/PETG, ~250 g) · the mower's 12 V battery · lap-bar through-pin on install.<br>
+    Full bill of materials with notes: <code>cart/BOM.md</code> · Build &amp; safety spec: <code>docs/BUILD.md</code>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+const ITEMS = [
+ ["1","Phase 1 — Drive + Safety"],
+ ["Flight controller (Pixhawk 6C class)","Runs ArduPilot Rover: skid-steer, RTK nav, failsafes","used","eBay","Pixhawk 6C flight controller",90],
+ ["RTK GPS kit (ArduSimple simpleRTK2B + antenna)","±2 cm positioning via free NTRIP","new","Amazon","ArduSimple simpleRTK2B RTK GPS kit",190],
+ ["Linear actuator 12V 100mm w/ feedback, IP66 (×2)","Pulls each lap bar — needs ~150N+, NOT a hobby micro","new","Amazon","heavy duty 12v linear actuator 100mm potentiometer feedback IP66",140],
+ ["Dual H-bridge motor driver (BTS7960 ×2)","FC drives actuators, reads feedback pot","new","Amazon","BTS7960 43A motor driver module",35],
+ ["RC transmitter + receiver (FlySky FS-i6X + iA6B)","Manual override + wireless KILL","new","Amazon","FlySky FS-i6X transmitter iA6B receiver",60],
+ ["E-stop, 22mm waterproof latching mushroom","Hardware kill: cuts actuator power + PTO/ignition","new","Amazon","22mm waterproof emergency stop push button latching",14],
+ ["Automotive relay + socket 40A (×2)","Switches existing PTO blade clutch","new","Amazon","40A automotive relay with socket harness",12],
+ ["Throttle servo (metal gear)","Sets engine RPM","new","Amazon","metal gear servo 20kg waterproof",18],
+ ["DC-DC buck converters (12→5V 5A, ×2)","Clean power off mower battery","new","Amazon","12v to 5v 5a buck converter module",20],
+ ["Fuse block + fuses + wiring + connectors","Power distribution + protection (XT60, terminals)","new","Amazon","6 way fuse block XT60 connectors wiring kit",45],
+ ["IP65 ABS enclosure ~200×150×100mm","The sealed brain box (printed plate goes inside)","new","Amazon","IP65 ABS enclosure 200x150x100 clear lid",30],
+ ["Cable glands PG9 assortment","Sealed wire entries","new","Amazon","PG9 cable gland waterproof assortment",12],
+ ["Conformal coating + dielectric grease","Weatherproof boards/connectors","new","Amazon","conformal coating spray dielectric grease",15],
+ ["20mm aluminium tube (GPS + LiDAR masts)","Raises antenna/LiDAR clear of metal","new","Amazon","20mm aluminum tube 1m",18],
+ ["Stainless M3/M4/M5 kit + brass heat-set inserts","For all printed brackets","new","Amazon","stainless m3 m4 m5 bolt kit brass heat set inserts",30],
+ ["Rubber pads, ratchet straps, loom, zip ties","Mounting + vibration","new","Amazon","ratchet straps wire loom rubber pads kit",22],
+ ["2","Phase 2 — Perception"],
+ ["Raspberry Pi 5, 8GB","Companion: LiDAR + vision, MAVLink to FC","new","Amazon","Raspberry Pi 5 8GB",80],
+ ["microSD 64GB A2","Pi OS","new","Amazon","SanDisk 64GB A2 microSD",12],
+ ["RPLidar A1M8 (360° 2D)","Obstacle detection → emergency stop","new","Amazon","RPLidar A1M8 360 lidar",100],
+ ["3","Phase 3 — AI Vision"],
+ ["Raspberry Pi AI Kit (Hailo-8L 13 TOPS, M.2 HAT+)","Real-time grass/obstacle vision AI","new","Amazon","Raspberry Pi AI Kit Hailo 8L",70],
+ ["Raspberry Pi Camera Module 3","Wide-FOV camera for vision","new","Amazon","Raspberry Pi Camera Module 3 wide",35],
+];
+const amz = q => "https://www.amazon.com/s?k="+encodeURIComponent(q);
+const ebay = q => "https://www.ebay.com/sch/i.html?_nkw="+encodeURIComponent(q);
+function srcUrl(src,q){return src==="eBay"?ebay(q):amz(q);}
+
+let html="", amzList=[];
+for(const row of ITEMS){
+  if(row.length===2){
+    html += `</tbody></table><div class="phase">${row[1]}<span class="ln"></span></div>`+
+            `<table><thead><tr><th>Part</th><th>Source</th><th>Find it</th><th class="price">Est&nbsp;$</th></tr></thead><tbody>`;
+    continue;
+  }
+  const [part,spec,cls,src,q,price]=row;
+  if(src!=="eBay") amzList.push(amz(q));
+  html += `<tr>
+    <td><div class="part">${part}</div><div class="spec">${spec}</div>
+      <div class="btns">
+        <a class="buy" href="${srcUrl(src,q)}" target="_blank" rel="noopener">Search ${src}</a>
+        <button class="copy" onclick="cp(this,'${q.replace(/'/g,"\\'")}')">Copy term</button>
+      </div></td>
+    <td><span class="src ${cls}">${cls.toUpperCase()}</span></td>
+    <td class="spec">${q}</td>
+    <td class="price">${price}</td></tr>`;
+}
+html += "</tbody></table>";
+// strip the leading empty table close
+document.getElementById('tables').innerHTML = html.replace(/^<\/tbody><\/table>/,'');
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1100);}
+function cp(btn,txt){navigator.clipboard.writeText(txt).then(()=>toast('Copied: '+txt.slice(0,28)+'…'));}
+function copyAll(){
+  const lines=ITEMS.filter(r=>r.length>2).map(r=>`- ${r[0]} [${r[3]}] — search: ${r[4]} — ~$${r[5]}`).join("\n");
+  navigator.clipboard.writeText("Autonomous ZTR Retrofit shopping list\n"+lines).then(()=>toast('Full list copied'));
+}
+function openAllAmazon(){amzList.forEach((u,i)=>setTimeout(()=>window.open(u,'_blank'),i*250));}
+</script>
+</body>
+</html>
