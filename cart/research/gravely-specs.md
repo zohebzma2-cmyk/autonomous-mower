@@ -1,11 +1,12 @@
 # Gravely 52" Seated Zero-Turn — Real Published Specs (for CAD retrofit)
 
-## ✅ MODEL CONFIRMED BY OWNER (2026-06-26): Gravely **ZT X 52** (residential)
-Verified from allmachines.com / Gravely / dealer spec pages — these REPLACE the earlier ZT XL/HD nominals:
-| Spec | ZT X 52 value | Retrofit impact |
+## ✅ MODEL CONFIRMED BY OWNER (2026-06-26): Gravely **ZT X 52**, ~**2021**, **KOHLER** engine (residential)
+Verified from dealer/Gravely spec pages — these REPLACE the earlier ZT XL/HD + Kawasaki nominals.
+Owner confirmed: ZT X 52, ~2021, Kohler engine → model **915256 / 918010**-class.
+| Spec | ZT X 52 (2021 Kohler) value | Retrofit impact |
 |------|---------------|-----------------|
-| **PTO / blade clutch** | **ELECTRIC WARNER** (12 V) | ✅ relay-switched PTO design is CORRECT |
-| Engine | Kawasaki **FR691V**, 23 hp, 726 cc | throttle servo only |
+| **PTO / blade clutch** | **ELECTRIC** (Ogura GT, 12 V) | ✅ relay-switched PTO design is CORRECT |
+| Engine | **Kohler 7000 Pro Twin**, 24 hp, 725 cc | throttle servo + ignition-kill only (brand-agnostic) |
 | Transaxles | Hydro-Gear **EZT** (serviceable) | return-to-neutral sprung → stout actuator (169 lbf ample) |
 | Forward speed | 7 mph (3.1 m/s) | nav speed cap |
 | Deck | 52″ = 1321 mm, 11-ga fabricated, 3 spindles | ✅ matches |

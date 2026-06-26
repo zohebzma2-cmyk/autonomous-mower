@@ -20,9 +20,9 @@ $fn = $preview ? 48 : 120;
 // ============================================================================
 //  SECTION 1 — MACHINE-SPECIFIC ("ANY ZTR") MEASUREMENTS
 //  >>> THESE ARE THE ONLY NUMBERS YOU MUST RE-MEASURE PER MACHINE <<<
-//  CONFIRMED machine: Gravely ZT X 52 (residential).  Verified specs:
-//    PTO = ELECTRIC WARNER clutch (12V, relay-switched) -> our design is correct.
-//    23 hp Kawasaki FR691V (726cc); Hydro-Gear EZT transaxles; 7 mph fwd.
+//  CONFIRMED machine: Gravely ZT X 52, ~2021, KOHLER engine (model 915256/918010-class).
+//    PTO = ELECTRIC clutch (Ogura GT, 12V, relay-switched) -> our design is correct.
+//    24 hp Kohler 7000 Pro Twin (725cc); Hydro-Gear EZT / ZT-2200 transaxles; 7 mph fwd.
 //    deck 52"=1321mm 11-ga fabricated; rear 20x10-8 (508mm dia, 254 wide);
 //    front casters 11x6-5 (279mm dia, 152 wide); weight 695 lb;
 //    overall L 74.5"/1892 · W 55.6"/1412 (no chute) · H 46"/1168.
