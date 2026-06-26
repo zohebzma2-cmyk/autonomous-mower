@@ -55,8 +55,9 @@ same screen over WiFi.
 | 7″ HDMI capacitive touchscreen (1024×600) | generic HDMI+USB-touch | $55–75 | works on any Pi; same sunlight caveat |
 | Sunlight-readable HDMI panel (~1000 nit) | high-brightness 7″ | $130–200 | **daytime-visible** upgrade if the screen must be read outside |
 
-Recommendation: start with the **Pi Touch Display 2 ($60)** for build/bench; move to a sunlight-readable
-panel later if field daytime visibility matters. Want me to add it to the Amazon cart?
+**Decision (auto-mode):** add the **Pi Touch Display 2 to the PiShop order** (§B) — it's ~$60 direct vs
+$102.76 marked-up on Amazon, and it bundles shipping with the Pi 5 / Hailo / Camera you're already
+buying there. Move to a sunlight-readable panel later only if field daytime visibility matters.
 
 ---
 
@@ -70,7 +71,8 @@ panel later if field daytime visibility matters. Want me to add it to the Amazon
 | **Raspberry Pi AI HAT+** (Hailo-8L, 13 TOPS) | PiShop | https://www.pishop.us/product/raspberry-pi-ai-hat-13-tops/ | $76.95 |
 | **Raspberry Pi 5, 8 GB** (board) | PiShop / CanaKit / Adafruit | https://www.pishop.us/product/raspberry-pi-5-8gb/ | ~$80 |
 | **Pi Camera Module 3** | PiShop | https://www.pishop.us/product/raspberry-pi-camera-module-3/ | $29.25 |
-| | | **Vendor subtotal** | **≈ 596** |
+| **Raspberry Pi Touch Display 2** (7″ DSI, on-unit screen) | PiShop | https://www.pishop.us/product/raspberry-pi-touch-display-2/ | ~$60 |
+| | | **Vendor subtotal** | **≈ 656** |
 
 Notes: ArduSimple ships from the EU — expect EUR→USD conversion + import shipping/duties. Tip: order the
 Pixhawk 6C from Holybro and both ArduSimple items together to save on shipping; PiShop covers the 3 Pi items.

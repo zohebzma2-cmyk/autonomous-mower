@@ -54,6 +54,25 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
 .maptag{position:absolute;left:12px;top:10px;z-index:500;font-size:11px;color:var(--mut);
   background:rgba(0,0,0,.55);padding:3px 9px;border-radius:20px;backdrop-filter:blur(6px)}
 .heading-arrow{filter:drop-shadow(0 0 6px rgba(62,106,225,.9))}
+.mapctl{position:absolute;right:10px;top:10px;z-index:500;display:flex;gap:6px}
+.mapctl button{font-size:12px;font-weight:600;border:none;color:#fff;border-radius:20px;padding:7px 12px;
+  background:rgba(20,24,30,.85);backdrop-filter:blur(8px);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.mapctl button.go{background:var(--blue)} .mapctl button.warn{background:#2a2017;color:var(--warn)}
+.hint{position:absolute;left:12px;bottom:10px;z-index:500;font-size:11px;color:#cfd6dd;
+  background:rgba(0,0,0,.6);padding:4px 10px;border-radius:20px;display:none}
+
+/* routes */
+.routes{display:flex;flex-direction:column;gap:8px}
+.rhead{display:flex;align-items:center;justify-content:space-between;color:var(--mut);font-size:12px;
+  text-transform:uppercase;letter-spacing:.08em;padding:0 2px}
+.route{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:11px 14px}
+.route .rn{flex:1;font-weight:600;font-size:14.5px}
+.route .rt{font-size:11px;color:var(--mut);background:var(--panel2);padding:2px 8px;border-radius:20px}
+.route .rt.coverage{color:#bcd0f0} .route .rt.taught{color:#bfe9d6}
+.route button{border:none;border-radius:10px;padding:9px 14px;font-weight:600;font-size:13px}
+.route .run{background:var(--ok);color:#04130c} .route .del{background:transparent;color:#6b7682;font-size:18px;padding:6px 8px}
+.empty{color:#566; font-size:13px;text-align:center;padding:10px;color:var(--mut)}
 
 /* controls */
 .seg{display:flex;background:var(--panel);border-radius:16px;padding:5px;gap:4px}
@@ -127,7 +146,21 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
     <div class="chip" id="cSpd">—</div>
   </div>
 
-  <div class="mapcard"><div class="maptag">live position</div><div id="map"></div></div>
+  <div class="mapcard">
+    <div class="maptag">live position</div>
+    <div class="mapctl" id="mapctl">
+      <button id="drawBtn" onclick="toggleDraw()">✏︎ Draw zone</button>
+      <button id="planBtn" class="go" onclick="planZone()" style="display:none">Plan coverage</button>
+      <button id="clearBtn" class="warn" onclick="clearDraw()" style="display:none">✕</button>
+    </div>
+    <div class="hint" id="hint">tap the map to add boundary points</div>
+    <div id="map"></div>
+  </div>
+
+  <div class="routes">
+    <div class="rhead"><span>Routes &amp; zones</span><span id="rcount"></span></div>
+    <div id="routeList"></div>
+  </div>
 
   <div class="seg" id="seg">
     <button data-mode="MANUAL">Manual</button>
@@ -164,8 +197,71 @@ function initMap(lat,lon){
     '<path d="M17 4 L25 24 L17 19 L9 24 Z" fill="#3e6ae1" stroke="#fff" stroke-width="1.2"/></svg>',
     iconSize:[34,34],iconAnchor:[17,17]});
   marker=L.marker([lat,lon],{icon}).addTo(map);
+  map.on('click', onMapClick);
   mapReady=true;
+  loadRoutes();
 }
+
+// ---- zone drawing + coverage ----
+let drawing=false, bPts=[], bMarkers=[], bPoly=null, planLayer=null;
+function toggleDraw(){
+  drawing=!drawing;
+  document.getElementById('drawBtn').textContent = drawing?'Drawing…':'✏︎ Draw zone';
+  document.getElementById('drawBtn').classList.toggle('go',drawing);
+  document.getElementById('planBtn').style.display = drawing?'block':'none';
+  document.getElementById('clearBtn').style.display = drawing?'block':'none';
+  document.getElementById('hint').style.display = drawing?'block':'none';
+  if(!drawing) clearDraw(true);
+}
+function onMapClick(e){
+  if(!drawing) return;
+  bPts.push(e.latlng);
+  bMarkers.push(L.circleMarker(e.latlng,{radius:5,color:'#3e6ae1',fillColor:'#3e6ae1',fillOpacity:1}).addTo(map));
+  if(bPoly) bPoly.remove();
+  bPoly=L.polygon(bPts,{color:'#3e6ae1',weight:2,dashArray:'5 5',fillOpacity:.08}).addTo(map);
+}
+function clearDraw(keepMode){
+  bMarkers.forEach(m=>m.remove()); bMarkers=[]; bPts=[];
+  if(bPoly){bPoly.remove();bPoly=null;}
+  if(!keepMode && drawing) toggleDraw();
+}
+async function planZone(){
+  if(bPts.length<3){ document.getElementById('sub').textContent='⚠ tap at least 3 boundary points'; return; }
+  const polygon=bPts.map(ll=>[ll.lat,ll.lng]);
+  const r=await fetch('/api/zones/plan',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:'Zone '+new Date().toLocaleTimeString().slice(0,5),polygon})});
+  const j=await r.json();
+  if(j.ok){
+    if(planLayer) planLayer.remove();
+    planLayer=L.polyline(j.points,{color:'#3e6ae1',weight:2,opacity:.5}).addTo(map);
+    document.getElementById('sub').textContent=j.msg;
+    clearDraw(); toggleDraw(); loadRoutes();
+  } else { document.getElementById('sub').textContent='⚠ '+j.msg; }
+}
+
+// ---- routes list ----
+async function loadRoutes(){
+  try{
+    const list=await (await fetch('/api/missions')).json();
+    const el=document.getElementById('routeList');
+    document.getElementById('rcount').textContent=list.length?list.length:'';
+    if(!list.length){ el.innerHTML='<div class="empty">No routes yet — Teach a path or draw a zone on the map.</div>'; return; }
+    el.innerHTML=list.map(r=>
+      `<div class="route"><span class="rn">${r.name}</span>`+
+      `<span class="rt ${r.type}">${r.type} · ${r.n}</span>`+
+      `<button class="run" onclick="runRoute('${r.id}')">Run</button>`+
+      `<button class="del" onclick="delRoute('${r.id}')">✕</button></div>`).join('');
+  }catch(e){}
+}
+async function runRoute(id){
+  if(!st.armed){ document.getElementById('sub').textContent='⚠ arm first, then Run'; return; }
+  await cmd('run_route',{id});
+}
+async function delRoute(id){
+  await fetch('/api/missions/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  loadRoutes();
+}
+setInterval(loadRoutes, 4000);   // pick up teach-saved routes
 function updateMap(s){
   if(!mapReady){ initMap(s.lat,s.lon); }
   const ll=[s.lat,s.lon];
