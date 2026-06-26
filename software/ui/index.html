@@ -245,12 +245,21 @@ async function loadRoutes(){
     const list=await (await fetch('/api/missions')).json();
     const el=document.getElementById('routeList');
     document.getElementById('rcount').textContent=list.length?list.length:'';
-    if(!list.length){ el.innerHTML='<div class="empty">No routes yet — Teach a path or draw a zone on the map.</div>'; return; }
-    el.innerHTML=list.map(r=>
-      `<div class="route"><span class="rn">${r.name}</span>`+
-      `<span class="rt ${r.type}">${r.type} · ${r.n}</span>`+
-      `<button class="run" onclick="runRoute('${r.id}')">Run</button>`+
-      `<button class="del" onclick="delRoute('${r.id}')">✕</button></div>`).join('');
+    if(!list.length){ const d=document.createElement('div'); d.className='empty';
+      d.textContent='No routes yet — Teach a path or draw a zone on the map.'; el.replaceChildren(d); return; }
+    // build DOM with textContent — never interpolate route names (user input) into HTML
+    el.replaceChildren(...list.map(r=>{
+      const row=document.createElement('div'); row.className='route';
+      const nm=document.createElement('span'); nm.className='rn'; nm.textContent=r.name;
+      const tp=document.createElement('span');
+      tp.className='rt '+(r.type==='coverage'?'coverage':'taught');   // constrained class, not raw input
+      tp.textContent=r.type+' · '+r.n;
+      const run=document.createElement('button'); run.className='run'; run.textContent='Run';
+      run.addEventListener('click',()=>runRoute(r.id));
+      const del=document.createElement('button'); del.className='del'; del.textContent='✕';
+      del.addEventListener('click',()=>delRoute(r.id));
+      row.append(nm,tp,run,del); return row;
+    }));
   }catch(e){}
 }
 async function runRoute(id){
