@@ -122,3 +122,16 @@ module vendor_or_proxy(file, dims, label="part") {
     // OpenSCAD can't test file existence; pass use_vendor=true once downloaded.
     proxy() cube(dims, center=true);
 }
+
+// ---- BRIM (baked bed-adhesion flange) --------------------------------------
+// Drops a part so its base sits at z=0 (caller passes the part's true min-z),
+// then welds a single-layer brim of width `w` around its first-layer footprint.
+// Output STL is print-ready WITH a brim — do NOT also enable a slicer brim.
+BRIM_LAYER = 0.2;     // one layer tall (matches a 0.2mm print)
+module add_brim(w=5, minz=0, layer=BRIM_LAYER) {
+    translate([0,0,-minz]) children();                       // part, base on bed
+    linear_extrude(layer)                                    // the brim ring/flange
+        offset(w)
+            projection(cut=true)                             // cut=true slices at global z=0
+                translate([0,0,-(minz + layer/2)]) children(); // base sits 0.1 BELOW z=0 -> slice ~mid first layer
+}

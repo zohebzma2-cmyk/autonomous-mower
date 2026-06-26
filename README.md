@@ -10,6 +10,7 @@ Turn a seated zero-turn mower (reference: **Gravely ZT 52"**) into a self-drivin
 autonomous-mower/
 ├── README.md                  ← you are here
 ├── docs/BUILD.md              ← full build & SAFETY spec (architecture, wiring, training, go/no-go)
+├── docs/PRINT_GUIDE.md        ← per-part orientation, brim width, supports, material, plate batching
 ├── cart/
 │   ├── BOM.md                 ← bill of materials (~$1,048 w/ Hailo) + trim levers
 │   └── cart.html              ← branded shopping page: search links + copy buttons
@@ -26,6 +27,8 @@ autonomous-mower/
 │   ├── controls_bracket.scad  ← e-stop pedestal, PTO relay box, throttle servo bracket
 │   ├── export_stl.sh          ← exports every PRINT_* part to STL + checks bed-fit
 │   ├── stl/                   ← exported STLs + MANIFEST.csv (bed-fit report)
+│   ├── stl/brim/              ← brim-baked, print-ready STLs (slicer brim OFF) + REPORT.txt
+│   ├── bake_brims.sh          ← welds a bed-adhesion brim onto every part
 │   ├── renders/               ← PNG renders of parts + full assembly
 │   └── vendor/                ← real vendor STEP models (Pi 5, Cam 3) + SOURCES.md
 ├── viewer/                    ← interactive 3D web viewer (rotate the whole machine)
