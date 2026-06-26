@@ -6,7 +6,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 mkdir -p stl/brim renders/brim
-FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad)
+FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad)
 
 # per-part brim width (mm). default 5; tall/warp-prone 8; structural 6; thin plates 4.
 brim_w(){ case "$1" in

@@ -30,6 +30,7 @@ class State:
         self.recording = []                    # taught waypoints being recorded
         self.active_route = []                 # waypoints currently being followed
         self.route_idx = 0
+        self.mav_cmd = None                    # set by mav.py in --mav mode → forwards drive cmds
         self.d = dict(
             connected=True, mode="MANUAL", armed=False, mission="idle",
             blade=False, estop=False,
@@ -296,7 +297,11 @@ class H(BaseHTTPRequestHandler):
             self._send(400, json.dumps({"ok": False, "msg": "bad json"})); return
 
         if self.path == "/api/command":
-            ok, msg = handle_command(p.get("cmd", ""), p.get("args"))
+            cmd, args = p.get("cmd", ""), p.get("args")
+            ok, msg = handle_command(cmd, args)          # companion-side logic + optimistic UI
+            if S.mav_cmd and cmd in ("arm", "disarm", "mode", "start", "resume", "pause", "estop", "clear_estop"):
+                try: S.mav_cmd(cmd, args)                # forward drive cmds to ArduPilot (SITL/Pixhawk)
+                except Exception as e: msg += f" [mav: {e}]"
             self._send(200 if ok else 409, json.dumps({"ok": ok, "msg": msg})); return
 
         if self.path == "/api/zones/plan":

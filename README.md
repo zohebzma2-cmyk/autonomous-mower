@@ -1,6 +1,8 @@
 # Autonomous Zero-Turn Retrofit Kit
 
-Turn a seated zero-turn mower (reference: **Gravely ZT 52"**) into a self-driving, trainable robot mower with **RTK GPS + LiDAR + camera + AI**, built from a **~$1k** parts budget, weatherproofed to live outdoors, and **reproducible on any ZTR** by re-measuring a handful of dimensions.
+> 🏁 **New here? Start with [`docs/00-BUILD-MANUAL.md`](docs/00-BUILD-MANUAL.md)** — the end-to-end build sequence.
+
+Turn a seated zero-turn mower (confirmed machine: **Gravely ZT X 52, 2021, Kohler**) into a self-driving, iPad-controlled robot mower with **RTK GPS + LiDAR + cameras + AI**, weatherproofed to live outdoors, **reproducible on any ZTR** by re-measuring a handful of dimensions. Includes the **control software** (`software/`), **firmware** (`firmware/`), and full **wiring/pinout** (`docs/WIRING.md`).
 
 > ⚠️ A 52" mower deck can kill. Read [`docs/BUILD.md` §0 Safety](docs/BUILD.md) before powering anything. Blades stay OFF until drive + navigation + every failsafe is proven.
 

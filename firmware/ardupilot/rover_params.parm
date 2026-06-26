@@ -1,0 +1,60 @@
+# ArduPilot Rover — starting parameters for the ZT X 52 retrofit.
+# Load in Mission Planner/QGC (Config > Full Parameter List > Load), then TUNE on the machine.
+# Format: NAME,VALUE  (comma or space both load). Lines beginning with # are comments.
+# Channel functions match docs/WIRING.md (SERVO1=throttleLeft, SERVO3=throttleRight).
+
+# ---- skid steering (twin lap-bar actuators via the ESP32 controller) ----
+SERVO1_FUNCTION,73     # throttleLeft  → ESP32 PWM-in L → BTS7960 #1 → LEFT actuator
+SERVO3_FUNCTION,74     # throttleRight → ESP32 PWM-in R → BTS7960 #2 → RIGHT actuator
+SERVO1_MIN,1000
+SERVO1_MAX,2000
+SERVO3_MIN,1000
+SERVO3_MAX,2000
+PILOT_STEER_TYPE,1     # two-paddle / skid input feel
+
+# ---- engine throttle servo + PTO (assign to your wired channels) ----
+SERVO5_FUNCTION,0      # throttle servo: drive via a Lua script or RCx passthrough (set per build)
+RELAY1_FUNCTION,1      # enable Relay1
+SERVO6_FUNCTION,-1     # PTO: wire SERVO6 to the PTO relay; OR use a RELAY pin. Keep DISABLED until blades-on phase.
+
+# ---- GPS / RTK (ArduSimple simpleRTK2B, u-blox ZED-F9P on GPS1) ----
+GPS_TYPE,1             # auto-detect u-blox
+GPS_AUTO_CONFIG,1
+GPS_RATE_MS,100        # 10 Hz
+# Inject RTCM3 corrections from the GCS (NTRIP) for the RTK fix. Add a 2nd antenna later for
+# moving-baseline heading (GPS_TYPE2 + GPS heading) — strongly recommended before tight pivots.
+
+# ---- arming & safety ----
+ARMING_CHECK,1         # all pre-arm checks ON
+ARMING_REQUIRE,1
+BRD_SAFETY_DEFLT,1     # safety switch required
+FENCE_ENABLE,1         # geofence ON
+FENCE_TYPE,6           # circle + polygon
+FENCE_ACTION,1         # breach → HOLD
+FENCE_MARGIN,3
+
+# ---- failsafes → all stop the machine ----
+FS_GCS_ENABLE,1        # lose GCS link → failsafe
+FS_GCS_TIMEOUT,5
+FS_ACTION,1            # 1 = HOLD
+FS_THR_ENABLE,1        # RC failsafe
+FS_THR_VALUE,950
+FS_CRASH_CHECK,1
+BATT_MONITOR,4         # PM02 power module (voltage + current)
+BATT_LOW_VOLT,11.4
+BATT_LOW_ACT,2         # low battery → RTL/HOLD
+
+# ---- modes (RC switch positions) ----
+MODE1,0                # MANUAL
+MODE4,4                # HOLD
+MODE6,10               # AUTO (missions / coverage)
+
+# ---- rover drive limits (gentle defaults for a 52" deck; tune up carefully) ----
+CRUISE_SPEED,1.4       # m/s target (≈ 3 mph; ZT X tops 7 mph — keep low for v1)
+WP_SPEED,1.4
+TURN_MAX_G,0.4         # gentle turns
+WP_RADIUS,0.6
+ATC_ACCEL_MAX,1.0
+
+# NOTE: leave PTO/blades DISABLED (SERVO6_FUNCTION,-1) and run the full §11 go/no-go in
+# docs/BUILD.md — jack stands → blades off → open-area teach-and-repeat → blades last.

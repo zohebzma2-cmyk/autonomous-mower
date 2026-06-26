@@ -22,3 +22,4 @@ PRINT_estop_pedestal_b,stl/PRINT_estop_pedestal_b.stl,92.8,50.0,30.4,YES
 PRINT_relay_box,stl/PRINT_relay_box.stl,76.0,56.0,45.0,YES
 PRINT_relay_lid,stl/PRINT_relay_lid.stl,76.0,56.0,6.0,YES
 PRINT_throttle_servo_bracket,stl/PRINT_throttle_servo_bracket.stl,56.9,44.0,42.0,YES
+PRINT_badge,stl/PRINT_badge.stl,114.0,34.0,4.0,YES
