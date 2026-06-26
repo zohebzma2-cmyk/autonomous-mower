@@ -92,6 +92,8 @@ RTK_L = 68.58; RTK_W = 53.34; RTK_H = 12; // official PCB drawing (was rounded 6
 RTK_HOLE_D = 3.2;                         // 3x M3 on Arduino-Uno pattern; SMA + 2x microUSB on short edges
 
 // --- GPS antenna puck (survey/helical, center-bolt mount) [V] ---
+// ★ Dual-antenna moving-baseline heading: print 2x gps_mast and mount the two antennas on
+//   a baseline >= 0.5 m apart (e.g. front-centre + rear-centre), both clear of metal.
 GPS_ANT_DIA = 60; GPS_ANT_H = 22; GPS_ANT_BOLT = 6.4;  // 1/4"-20 center stud
 
 // --- RPLidar A1M8 (2D 360 scanner) — EXACT from Slamtec LD108 datasheet (Fig 5-2) ---

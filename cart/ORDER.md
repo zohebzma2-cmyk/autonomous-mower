@@ -68,12 +68,20 @@ buying there. Move to a sunlight-readable panel later only if field daytime visi
 | **Pixhawk 6C** flight controller (genuine — avoid eBay clones) | Holybro | https://holybro.com/products/pixhawk-6c | $165.99 |
 | **simpleRTK2B Budget** (u-blox ZED-F9P) RTK board | ArduSimple | https://www.ardusimple.com/product/simplertk2b/ | €172 (~$186) |
 | **ANN-MB-00** multiband GNSS antenna (IP67) | ArduSimple | https://www.ardusimple.com/product/ann-mb-00-ip67/ | €53.80 (~$58) |
+| ★ **2nd RTK board** (simpleRTK2Blite) — *heading upgrade* | ArduSimple | https://www.ardusimple.com/product/simplertk2blite/ | ~$110 |
+| ★ **2nd ANN-MB-00 antenna** — *heading upgrade* | ArduSimple | https://www.ardusimple.com/product/ann-mb-00-ip67/ | ~$58 |
 | **Raspberry Pi AI HAT+** (Hailo-8L, 13 TOPS) | PiShop | https://www.pishop.us/product/raspberry-pi-ai-hat-13-tops/ | $76.95 |
 | **Raspberry Pi 5, 8 GB** (board) | PiShop / CanaKit / Adafruit | https://www.pishop.us/product/raspberry-pi-5-8gb/ | ~$80 |
 | **Pi Camera Module 3** (FRONT — obstacle + vision) | PiShop | https://www.pishop.us/product/raspberry-pi-camera-module-3/ | $29.25 |
 | **Pi Camera Module 3** (REAR feed) | PiShop | https://www.pishop.us/product/raspberry-pi-camera-module-3/ | $29.25 |
 | **Raspberry Pi Touch Display 2** (7″ DSI, on-unit screen) | PiShop | https://www.pishop.us/product/raspberry-pi-touch-display-2/ | ~$60 |
-| | | **Vendor subtotal** | **≈ 685** |
+| | | **Vendor subtotal** | **≈ 853** |
+
+★ = **recommended precision upgrade.** The 2nd RTK board + antenna give **moving-baseline heading
+(~0.4° true heading)** instead of motion-derived heading that wanders at low speed / pivots — the single
+biggest accuracy improvement in the build (turns ~10 cm cross-track into a few cm). Mount the two
+antennas on a baseline **≥ 50 cm apart** (print 2× `gps_mast`), both clear of metal. ArduPilot config
+in `firmware/ardupilot/rover_params.parm` (moving-baseline block).
 
 ### A3. Perception / safety sensors (added for camera view + overhead + incline)
 - **Front + rear cameras** — 2× Pi Camera 3 (above), shown as live feeds in the UI; front does obstacle + grass vision (Hailo). Pi 5 has 2 CSI ports.
@@ -98,13 +106,14 @@ Pixhawk 6C from Holybro and both ArduSimple items together to save on shipping; 
 
 | | |
 |---|------:|
-| Amazon cart (parts) | ≈ $909 |
-| Vendor-direct | ≈ $596 |
-| On-unit touchscreen (A2) | + ~$60 |
-| **Full genuine build** | **≈ $1,565** |
-| Optional later: dual-antenna heading +~$100 · own RTK base +~$150 · sunlight display +~$120 | |
+| Amazon cart (BOM + ESP32 / ultrasonic / drive-relay) | ≈ $934 |
+| Vendor-direct (Pixhawk, RTK, Pi+Hailo, 2 cameras, display, PM02) | ≈ $710 |
+| **Functional build (single-antenna RTK)** | **≈ $1,644** |
+| ★ Dual-antenna RTK heading (recommended — the precision upgrade) | + ~$168 |
+| **Precision build** | **≈ $1,812** |
+| Further: own RTK base +~$150 · sunlight-readable display +~$120 | |
 
-**Design:** ✅ complete — `docs/BUILD.md`, `docs/PRINT_GUIDE.md`, `cad/` (23 parts, brim-baked, bed-fit), `viewer/`.
+**Design:** ✅ complete — `docs/BUILD.md`, `docs/PRINT_GUIDE.md`, `cad/` (24 parts, brim-baked, bed-fit), `viewer/`.
 **Filament/printer/mower:** you already have. **Software** (ArduPilot, Mission Planner, NTRIP): free.
 
 ## D. Build-readiness checklist (what happens after parts land)

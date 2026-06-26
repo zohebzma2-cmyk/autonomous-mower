@@ -21,8 +21,16 @@ SERVO6_FUNCTION,-1     # PTO: wire SERVO6 to the PTO relay; OR use a RELAY pin. 
 GPS_TYPE,1             # auto-detect u-blox
 GPS_AUTO_CONFIG,1
 GPS_RATE_MS,100        # 10 Hz
-# Inject RTCM3 corrections from the GCS (NTRIP) for the RTK fix. Add a 2nd antenna later for
-# moving-baseline heading (GPS_TYPE2 + GPS heading) — strongly recommended before tight pivots.
+# Inject RTCM3 corrections from the GCS (NTRIP) for the RTK fix.
+
+# ---- ★ DUAL-ANTENNA MOVING-BASELINE HEADING (precision upgrade — uncomment to enable) ----
+# With the 2nd ZED-F9P + antenna (baseline ≥0.5 m) you get true ~0.4° heading instead of
+# motion-derived heading that wanders at low speed / pivots. Then set:
+# GPS_TYPE,17          # GPS1 = moving-baseline BASE
+# GPS_TYPE2,18         # GPS2 = moving-baseline ROVER (the two F9P link via UART)
+# EK3_SRC1_YAW,2       # use GPS yaw in the EKF
+# GPS_POS1_Y,0.0       # antenna positions (m) → the baseline vector; MEASURE on your mount
+# GPS_POS2_Y,0.5       # e.g. 2nd antenna 0.5 m to one side. Set X/Y/Z for both.
 
 # ---- arming & safety ----
 ARMING_CHECK,1         # all pre-arm checks ON

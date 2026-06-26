@@ -67,8 +67,9 @@ A 52" deck spins ~3 lb of steel at ~18,000 fpm tip speed. An autonomous bug here
 
 - **±2 cm** with RTK vs ±3 m plain GPS — the difference between mowing rows and driving into the house.
 - **Corrections (NTRIP):** stream RTCM3 from a base. Cheapest: a free public **CORS / state-DOT NTRIP** mount within ~20 km, over a phone hotspot. If none nearby, add a second simpleRTK2B as your own base (~+$150) for full independence.
-- **Heading:** a single antenna gives position but heading comes from motion (bad at low speed / pivot turns). Upgrade path: **moving-baseline dual antenna** for true heading — strongly recommended before trusting tight zero-turn pivots. Budget allows single now, dual later.
-- Antenna goes **high on a mast, on a ground plane**, clear of the engine and ROPS steel (multipath).
+- **Heading (the precision lever):** a single antenna gives cm *position* but heading comes from motion — it wanders at low speed and during pivots, smearing row alignment (~10 cm cross-track). The **dual-antenna moving-baseline** kit (now in the order, `★` in `cart/ORDER.md`) gives **true ~0.4° heading** → a few-cm tracking. Mount the **two antennas on a baseline ≥ 0.5 m** (print 2× `gps_mast`), both on ground planes, clear of metal. Config: the moving-baseline block in `firmware/ardupilot/rover_params.parm`.
+- Each antenna goes **high on a mast, on a ground plane**, clear of the engine/metal (multipath). The ZT X has no ROPS — mount the masts to seat-frame / fabricated posts (`gps_mast.scad`).
+- **Realistic precision:** ±2 cm position (RTK fixed, open sky); ~few-cm cross-track *with* dual-antenna heading, ~10 cm with single; degrades to decimeters under tree canopy (GPS physics) — the planned row overlap (~17 cm) absorbs it so coverage stays complete.
 
 ---
 
