@@ -1,0 +1,18 @@
+[Unit]
+Description=Mower companion control server (web UI + MAVLink bridge)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Adjust the path/user to your Pi. Use --mav for the real Pixhawk (serial), or drop it for sim.
+WorkingDirectory=/home/pi/autonomous-mower/software/companion
+ExecStart=/usr/bin/python3 app.py --port 8080 --mav /dev/serial0
+Restart=always
+RestartSec=3
+User=pi
+# let it bind :8080 and read the Pixhawk serial
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+SupplementaryGroups=dialout
+
+[Install]
+WantedBy=multi-user.target

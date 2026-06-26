@@ -46,19 +46,21 @@ The display you mount on the unit shows the *same* UI full-screen. On the Pi:
 # autostart Chromium kiosk pointing at the local server
 chromium-browser --kiosk --noerrdialogs --disable-infobars http://localhost:8080/
 ```
-(Run the companion as a `systemd` service + a kiosk autostart — see `dev/DEPLOY.md`, TODO.)
-**Display pick:** official **Raspberry Pi Touch Display 2** (DSI, ~$60) for a clean build; note a
-standard LCD is hard to read in direct sun — a high-brightness/sunlight-readable HDMI panel is the
-upgrade if daytime visibility matters. Added to the parts order (`cart/ORDER.md`).
+**Full deploy** (service + kiosk autostart + cameras + NTRIP): see [`dev/DEPLOY.md`](dev/DEPLOY.md)
+with the ready-to-use `deploy/mower-companion.service` and `deploy/kiosk.sh`.
+**Display pick:** **Raspberry Pi Touch Display 2** (DSI, ~$60); a standard LCD is hard to read in
+direct sun — a sunlight-readable HDMI panel is the daytime upgrade (`cart/ORDER.md`).
 
 ## Roadmap
-- [x] **v0 control plane** — web UI (iPad + kiosk), telemetry, arm/mode/mission/blade/E-STOP, sim backend
-- [ ] **MAVLink** (`mav.py`) — wire to ArduPilot SITL, then Pixhawk (pymavlink)
-- [ ] **Teach-and-repeat** — record RTK waypoints via UI, upload AUTO mission
-- [ ] **LiDAR safety** (`safety.py`) — RPLidar stop-zone → MAVLink HOLD
-- [ ] **Coverage planner** — boundary → back-and-forth rows
-- [ ] **Camera AI** (Hailo) — grass/obstacle segmentation
-- [ ] **Map view** — live position + path on the UI
+- [x] **v0 control plane** — web UI (iPad + kiosk), telemetry, arm/mode/mission/blade/E-STOP
+- [x] **Teach-and-repeat** — record waypoints via UI, run as a route
+- [x] **Coverage planner** — boundary → boustrophedon rows + **live % mowed** overlay
+- [x] **Safety** (`safety.py`) — incline cutoff, overhead/tree-limb stop, obstacle (18/19 tested)
+- [x] **Map view** — live position + heading + planned vs mowed path (OpenStreetMap)
+- [x] **Cameras** — front/rear feeds in the UI
+- [x] **MAVLink** (`mav.py`) — command routing wired; **needs SITL/hardware validation**
+- [x] **Deployment** — systemd service + kiosk autostart (`dev/DEPLOY.md`)
+- [ ] **Camera AI** (Hailo) — grass/obstacle segmentation (needs hardware)
 - [ ] **Fleet/RaaS layer** — multi-unit dashboard (commercialization, see project notes)
 
 ## Safety
