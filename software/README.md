@@ -60,7 +60,8 @@ direct sun — a sunlight-readable HDMI panel is the daytime upgrade (`cart/ORDE
 - [x] **Cameras** — front/rear feeds in the UI
 - [x] **MAVLink** (`mav.py`) — command routing wired; **needs SITL/hardware validation**
 - [x] **Deployment** — systemd service + kiosk autostart (`dev/DEPLOY.md`)
-- [ ] **Camera AI** (Hailo) — grass/obstacle segmentation (needs hardware)
+- [x] **Camera AI** (`vision.py`) — detector pipeline + obstacle/grass mapping (tested); the Hailo `.hef` model is trained/compiled on hardware
+- [x] **MAVLink mission upload** (`mav.py`) — route → AUTO waypoint upload (encoding tested; handshake needs SITL)
 - [ ] **Fleet/RaaS layer** — multi-unit dashboard (commercialization, see project notes)
 
 ## Safety

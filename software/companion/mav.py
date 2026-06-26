@@ -15,6 +15,38 @@ import time
 ROVER_MODES = {"MANUAL": 0, "HOLD": 4, "AUTO": 10, "GUIDED": 15, "RTL": 11}
 FIX_NAME = {0: "no", 1: "no", 2: "2d", 3: "3d", 4: "dgps", 5: "rtk_float", 6: "rtk_fixed"}
 
+MAV_FRAME_GLOBAL_REL_ALT = 3
+MAV_CMD_NAV_WAYPOINT = 16
+
+
+def to_mission_items(waypoints):
+    """PURE (unit-tested). [[lat,lon],...] → mission-item dicts for MISSION_ITEM_INT
+    (NAV_WAYPOINT). lat/lon are scaled to 1e7 ints as MAVLink requires."""
+    items = []
+    for i, (lat, lon) in enumerate(waypoints):
+        items.append(dict(seq=i, frame=MAV_FRAME_GLOBAL_REL_ALT, command=MAV_CMD_NAV_WAYPOINT,
+                          current=1 if i == 0 else 0, autocontinue=1,
+                          lat=int(round(lat * 1e7)), lon=int(round(lon * 1e7)), alt=0.0))
+    return items
+
+
+def upload_mission(m, waypoints, timeout=5):
+    """Push a route to ArduPilot via the MAVLink mission protocol (SITL/Pixhawk)."""
+    items = to_mission_items(waypoints)
+    if not items:
+        return False
+    m.mav.mission_count_send(m.target_system, m.target_component, len(items))
+    for _ in range(len(items)):
+        req = m.recv_match(type=["MISSION_REQUEST_INT", "MISSION_REQUEST"], blocking=True, timeout=timeout)
+        if req is None:
+            return False
+        it = items[req.seq]
+        m.mav.mission_item_int_send(m.target_system, m.target_component, it["seq"], it["frame"],
+            it["command"], it["current"], it["autocontinue"], 0, 0, 0, 0,
+            it["lat"], it["lon"], it["alt"])
+    ack = m.recv_match(type="MISSION_ACK", blocking=True, timeout=timeout)
+    return ack is not None
+
 
 def run_mavlink(endpoint, S, _handle_command):
     from pymavlink import mavutil
@@ -46,7 +78,13 @@ def run_mavlink(endpoint, S, _handle_command):
                 mavutil.mavlink.MAV_CMD_MISSION_START, 0, 0, 0, 0, 0, 0, 0, 0)
         elif cmd == "pause":
             set_mode("HOLD")
-        # blade / teach_start / teach_stop → TODO (GPIO relay, mission record/upload)
+        elif cmd == "upload_run":                     # teach/coverage route → AUTO mission
+            pts = args.get("points") or []
+            if upload_mission(m, pts):
+                set_mode("AUTO")
+                m.mav.command_long_send(m.target_system, m.target_component,
+                    mavutil.mavlink.MAV_CMD_MISSION_START, 0, 0, 0, 0, 0, 0, 0, 0)
+        # blade / GPIO relay → wired to the safety MCU on the real build
 
     def set_mode(name):
         mode_id = ROVER_MODES.get(name)

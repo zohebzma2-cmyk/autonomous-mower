@@ -18,7 +18,7 @@ NOT a substitute for the physical e-stop.
 """
 import argparse, json, os, threading, time, math, queue
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import missions, safety
+import missions, safety, vision
 
 UI_DIR = os.path.join(os.path.dirname(__file__), "..", "ui")
 
@@ -40,6 +40,7 @@ class State:
             obstacle=False, obstacle_range=None,
             roll=0.0, pitch=0.0, slope=0.0,     # IMU tilt (deg) → incline safety
             overhead_m=5.0,                     # upward sensor: branch clearance (m)
+            objects=[], grass_pct=0,            # camera-AI: detected objects + grass coverage
             cameras=["front", "rear"],          # camera feeds available
             mode_options=["MANUAL", "HOLD", "AUTO"],
             taught_points=0, route_id=None, progress=0,   # active route id + % complete
@@ -163,10 +164,8 @@ def sim_loop():
         pitch = round(6*math.sin(t*0.05 + 1.0), 1)
         if (int(t) % 53) < 4: roll = round(roll + 11, 1)             # occasional steep side-slope
         overhead = 1.35 if (int(t) % 47) < 2 else 5.0               # occasional low tree limb
-        obstacle = (int(t) % 41) < 3
         upd.update(roll=roll, pitch=pitch, slope=safety.slope_of(roll, pitch),
-                   overhead_m=round(overhead, 2), obstacle=obstacle,
-                   obstacle_range=(round(1.2 + 0.5*math.sin(t), 2) if obstacle else None))
+                   overhead_m=round(overhead, 2))                   # obstacle now comes from vision.py
 
         if d["mission"] == "running":
             allow, reason = safety.evaluate({**d, **upd})            # incline/overhead/obstacle/estop
@@ -195,7 +194,7 @@ def sim_loop():
             if int(t*5) % 5 == 0:                        # record ~1 pt/sec
                 S.recording.append([lat, lon]); upd["taught_points"] = len(S.recording)
         else:
-            upd.update(speed=0.0, obstacle=False)
+            upd.update(speed=0.0)                 # vision.py owns obstacle/obstacle_range
         S.update(**upd)
         time.sleep(0.2)
 
@@ -314,6 +313,9 @@ class H(BaseHTTPRequestHandler):
             if S.mav_cmd and cmd in ("arm", "disarm", "mode", "start", "resume", "pause", "estop", "clear_estop"):
                 try: S.mav_cmd(cmd, args)                # forward drive cmds to ArduPilot (SITL/Pixhawk)
                 except Exception as e: msg += f" [mav: {e}]"
+            if S.mav_cmd and ok and cmd == "run_route" and S.active_route:
+                try: S.mav_cmd("upload_run", {"points": S.active_route})   # → AUTO mission upload
+                except Exception as e: msg += f" [mav: {e}]"
             self._send(200 if ok else 409, json.dumps({"ok": ok, "msg": msg})); return
 
         if self.path == "/api/zones/plan":
@@ -338,6 +340,7 @@ def main():
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--sim", action="store_true", default=True)
     ap.add_argument("--mav", help="MAVLink endpoint, e.g. udp:127.0.0.1:14550 (needs pymavlink)")
+    ap.add_argument("--vision-hef", help="Hailo .hef model for real camera detection (else sim)")
     args = ap.parse_args()
 
     if args.mav:
@@ -353,6 +356,10 @@ def main():
     else:
         threading.Thread(target=sim_loop, daemon=True).start()
         print("[companion] SIM mode (no hardware)")
+
+    # camera-AI vision loop (sim detector unless a Hailo .hef is supplied)
+    threading.Thread(target=vision.run_vision,
+                     args=(S, vision.make_detector(args.vision_hef)), daemon=True).start()
 
     srv = ThreadingHTTPServer(("0.0.0.0", args.port), H)
     print(f"[companion] open  http://localhost:{args.port}/   (on iPad: http://<this-mac-LAN-ip>:{args.port}/ )")

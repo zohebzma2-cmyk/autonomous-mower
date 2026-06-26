@@ -153,7 +153,7 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
   </div>
 
   <div class="cams">
-    <div class="cam"><img id="camFront" alt="front camera"><span class="cl">FRONT · obstacle + vision</span></div>
+    <div class="cam"><img id="camFront" alt="front camera"><span class="cl" id="camFrontLabel">FRONT</span></div>
     <div class="cam"><img id="camRear" alt="rear camera"><span class="cl">REAR</span></div>
   </div>
 
@@ -360,6 +360,10 @@ function render(s){
   const oh=document.getElementById('cOh'), ohv=(s.overhead_m??9);
   oh.innerHTML='OVERHEAD <b>'+(ohv>=5?'clear':ohv.toFixed(1)+'m')+'</b>';
   oh.className='chip '+(ohv<1.6?'bad':(ohv<2.0?'warn':''));
+  // camera-AI label: grass coverage + any detected hazards
+  const haz=(s.objects||[]).filter(o=>o!=='grass');
+  document.getElementById('camFrontLabel').textContent =
+    'FRONT · '+(s.grass_pct||0)+'% grass'+(haz.length?' · ⚠ '+haz.join(', '):'');
   // controls
   document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('active',x.dataset.mode===s.mode));
   const arm=document.getElementById('armBtn'); arm.textContent=s.armed?'Disarm':'Arm'; arm.classList.toggle('armed',s.armed);

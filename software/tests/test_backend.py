@@ -16,7 +16,7 @@ _tmp = tempfile.mkdtemp()
 missions.DATA = _tmp
 missions.FILE = os.path.join(_tmp, "missions.json")
 
-import app, safety
+import app, safety, vision, mav
 
 SQUARE = [[42.8060, -71.3675], [42.8060, -71.3670],
           [42.8064, -71.3670], [42.8064, -71.3675]]   # ~44m x 41m
@@ -164,6 +164,33 @@ def test_arm_refused_on_dangerous_slope():
     reset(); app.S.update(gps_fix="rtk_fixed", roll=20.0)
     ok, why = app.handle_command("arm")
     assert not ok and "steep" in why, "must refuse to arm on a dangerous slope"
+
+# ---------------------------------------------------------------- camera-AI vision
+def test_vision_hazard_in_stop_zone_stops():
+    obstacle, rng, objs, _ = vision.evaluate([{"cls": "person", "conf": 0.9, "box": [0.5, 0.7, 0.2, 0.4]}])
+    assert obstacle and rng is not None and "person" in objs, "person ahead must stop the mower"
+
+def test_vision_hazard_offside_is_clear():
+    assert vision.evaluate([{"cls": "person", "conf": 0.9, "box": [0.05, 0.7, 0.1, 0.2]}])[0] is False, \
+        "a person well off to the side is not in the path"
+
+def test_vision_low_confidence_ignored():
+    assert vision.evaluate([{"cls": "person", "conf": 0.2, "box": [0.5, 0.7, 0.2, 0.4]}])[0] is False
+
+def test_vision_grass_only_clear_with_coverage():
+    obstacle, _, _, grass = vision.evaluate([{"cls": "grass", "conf": 0.95, "box": [0.5, 0.8, 0.9, 0.5]}])
+    assert obstacle is False and grass > 0, "grass-only frame: no stop, grass coverage reported"
+
+# ---------------------------------------------------------------- MAVLink mission encoding
+def test_mission_items_encoding():
+    items = mav.to_mission_items([[42.806, -71.367], [42.807, -71.368]])
+    assert len(items) == 2
+    assert items[0]["lat"] == int(round(42.806 * 1e7)) and items[0]["lon"] == int(round(-71.367 * 1e7))
+    assert items[0]["command"] == 16 and items[0]["frame"] == 3 and items[0]["current"] == 1
+    assert items[1]["current"] == 0, "only the first item is 'current'"
+
+def test_mission_items_empty():
+    assert mav.to_mission_items([]) == []
 
 # ---------------------------------------------------------------- runner
 def main():
