@@ -86,9 +86,9 @@ FC_L = 84.8; FC_W = 44; FC_H = 12.4;     // confirmed via Holybro docs
 FC_HOLE_DX = 76; FC_HOLE_DY = 36;        // [V] varies by board; slots cover it
 FC_HOLE_D = 3.2;                         // M3 clearance
 
-// --- ArduSimple simpleRTK2B (Arduino-Uno footprint) — confirmed 69x53 [V->DS] ---
-RTK_L = 69; RTK_W = 53; RTK_H = 12;      // confirmed via ArduSimple
-RTK_HOLE_D = 3.2;
+// --- ArduSimple simpleRTK2B (Arduino-Uno footprint) — EXACT from PCB drawing ---
+RTK_L = 68.58; RTK_W = 53.34; RTK_H = 12; // official PCB drawing (was rounded 69x53)
+RTK_HOLE_D = 3.2;                         // 3x M3 on Arduino-Uno pattern; SMA + 2x microUSB on short edges
 
 // --- GPS antenna puck (survey/helical, center-bolt mount) [V] ---
 GPS_ANT_DIA = 60; GPS_ANT_H = 22; GPS_ANT_BOLT = 6.4;  // 1/4"-20 center stud

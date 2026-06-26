@@ -70,9 +70,15 @@ buying there. Move to a sunlight-readable panel later only if field daytime visi
 | **ANN-MB-00** multiband GNSS antenna (IP67) | ArduSimple | https://www.ardusimple.com/product/ann-mb-00-ip67/ | €53.80 (~$58) |
 | **Raspberry Pi AI HAT+** (Hailo-8L, 13 TOPS) | PiShop | https://www.pishop.us/product/raspberry-pi-ai-hat-13-tops/ | $76.95 |
 | **Raspberry Pi 5, 8 GB** (board) | PiShop / CanaKit / Adafruit | https://www.pishop.us/product/raspberry-pi-5-8gb/ | ~$80 |
-| **Pi Camera Module 3** | PiShop | https://www.pishop.us/product/raspberry-pi-camera-module-3/ | $29.25 |
+| **Pi Camera Module 3** (FRONT — obstacle + vision) | PiShop | https://www.pishop.us/product/raspberry-pi-camera-module-3/ | $29.25 |
+| **Pi Camera Module 3** (REAR feed) | PiShop | https://www.pishop.us/product/raspberry-pi-camera-module-3/ | $29.25 |
 | **Raspberry Pi Touch Display 2** (7″ DSI, on-unit screen) | PiShop | https://www.pishop.us/product/raspberry-pi-touch-display-2/ | ~$60 |
-| | | **Vendor subtotal** | **≈ 656** |
+| | | **Vendor subtotal** | **≈ 685** |
+
+### A3. Perception / safety sensors (added for camera view + overhead + incline)
+- **Front + rear cameras** — 2× Pi Camera 3 (above), shown as live feeds in the UI; front does obstacle + grass vision (Hailo). Pi 5 has 2 CSI ports.
+- **Overhead clearance sensor (tree-limb / height detection)** — **JSN-SR04T waterproof ultrasonic** (~$10, Amazon) mounted forward/up; stops the machine before the GPS mast strikes a low branch. *(add to Amazon cart — exact part being finalized by research)*
+- **Incline safety** — uses the **Pixhawk IMU** (no new hardware): max-slope cutoff (~15° rollover limit) + mow up/down, not across. See `docs/BUILD.md`.
 
 Notes: ArduSimple ships from the EU — expect EUR→USD conversion + import shipping/duties. Tip: order the
 Pixhawk 6C from Holybro and both ArduSimple items together to save on shipping; PiShop covers the 3 Pi items.

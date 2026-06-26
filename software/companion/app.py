@@ -18,7 +18,7 @@ NOT a substitute for the physical e-stop.
 """
 import argparse, json, os, threading, time, math, queue
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import missions
+import missions, safety
 
 UI_DIR = os.path.join(os.path.dirname(__file__), "..", "ui")
 
@@ -37,6 +37,9 @@ class State:
             battery_v=12.9, battery_pct=92, speed=0.0, heading=0.0,
             lat=42.8062, lon=-71.3673,          # Windham NH-ish
             obstacle=False, obstacle_range=None,
+            roll=0.0, pitch=0.0, slope=0.0,     # IMU tilt (deg) → incline safety
+            overhead_m=5.0,                     # upward sensor: branch clearance (m)
+            cameras=["front", "rear"],          # camera feeds available
             mode_options=["MANUAL", "HOLD", "AUTO"],
             taught_points=0, msg="sim: ready",
         )
@@ -69,7 +72,7 @@ class State:
 S = State()
 
 # ---------------------------------------------------------------- command handling
-def handle_command(cmd, args):
+def handle_command(cmd, args=None):
     """Apply a control command to state. Returns (ok, message)."""
     d = S.snapshot()
     if cmd == "estop":
@@ -84,6 +87,9 @@ def handle_command(cmd, args):
     if cmd == "arm":
         if d["gps_fix"] not in ("rtk_fixed", "rtk_float", "3d"):
             return False, "no GPS fix — refusing to arm"
+        ok, why = safety.can_arm(d)          # refuse to arm on a dangerous slope
+        if not ok:
+            return False, why
         S.update(armed=True, msg="armed")
         return True, "armed"
     if cmd == "disarm":
@@ -145,25 +151,31 @@ def sim_loop():
         # battery slow drain
         upd["battery_v"] = round(max(11.0, 12.9 - t * 0.0005), 2)
         upd["battery_pct"] = max(0, int((upd["battery_v"] - 11.0) / (12.9 - 11.0) * 100))
-        SPD = 1.4                                       # m/s cruise
-        STEP = SPD * 0.2                                 # metres per 0.2s tick
-        if d["mission"] == "running" and not d["estop"]:
-            # occasional simulated LiDAR obstacle → safety hold
-            if (int(t) % 41) in (0, 1, 2):
-                upd.update(obstacle=True, obstacle_range=round(1.2 + 0.5*math.sin(t), 2),
-                           speed=0.0, msg="LiDAR: obstacle — holding")
+        SPD = 1.4; STEP = SPD * 0.2                      # cruise m/s, metres/tick
+        # --- simulated sensor suite (always live so UI gauges have data) ---
+        roll = round(8*math.sin(t*0.07), 1)
+        pitch = round(6*math.sin(t*0.05 + 1.0), 1)
+        if (int(t) % 53) < 4: roll = round(roll + 11, 1)             # occasional steep side-slope
+        overhead = 1.35 if (int(t) % 47) < 2 else 5.0               # occasional low tree limb
+        obstacle = (int(t) % 41) < 3
+        upd.update(roll=roll, pitch=pitch, slope=safety.slope_of(roll, pitch),
+                   overhead_m=round(overhead, 2), obstacle=obstacle,
+                   obstacle_range=(round(1.2 + 0.5*math.sin(t), 2) if obstacle else None))
+
+        if d["mission"] == "running":
+            allow, reason = safety.evaluate({**d, **upd})            # incline/overhead/obstacle/estop
+            if not allow:
+                upd.update(speed=0.0, msg=reason)                    # software safety HOLD
             elif S.active_route and S.route_idx < len(S.active_route):
                 tgt = S.active_route[S.route_idx]
                 lat, lon, hdg, reached = missions.step_towards(d["lat"], d["lon"], tgt, STEP)
-                upd.update(lat=lat, lon=lon, heading=hdg, speed=SPD,
-                           obstacle=False, obstacle_range=None)
+                upd.update(lat=lat, lon=lon, heading=hdg, speed=SPD)
                 if reached:
                     S.route_idx += 1
                     if S.route_idx >= len(S.active_route):
-                        upd.update(mission="idle", speed=0.0, msg="mission complete ✓")
-                        S.active_route = []
-            else:                                        # manual start, no route → gentle wander
-                upd.update(obstacle=False, speed=SPD, heading=round((d["heading"]+2) % 360, 1))
+                        upd.update(mission="idle", speed=0.0, msg="mission complete ✓"); S.active_route = []
+            else:                                                    # manual start, no route → wander
+                upd.update(speed=SPD, heading=round((d["heading"]+2) % 360, 1))
                 hx = math.cos(math.radians(d["heading"]))
                 upd.update(lat=round(d["lat"]+hx*1e-6, 7), lon=round(d["lon"]+1e-6, 7))
         elif d["mission"] == "teaching":
@@ -178,6 +190,36 @@ def sim_loop():
             upd.update(speed=0.0, obstacle=False)
         S.update(**upd)
         time.sleep(0.2)
+
+# ---------------------------------------------------------------- camera feeds
+def _camera_svg(name, s):
+    """Synthetic camera frame (sim): horizon tilts with roll; overlays obstacle &
+    low-branch. Real hardware replaces this route with an MJPEG stream (picamera2)."""
+    W, H = 320, 180
+    roll = s.get("roll", 0) * (1 if name == "front" else -1)
+    front = name == "front"
+    obstacle = s.get("obstacle") and front
+    low = front and (s.get("overhead_m", 9) or 9) < safety.MIN_OVERHEAD_M
+    ox = W/2 + 40*math.sin(s.get("heading", 0)*0.03)
+    label = name.upper()
+    rec = '<circle cx="294" cy="16" r="5" fill="#e5504a"/><text x="285" y="20" text-anchor="end" fill="#e5504a" font-size="10" font-family="monospace">REC</text>'
+    obs = f'<rect x="{ox-34}" y="92" width="68" height="48" fill="none" stroke="#e5504a" stroke-width="3" rx="4"/><text x="{ox}" y="86" text-anchor="middle" fill="#e5504a" font-size="11" font-family="monospace">OBSTACLE</text>' if obstacle else ''
+    branch = '<rect x="0" y="0" width="320" height="26" fill="#5a3a1c" opacity=".85"/><text x="160" y="18" text-anchor="middle" fill="#ffd9a6" font-size="12" font-family="monospace">LOW BRANCH — STOP</text>' if low else ''
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2735"/><stop offset="1" stop-color="#27333f"/></linearGradient></defs>
+<rect width="{W}" height="{H}" fill="url(#sky)"/>
+<g transform="rotate({-roll} {W/2} {H/2})">
+  <rect x="-80" y="{H/2}" width="{W+160}" height="{H}" fill="#1d2c1d"/>
+  <line x1="-80" y1="{H/2}" x2="{W+80}" y2="{H/2}" stroke="#4a7a4a" stroke-width="2" opacity=".7"/>
+  <line x1="{W*0.35}" y1="{H/2}" x2="{W*0.42}" y2="{H}" stroke="#2f4a2f" stroke-width="2"/>
+  <line x1="{W*0.65}" y1="{H/2}" x2="{W*0.58}" y2="{H}" stroke="#2f4a2f" stroke-width="2"/>
+</g>
+<line x1="{W/2-9}" y1="{H/2}" x2="{W/2+9}" y2="{H/2}" stroke="#7fd6ff" stroke-width="1.5" opacity=".6"/>
+<line x1="{W/2}" y1="{H/2-9}" x2="{W/2}" y2="{H/2+9}" stroke="#7fd6ff" stroke-width="1.5" opacity=".6"/>
+{obs}{branch}
+<text x="10" y="170" fill="#cdd6df" font-size="11" font-family="monospace">{label}</text>
+<text x="310" y="170" text-anchor="end" fill="#9fb0c0" font-size="11" font-family="monospace">tilt {s.get("slope",0):.0f}°</text>
+{rec}</svg>'''
 
 # ---------------------------------------------------------------- http handler
 class H(BaseHTTPRequestHandler):
@@ -215,6 +257,9 @@ class H(BaseHTTPRequestHandler):
             return
         if self.path.startswith("/vendor/"):
             return self._serve_static(self.path)
+        if self.path.startswith("/camera/"):
+            name = self.path.split("/")[-1].split(".")[0].split("?")[0]
+            self._send(200, _camera_svg(name, S.snapshot()), "image/svg+xml"); return
         if self.path == "/api/state":
             self._send(200, json.dumps(S.snapshot())); return
         if self.path == "/api/missions":

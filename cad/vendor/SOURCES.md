@@ -19,6 +19,13 @@ Dimensions are from manufacturer datasheets/product briefs unless marked "approx
 | 9 | 22 mm industrial mushroom E-stop button (generic) | **needs-login** (GrabCAD) | — | STEP | community, free w/ GrabCAD login | Panel cutout ø **22.5**; mushroom head ø **40**; body depth ~**50–65** behind panel (incl. 1NC block) | https://grabcad.com/library/22mm-emergency-stop-button-1 · https://grabcad.com/library/starelo-22mm-1nc-red-mushroom-emergency-stop-metal-latching-push-button-switch-1 · Siemens (TraceParts, login): https://www.traceparts.com/en/product/siemens-22mm-metal-round-complete-unit-combinationemergencystop-mushroom-pushbutton |
 | 10 | DC-DC buck converter module (generic, LM2596) | **needs-login** (GrabCAD) | — | STEP | community, free w/ login | LM2596 module ~**44 × 21 × 13.65** (typical) | https://grabcad.com/library/lm2596-dc-dc-buck-converter-module-1 · STEP listing: https://marathon-os.com/library/lm2596-dcdc-buck-converter-module-3d-6811d70143b4d50b11a59159 |
 
+## Actuation / safety / power retrofit (added 2026-06-26 — precision pass)
+
+| Component | Status | Local file | Format | License | Real dims | URL |
+|-----------|--------|-----------|--------|---------|-----------|-----|
+| **Progressive Automations PA-14P** linear actuator (4" stroke, 12V, 10kΩ pot feedback) | **downloaded** | `PA-14P.SLDPRT` (SolidWorks), `PA-14.stp` (STEP AP214, **inches**), `PA-14.DWG` | SLDPRT + STEP + DWG | Vendor-provided free on Progressive Automations Resources page (no login, no explicit open license) | See report; STEP is the **6" stroke** variant (`PA-14-6.STEP`) — cross-section/ends identical, only barrel length scales | STEP https://cdn.shopify.com/s/files/1/0061/7735/7891/files/PA-14.stp · SLDPRT https://cdn.shopify.com/s/files/1/0061/7735/7891/files/PA-14P.SLDPRT · Resources https://www.progressiveautomations.com/pages/resources · Datasheet https://f.hubspotusercontent40.net/hubfs/7717445/PDFs/Actuator%20datasheets/PA-14P%20datasheet.pdf |
+| BTS7960/IBT-2, 22mm E-stop, DS3225 servo, LM2596 buck, Snlazp fuse block, XINYIELE enclosure | **dims-only / measure** | — | (community STEP behind GrabCAD login) | — | See `cart/research/cad-precision-actuation.md` | per-item in report |
+
 ## Notes / caveats
 
 - **OpenSCAD note:** all three downloaded files are STEP. To use as visual context in OpenSCAD,

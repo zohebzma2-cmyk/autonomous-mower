@@ -47,6 +47,11 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
 .chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:-6px}
 .chip{font-size:12px;color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:5px 12px}
 .chip b{color:var(--ink);font-weight:600}
+.chip.warn{color:var(--warn);border-color:#5a4413}.chip.bad{color:var(--bad);border-color:#5a2420}
+.cams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cam{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0c1014;aspect-ratio:16/9}
+.cam img{width:100%;height:100%;display:block;object-fit:cover}
+.cam .cl{position:absolute;left:8px;bottom:6px;font-size:10px;color:#cdd6df;background:rgba(0,0,0,.55);padding:2px 7px;border-radius:10px;letter-spacing:.05em;backdrop-filter:blur(4px)}
 
 /* map */
 .mapcard{border-radius:20px;overflow:hidden;border:1px solid var(--line);height:230px;position:relative;background:#0c1014}
@@ -142,8 +147,14 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
 
   <div class="chips">
     <div class="chip" id="cGps">GPS —</div>
-    <div class="chip" id="cMode">—</div>
     <div class="chip" id="cSpd">—</div>
+    <div class="chip" id="cSlope">TILT —</div>
+    <div class="chip" id="cOh">OVERHEAD —</div>
+  </div>
+
+  <div class="cams">
+    <div class="cam"><img id="camFront" alt="front camera"><span class="cl">FRONT · obstacle + vision</span></div>
+    <div class="cam"><img id="camRear" alt="rear camera"><span class="cl">REAR</span></div>
   </div>
 
   <div class="mapcard">
@@ -291,8 +302,13 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>cmd('mode',{mo
 
 function verbFor(s){
   if(s.estop) return ['EMERGENCY STOP','bad'];
+  if(s.mission==='running'){
+    if((s.slope||0)>15) return ['TOO STEEP','bad'];
+    if((s.overhead_m??9)<1.6) return ['LOW BRANCH','warn'];
+    if(s.obstacle) return ['HOLDING','warn'];
+    return ['MOWING','go'];
+  }
   if(s.obstacle) return ['HOLDING','warn'];
-  if(s.mission==='running') return ['MOWING','go'];
   if(s.mission==='teaching') return ['LEARNING PATH','go'];
   if(s.mission==='paused') return ['PAUSED','warn'];
   if(s.armed) return ['READY','go'];
@@ -326,8 +342,12 @@ function render(s){
   // chips
   const fix=(s.gps_fix||'').toUpperCase().replace('_',' ');
   document.getElementById('cGps').innerHTML='GPS <b>'+fix+'</b> · '+s.sats;
-  document.getElementById('cMode').innerHTML='HDG <b>'+(s.heading||0).toFixed(0)+'°</b>';
   document.getElementById('cSpd').innerHTML='<b>'+(s.speed??0).toFixed(1)+'</b> m/s';
+  const sl=document.getElementById('cSlope'); sl.innerHTML='TILT <b>'+(s.slope||0).toFixed(0)+'°</b>';
+  sl.className='chip '+(s.slope>15?'bad':(s.slope>=12?'warn':''));
+  const oh=document.getElementById('cOh'), ohv=(s.overhead_m??9);
+  oh.innerHTML='OVERHEAD <b>'+(ohv>=5?'clear':ohv.toFixed(1)+'m')+'</b>';
+  oh.className='chip '+(ohv<1.6?'bad':(ohv<2.0?'warn':''));
   // controls
   document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('active',x.dataset.mode===s.mode));
   const arm=document.getElementById('armBtn'); arm.textContent=s.armed?'Disarm':'Arm'; arm.classList.toggle('armed',s.armed);
@@ -343,5 +363,13 @@ function render(s){
 const es=new EventSource('/events');
 es.onmessage=e=>{try{render(JSON.parse(e.data));}catch(_){}}
 es.onerror=()=>{document.getElementById('off').style.display='flex';}
+
+// live camera feeds (sim: synthetic SVG; real hardware: MJPEG). cache-bust each refresh.
+function refreshCams(){
+  const t=Date.now();
+  const f=document.getElementById('camFront'); if(f) f.src='/camera/front.svg?'+t;
+  const r=document.getElementById('camRear');  if(r) r.src='/camera/rear.svg?'+t;
+}
+refreshCams(); setInterval(refreshCams, 600);
 </script>
 </body></html>

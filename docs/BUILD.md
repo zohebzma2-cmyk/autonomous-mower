@@ -71,15 +71,13 @@ A 52" deck spins ~3 lb of steel at ~18,000 fpm tip speed. An autonomous bug here
 
 ---
 
-## 4. Perception — LiDAR + camera + AI
+## 4. Perception & safety sensors — obstacle, height, incline, cameras
 
-- **RPLidar A1 (2D, 360°):** primary obstacle *safety* sensor. Pi reads the scan; anything inside a stop-zone polygon in front/around → MAVLink command to HOLD. Simple, reliable, runs first.
-- **Pi Camera 3 + Hailo-8L (13 TOPS):** the AI layer. Phase-3 jobs:
-  - grass-vs-not-grass segmentation (mow only what should be mowed),
-  - obstacle classification (person/pet/toy vs grass clump),
-  - row-edge following to refine GPS coverage.
-  Models run on the Hailo accelerator so the Pi 5 CPU stays free. Start with a pretrained segmentation model; fine-tune on your yard's photos over time.
-- **Sensor fusion order of authority:** E-stop > RC > LiDAR stop-zone > ArduPilot nav > camera AI hints. AI never *adds* motion authority; it only refines or vetoes.
+- **RPLidar A1 (2D, 360°) — horizontal obstacle:** Pi reads the scan; anything inside a stop-zone (~2 m) in the path → HOLD. Simple, reliable, runs first.
+- **Overhead clearance — tree-limb / height detection:** the horizontal LiDAR **cannot see overhead**, so a **forward/up-facing JSN-SR04T waterproof ultrasonic** (or VL53L1X ToF) watches the height above/ahead. If clearance drops below the machine's tallest point (the **GPS mast**, ~1.6 m incl. margin) → STOP, so the mast/antenna never strikes a low branch. (`safety.MIN_OVERHEAD_M`.)
+- **Incline / hill safety — IMU (no new hardware):** the Pixhawk IMU gives roll/pitch. A **max-slope cutoff (~15°, the ZTR side-slope rollover limit)** refuses to arm or move above it (`safety.MAX_SLOPE_DEG`), with a 12° caution band. **Mowing strategy on slopes: drive up/down the fall line, not across** (side-slope is the rollover axis) — the coverage planner orients rows accordingly on graded zones.
+- **Cameras (front + rear):** 2× Pi Camera 3 (Pi 5 has two CSI ports), shown as **live feeds in the control UI**. Front feeds Hailo vision (grass-vs-not, obstacle classification, row-edge following); rear is situational. Phase-3 AI runs on the Hailo so the Pi CPU stays free.
+- **Sensor-fusion order of authority:** physical E-stop > RC kill > **incline cutoff** > **overhead stop** > LiDAR obstacle > ArduPilot nav > camera-AI hints. AI never *adds* motion authority; it only refines or vetoes. This policy lives in `software/companion/safety.py` (unit-tested).
 
 ---
 
