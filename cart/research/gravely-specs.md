@@ -1,5 +1,26 @@
 # Gravely 52" Seated Zero-Turn — Real Published Specs (for CAD retrofit)
 
+## ✅ MODEL CONFIRMED BY OWNER (2026-06-26): Gravely **ZT X 52** (residential)
+Verified from allmachines.com / Gravely / dealer spec pages — these REPLACE the earlier ZT XL/HD nominals:
+| Spec | ZT X 52 value | Retrofit impact |
+|------|---------------|-----------------|
+| **PTO / blade clutch** | **ELECTRIC WARNER** (12 V) | ✅ relay-switched PTO design is CORRECT |
+| Engine | Kawasaki **FR691V**, 23 hp, 726 cc | throttle servo only |
+| Transaxles | Hydro-Gear **EZT** (serviceable) | return-to-neutral sprung → stout actuator (169 lbf ample) |
+| Forward speed | 7 mph (3.1 m/s) | nav speed cap |
+| Deck | 52″ = 1321 mm, 11-ga fabricated, 3 spindles | ✅ matches |
+| Rear tires | **20×10-8** (508 mm dia, 254 wide) | mower mock updated (was 22″) |
+| Front casters | **11×6-5** (279 mm dia, 152 wide) | mower mock updated |
+| Weight | 695 lb | (lighter than ZT HD) |
+| Overall | L 74.5″/1892 · W 55.6″/1412 (no chute) · H 46″/1168 | — |
+| **ROPS** | **NONE (no factory roll bar)** | ⚠️ GPS mast mounts to SEAT FRAME / fabricated post, not a ROPS clamp |
+| Lap bars | round tubular steel; OD **unpublished** | MIC the OD before cutting clamps |
+| Serial plate | ZT X = **915xxx / 918011**-class (under seat) | confirm exact unit |
+
+Sources: allmachines.com/mowers/gravely-zt-x-52-kawasaki · tkpowerequipment.com (918011) · aeoutdoorpower.com (915257).
+
+---
+
 Research date: 2026-06-26. Purpose: replace nominal CAD parameters with published
 manufacturer/dealer numbers for the owner's "Gravely 52 inch" twin-lap-bar seated ZT.
 

@@ -1,6 +1,9 @@
 # Autonomous Zero-Turn Retrofit — Build & Safety Spec
 
-**Reference machine:** Gravely ZT 52" (seated ZTR, twin lap bars)
+**Machine (confirmed):** Gravely **ZT X 52** (residential seated ZTR, twin lap bars) — 23 hp Kawasaki FR691V,
+**electric Warner PTO clutch** (12 V, relay-switched ✓), Hydro-Gear EZT transaxles, 11-ga 52″ fabricated deck,
+695 lb, **no factory ROPS**. → The PTO relay design is correct for this machine; the GPS mast mounts to the
+**seat-frame upright or a fabricated post** (not a roll-bar), since the ZT X has no ROPS.
 **Goal:** a seat-mountable retrofit that makes a gas ZTR drive itself, with GPS + LiDAR + camera + AI, trainable by driving it once, reproducible on any zero-turn by re-measuring a handful of dimensions.
 **Status:** design + CAD + cart. Not yet built. Read the Safety chapter before powering anything.
 

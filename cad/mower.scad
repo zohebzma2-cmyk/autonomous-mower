@@ -14,14 +14,15 @@ M_DECK_H      = 110;    // deck shell height
 M_FRAME_L     = 1500;   // main frame rail length
 M_FRAME_W     = 560;    // rail centre-centre  (~ lap bar spacing)
 M_RAIL        = 50;     // square tube size
-M_REAR_WHEEL_D= 560;    // 22"
-M_REAR_WHEEL_W= 200;
-M_FRONT_CASTER_D = 280; // 11"
-M_FRONT_CASTER_W = 100;
+M_REAR_WHEEL_D= 508;    // ZT X 52: 20x10-8 → 20" dia
+M_REAR_WHEEL_W= 254;    // 10" wide
+M_FRONT_CASTER_D = 279; // 11x6-5 → 11" dia
+M_FRONT_CASTER_W = 152; // 6" wide
 M_WHEELBASE   = 900;
-M_SEAT_Z      = 620;    // seat pan height off ground
+M_SEAT_Z      = 580;    // seat pan height off ground (ZT X, no ROPS, H 46")
 M_ENGINE      = [430, 480, 360];
-M_ROPS_H      = 1100;   // roll bar top above seat pan
+M_HAS_ROPS    = false;  // ZT X 52 has NO factory ROPS (residential) → GPS mast mounts to seat frame
+M_ROPS_H      = 1100;   // (only used if a ROPS is fitted)
 
 // Ground = z0. Rear axle centred at x=0; front casters forward (+X).
 
@@ -100,7 +101,7 @@ module mower(lap_angle=0) {
     mower_deck();
     mower_engine();
     mower_seat();
-    mower_rops();
+    if (M_HAS_ROPS) mower_rops();
     mower_lapbar(side=+1, angle=lap_angle);
     mower_lapbar(side=-1, angle=lap_angle);
 }

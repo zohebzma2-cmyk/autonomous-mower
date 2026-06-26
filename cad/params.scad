@@ -20,13 +20,17 @@ $fn = $preview ? 48 : 120;
 // ============================================================================
 //  SECTION 1 — MACHINE-SPECIFIC ("ANY ZTR") MEASUREMENTS
 //  >>> THESE ARE THE ONLY NUMBERS YOU MUST RE-MEASURE PER MACHINE <<<
-//  Defaults are NOMINAL for a Gravely ZT X/XL 52" (res) or ZT HD 52".
-//  >>> READ THE MODEL/SERIAL PLATE (under seat / LH frame rail) to confirm:
-//      918015 = ZT XL 52,  991083 = ZT HD 52.  Then MEASURE the items below.
-//  VERIFIED (Gravely spec pages): deck = 52" = 1321mm; electric 12V Warner PTO
-//  clutch (relay-switched); 23hp Kawasaki FR691V; 12V Group-U1 battery;
-//  lap bars = ROUND tubular steel; return-to-neutral is SPRING/DAMPER loaded
-//  (OEM 09282900) -> actuator must overcome a centering force (size for it).
+//  CONFIRMED machine: Gravely ZT X 52 (residential).  Verified specs:
+//    PTO = ELECTRIC WARNER clutch (12V, relay-switched) -> our design is correct.
+//    23 hp Kawasaki FR691V (726cc); Hydro-Gear EZT transaxles; 7 mph fwd.
+//    deck 52"=1321mm 11-ga fabricated; rear 20x10-8 (508mm dia, 254 wide);
+//    front casters 11x6-5 (279mm dia, 152 wide); weight 695 lb;
+//    overall L 74.5"/1892 · W 55.6"/1412 (no chute) · H 46"/1168.
+//    lap bars = ROUND tubular steel; return-to-neutral is SPRING/DAMPER loaded
+//    -> actuator must overcome a centering force (the 169-lbf unit is ample).
+//  *** ZT X has NO factory ROPS *** -> the GPS mast cannot clamp a roll-bar post;
+//      mount it to the seat-frame upright or a fabricated post (see gps_mast.scad).
+//  Lap-bar tube OD is NOT published -> MIC it. Serial plate (under seat): ZT X = 915xxx / 918011-class.
 // ============================================================================
 
 // --- Lap bars (the twin steering levers) ---

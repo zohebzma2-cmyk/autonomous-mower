@@ -1,8 +1,12 @@
 // ============================================================================
 //  GPS ANTENNA MAST MOUNT  —  autonomous zero-turn mower retrofit
-//  Clamps to the vertical ROPS (roll-over bar) post and carries a tall
-//  aluminium mast so the RTK GPS antenna sits HIGH and clear of the metal
-//  frame (metal near a survey antenna kills multipath / sky view).
+//  Clamps to a vertical SQUARE post and carries a tall aluminium mast so the
+//  RTK GPS antenna sits HIGH and clear of metal (metal near a survey antenna
+//  kills multipath / sky view).
+//  *** ZT X 52 HAS NO ROPS *** — there's no roll-bar post to clamp. Bolt a short
+//  ~1.5" (38mm) square-tube stub to the seat frame / rear frame rail and clamp
+//  to THAT (set ROPS_POST to the stub size). For a ROUND seat-frame member use
+//  utils' tube_clamp() instead. Keep the antenna well above the engine/operator.
 //
 //  PRINTED PIECES (each fits the 150x150x150 bed, < 145 mm every axis):
 //    A) PRINT_gps_clamp_a()  — front clamp half + vertical mast socket
