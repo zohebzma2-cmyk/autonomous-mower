@@ -44,6 +44,22 @@ cheaper equivalents exist (1-pack microSD ~$13, 55 ml brush-on 422B ~$15) if you
 
 ---
 
+## A2. On-unit display (touchscreen) — pick one, ~$60–110  *(not yet in cart)*
+
+The same control UI (`software/`) runs full-screen on this, mounted on the unit; your iPad shows the
+same screen over WiFi.
+
+| Option | What | ~$ | Notes |
+|--------|------|---:|-------|
+| **Raspberry Pi Touch Display 2** (DSI) | 7″ official touchscreen | $60 | cleanest integration; **hard to read in direct sun** |
+| 7″ HDMI capacitive touchscreen (1024×600) | generic HDMI+USB-touch | $55–75 | works on any Pi; same sunlight caveat |
+| Sunlight-readable HDMI panel (~1000 nit) | high-brightness 7″ | $130–200 | **daytime-visible** upgrade if the screen must be read outside |
+
+Recommendation: start with the **Pi Touch Display 2 ($60)** for build/bench; move to a sunlight-readable
+panel later if field daytime visibility matters. Want me to add it to the Amazon cart?
+
+---
+
 ## B. Vendor-direct — must order from these sites (NOT on Amazon) — ≈ $596
 
 | Item | Vendor | URL | Price |
@@ -67,8 +83,9 @@ Pixhawk 6C from Holybro and both ArduSimple items together to save on shipping; 
 |---|------:|
 | Amazon cart (parts) | ≈ $909 |
 | Vendor-direct | ≈ $596 |
-| **Full genuine build** | **≈ $1,505** |
-| Optional later: dual-antenna heading +~$100 · own RTK base +~$150 | |
+| On-unit touchscreen (A2) | + ~$60 |
+| **Full genuine build** | **≈ $1,565** |
+| Optional later: dual-antenna heading +~$100 · own RTK base +~$150 · sunlight display +~$120 | |
 
 **Design:** ✅ complete — `docs/BUILD.md`, `docs/PRINT_GUIDE.md`, `cad/` (23 parts, brim-baked, bed-fit), `viewer/`.
 **Filament/printer/mower:** you already have. **Software** (ArduPilot, Mission Planner, NTRIP): free.

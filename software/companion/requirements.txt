@@ -1,0 +1,5 @@
+# Sim mode (default) needs NOTHING — pure stdlib.
+# Install these only for the real-hardware / SITL path (--mav):
+pymavlink>=2.4.40
+# Phase 2 (LiDAR safety): rplidar-roboticia or sllidar driver
+# Phase 3 (camera AI): hailo-rt + opencv-python (on the Pi)

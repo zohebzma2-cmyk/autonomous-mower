@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Mower</title>
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css"/>
+<style>
+:root{
+  --bg:#000;--panel:#15181e;--panel2:#1c2128;--line:#262b33;--ink:#f4f6f8;--mut:#7d8895;
+  --blue:#3e6ae1;--ok:#2ecd8a;--warn:#e8b13a;--bad:#e5504a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);user-select:none;
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none}
+.wrap{max-width:500px;margin:0 auto;min-height:100%;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:16px}
+
+/* header */
+header{display:flex;align-items:center;gap:10px;padding-top:env(safe-area-inset-top)}
+.brand{display:flex;align-items:center;gap:9px;flex:1}
+.mark{width:24px;height:24px;border-radius:50%;border:2.5px solid var(--ok);position:relative}
+.mark::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--ok)}
+.brand b{font-weight:600;font-size:15px;letter-spacing:.2px}
+.brand span{color:var(--mut);font-size:12px}
+.batt{display:flex;align-items:center;gap:7px;font-size:14px;font-variant-numeric:tabular-nums;color:var(--mut)}
+.batt b{color:var(--ink);font-weight:600}
+.cell{width:26px;height:13px;border:1.5px solid var(--mut);border-radius:3px;position:relative;padding:1.5px}
+.cell::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:var(--mut);border-radius:0 1px 1px 0}
+.cell i{display:block;height:100%;background:var(--ok);border-radius:1px;transition:width .6s,background .6s}
+
+/* hero status */
+.status{text-align:center;margin-top:4px}
+.status .verb{font-size:30px;font-weight:600;letter-spacing:.5px;transition:color .3s}
+.status .sub{color:var(--mut);font-size:13.5px;margin-top:3px;height:18px;transition:color .3s}
+.status.bad .verb{color:var(--bad)} .status.warn .verb{color:var(--warn)} .status.go .verb{color:var(--ok)}
+
+/* mower stage */
+.stage{position:relative;height:230px;display:flex;align-items:center;justify-content:center}
+.glow{position:absolute;width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(62,106,225,.16),transparent 70%);transition:background .4s}
+.stage.go .glow{background:radial-gradient(closest-side,rgba(46,205,138,.16),transparent 70%)}
+.stage.bad .glow{background:radial-gradient(closest-side,rgba(229,80,74,.20),transparent 70%)}
+svg.mower{position:relative;height:215px;transition:filter .3s}
+.chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:-6px}
+.chip{font-size:12px;color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:5px 12px}
+.chip b{color:var(--ink);font-weight:600}
+
+/* map */
+.mapcard{border-radius:20px;overflow:hidden;border:1px solid var(--line);height:230px;position:relative;background:#0c1014}
+#map{height:100%;width:100%;filter:saturate(.85) brightness(.92)}
+.maptag{position:absolute;left:12px;top:10px;z-index:500;font-size:11px;color:var(--mut);
+  background:rgba(0,0,0,.55);padding:3px 9px;border-radius:20px;backdrop-filter:blur(6px)}
+.heading-arrow{filter:drop-shadow(0 0 6px rgba(62,106,225,.9))}
+
+/* controls */
+.seg{display:flex;background:var(--panel);border-radius:16px;padding:5px;gap:4px}
+.seg button{flex:1;background:transparent;border:none;color:var(--mut);font-size:14.5px;font-weight:600;
+  padding:13px 0;border-radius:12px;transition:.2s}
+.seg button.active{background:var(--blue);color:#fff}
+.row{display:flex;gap:11px}
+.btn{flex:1;border:none;background:var(--panel);color:var(--ink);font-size:15.5px;font-weight:600;
+  padding:17px 10px;border-radius:16px;min-height:58px;transition:.15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--ink);color:#000}
+.btn.armed{background:var(--ok);color:#04130c}
+.btn.blade.on{background:var(--bad);color:#fff}
+.btn.teach.on{background:var(--blue);color:#fff}
+.btn:disabled{opacity:.35}
+.estop{border:none;border-radius:18px;font-size:17px;font-weight:700;letter-spacing:1.5px;padding:20px;
+  min-height:66px;background:#1a1012;color:var(--bad);box-shadow:inset 0 0 0 1.5px rgba(229,80,74,.45);transition:.15s}
+.estop:active{transform:scale(.98)}
+.estop.engaged{background:var(--bad);color:#fff;box-shadow:none;animation:pulse 1.1s infinite}
+@keyframes pulse{50%{background:#c2403b}}
+.foot{color:#4f5862;font-size:10.5px;text-align:center;margin-top:auto;letter-spacing:.2px}
+.off{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;
+  color:var(--mut);font-size:14px;z-index:900}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="mark"></div><b>Mower</b><span>Gravely ZT 52"</span></div>
+    <div class="batt"><b id="bpct">—</b><span id="bv" style="color:var(--mut)"></span>
+      <div class="cell"><i id="bfill" style="width:0"></i></div></div>
+  </header>
+
+  <div class="status" id="status">
+    <div class="verb" id="verb">—</div>
+    <div class="sub" id="sub"></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="glow"></div>
+    <!-- top-down mower mockup -->
+    <svg class="mower" id="mower" viewBox="0 0 200 215" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- obstacle arc (front) -->
+      <path id="obsArc" d="M55 26 A 50 50 0 0 1 145 26" stroke="#e5504a" stroke-width="5"
+            stroke-linecap="round" opacity="0" fill="none"/>
+      <!-- cutting deck (52") -->
+      <rect id="deck" x="14" y="30" width="172" height="44" rx="14" fill="#20262e" stroke="#2c333d" stroke-width="1.5"/>
+      <!-- blade discs -->
+      <circle id="b1" cx="60" cy="52" r="13" fill="#171c22"/>
+      <circle id="b2" cx="100" cy="52" r="13" fill="#171c22"/>
+      <circle id="b3" cx="140" cy="52" r="13" fill="#171c22"/>
+      <!-- front casters -->
+      <circle cx="36" cy="22" r="8" fill="#11151a"/><circle cx="164" cy="22" r="8" fill="#11151a"/>
+      <!-- frame body -->
+      <rect x="52" y="74" width="96" height="104" rx="16" fill="#262d36"/>
+      <!-- brain box -->
+      <rect x="74" y="96" width="52" height="40" rx="8" fill="#2f3946" stroke="#3e6ae1" stroke-width="1.5"/>
+      <circle cx="100" cy="116" r="6" fill="#3e6ae1" id="brain"/>
+      <!-- seat -->
+      <rect x="76" y="144" width="48" height="30" rx="10" fill="#1b212a"/>
+      <!-- rear drive wheels -->
+      <rect x="20" y="120" width="22" height="70" rx="10" fill="#0e1116" stroke="#222933" stroke-width="1.5"/>
+      <rect x="158" y="120" width="22" height="70" rx="10" fill="#0e1116" stroke="#222933" stroke-width="1.5"/>
+      <!-- gps mast dot -->
+      <circle cx="100" cy="86" r="3.4" fill="#2ecd8a"/>
+    </svg>
+  </div>
+
+  <div class="chips">
+    <div class="chip" id="cGps">GPS —</div>
+    <div class="chip" id="cMode">—</div>
+    <div class="chip" id="cSpd">—</div>
+  </div>
+
+  <div class="mapcard"><div class="maptag">live position</div><div id="map"></div></div>
+
+  <div class="seg" id="seg">
+    <button data-mode="MANUAL">Manual</button>
+    <button data-mode="HOLD">Hold</button>
+    <button data-mode="AUTO">Auto</button>
+  </div>
+  <div class="row">
+    <button class="btn" id="armBtn" onclick="toggleArm()">Arm</button>
+    <button class="btn primary" id="startBtn" onclick="cmd('start')">Start mow</button>
+    <button class="btn" onclick="cmd('pause')">Pause</button>
+  </div>
+  <div class="row">
+    <button class="btn teach" id="teachBtn" onclick="toggleTeach()">Teach path</button>
+    <button class="btn blade" id="bladeBtn" onclick="toggleBlade()">Blade off</button>
+  </div>
+
+  <button class="estop" id="estopBtn" onclick="estop()">EMERGENCY STOP</button>
+  <div class="foot">The on-screen E-STOP commands HOLD · disarm · blade-off. The physical e-stop &amp; RC kill are the real safety chain.</div>
+</div>
+<div class="off" id="off">reconnecting…</div>
+
+<script src="/vendor/leaflet/leaflet.js"></script>
+<script>
+let st={}, map, marker, path, pts=[], mapReady=false;
+
+function initMap(lat,lon){
+  map=L.map('map',{zoomControl:false,attributionControl:false}).setView([lat,lon],18);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20}).addTo(map);
+  L.control.attribution({prefix:false}).addAttribution('© OpenStreetMap').addTo(map);
+  path=L.polyline([],{color:'#2ecd8a',weight:4,opacity:.9}).addTo(map);
+  const icon=L.divIcon({className:'',html:
+    '<svg class="heading-arrow" id="arrow" width="34" height="34" viewBox="0 0 34 34">'+
+    '<circle cx="17" cy="17" r="9" fill="rgba(62,106,225,.25)"/>'+
+    '<path d="M17 4 L25 24 L17 19 L9 24 Z" fill="#3e6ae1" stroke="#fff" stroke-width="1.2"/></svg>',
+    iconSize:[34,34],iconAnchor:[17,17]});
+  marker=L.marker([lat,lon],{icon}).addTo(map);
+  mapReady=true;
+}
+function updateMap(s){
+  if(!mapReady){ initMap(s.lat,s.lon); }
+  const ll=[s.lat,s.lon];
+  marker.setLatLng(ll);
+  const a=document.getElementById('arrow'); if(a) a.style.transform='rotate('+(s.heading||0)+'deg)';
+  if(s.speed>0){ pts.push(ll); path.setLatLngs(pts); }
+  map.panTo(ll,{animate:true,duration:.6});
+}
+
+async function cmd(c,args){try{const r=await fetch('/api/command',{method:'POST',
+  headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:c,args:args||{}})});
+  const j=await r.json(); if(!j.ok) document.getElementById('sub').textContent='⚠ '+j.msg;}catch(e){}}
+function toggleArm(){cmd(st.armed?'disarm':'arm');}
+function toggleBlade(){cmd('blade',{on:!st.blade});}
+function toggleTeach(){cmd(st.mission==='teaching'?'teach_stop':'teach_start');}
+function estop(){st.estop?cmd('clear_estop'):cmd('estop');}
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>cmd('mode',{mode:b.dataset.mode}));
+
+function verbFor(s){
+  if(s.estop) return ['EMERGENCY STOP','bad'];
+  if(s.obstacle) return ['HOLDING','warn'];
+  if(s.mission==='running') return ['MOWING','go'];
+  if(s.mission==='teaching') return ['LEARNING PATH','go'];
+  if(s.mission==='paused') return ['PAUSED','warn'];
+  if(s.armed) return ['READY','go'];
+  return ['PARKED',''];
+}
+function render(s){
+  st=s;
+  document.getElementById('off').style.display = s.connected?'none':'flex';
+  // battery
+  document.getElementById('bpct').textContent=s.battery_pct+'%';
+  document.getElementById('bv').textContent=' '+s.battery_v+'V';
+  const f=document.getElementById('bfill'); f.style.width=s.battery_pct+'%';
+  f.style.background = s.battery_pct>40?'var(--ok)':(s.battery_pct>20?'var(--warn)':'var(--bad)');
+  // status verb
+  const [verb,cls]=verbFor(s);
+  document.getElementById('verb').textContent=verb;
+  document.getElementById('status').className='status '+cls;
+  document.getElementById('stage').className='stage '+cls;
+  let sub = s.mode+' · '+(s.speed??0).toFixed(1)+' m/s';
+  if(s.mission==='teaching') sub='recording · '+s.taught_points+' pts';
+  if(s.estop) sub='tap E-STOP to clear';
+  if(s.obstacle) sub='obstacle '+(s.obstacle_range||'')+' m ahead';
+  document.getElementById('sub').textContent=sub;
+  // mower svg state
+  const deckRed=s.blade && !s.estop;
+  document.getElementById('deck').setAttribute('fill', deckRed?'#3a1714':'#20262e');
+  ['b1','b2','b3'].forEach(id=>document.getElementById(id).setAttribute('fill', deckRed?'#e5504a':'#171c22'));
+  document.getElementById('obsArc').setAttribute('opacity', s.obstacle?'1':'0');
+  document.getElementById('brain').setAttribute('fill', s.connected?'#3e6ae1':'#444');
+  document.getElementById('mower').style.filter = s.estop?'grayscale(.4) brightness(.8)':'none';
+  // chips
+  const fix=(s.gps_fix||'').toUpperCase().replace('_',' ');
+  document.getElementById('cGps').innerHTML='GPS <b>'+fix+'</b> · '+s.sats;
+  document.getElementById('cMode').innerHTML='HDG <b>'+(s.heading||0).toFixed(0)+'°</b>';
+  document.getElementById('cSpd').innerHTML='<b>'+(s.speed??0).toFixed(1)+'</b> m/s';
+  // controls
+  document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('active',x.dataset.mode===s.mode));
+  const arm=document.getElementById('armBtn'); arm.textContent=s.armed?'Disarm':'Arm'; arm.classList.toggle('armed',s.armed);
+  document.getElementById('startBtn').disabled=!(s.mode==='AUTO'&&s.armed&&!s.estop);
+  const bb=document.getElementById('bladeBtn'); bb.textContent='Blade '+(s.blade?'on':'off'); bb.classList.toggle('on',s.blade);
+  document.getElementById('teachBtn').textContent=s.mission==='teaching'?('Stop · '+s.taught_points):'Teach path';
+  document.getElementById('teachBtn').classList.toggle('on',s.mission==='teaching');
+  const e=document.getElementById('estopBtn');
+  e.textContent=s.estop?'TAP TO CLEAR':'EMERGENCY STOP'; e.classList.toggle('engaged',s.estop);
+  // map
+  updateMap(s);
+}
+const es=new EventSource('/events');
+es.onmessage=e=>{try{render(JSON.parse(e.data));}catch(_){}}
+es.onerror=()=>{document.getElementById('off').style.display='flex';}
+</script>
+</body></html>
