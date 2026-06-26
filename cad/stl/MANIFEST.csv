@@ -19,3 +19,6 @@ PRINT_camera_cradle,stl/PRINT_camera_cradle.stl,31.0,50.0,30.5,YES
 PRINT_estop_face,stl/PRINT_estop_face.stl,58.0,58.0,4.0,YES
 PRINT_estop_pedestal_a,stl/PRINT_estop_pedestal_a.stl,92.8,83.1,139.1,YES
 PRINT_estop_pedestal_b,stl/PRINT_estop_pedestal_b.stl,92.8,50.0,30.4,YES
+PRINT_relay_box,stl/PRINT_relay_box.stl,76.0,56.0,45.0,YES
+PRINT_relay_lid,stl/PRINT_relay_lid.stl,76.0,56.0,6.0,YES
+PRINT_throttle_servo_bracket,stl/PRINT_throttle_servo_bracket.stl,56.9,44.0,42.0,YES

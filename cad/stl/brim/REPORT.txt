@@ -1,8 +1,8 @@
 part                            brim  plainXY   brimXY   facets+  OK
 PRINT_box_foot                     5     40.0     50.0      1400  YES
-PRINT_equipment_plate         2     140.0    144.0   2912     YES
-PRINT_upper_shelf                  5    139.5    139.5       944  YES
-PRINT_lapbar_yoke_bottom           6    129.1    135.1      1776  YES
+PRINT_equipment_plate              2    140.0    144.0      2912  YES
+PRINT_upper_shelf                  2    139.3    139.3      4816  YES
+PRINT_lapbar_yoke_bottom           6    127.1    133.1      1776  YES
 PRINT_lapbar_yoke_top              6     68.0     80.0      1776  YES
 PRINT_rail_anchor_bottom           6     57.0     69.0      1456  YES
 PRINT_rail_anchor_top              6     57.0     69.0      1456  YES
@@ -13,9 +13,9 @@ PRINT_lidar_base_a                 6     60.0     72.0       480  YES
 PRINT_lidar_base_b                 6     64.0     72.0       976  YES
 PRINT_lidar_mast_lower             8     82.0     98.0       972  YES
 PRINT_lidar_mast_upper             8     82.0     98.0       972  YES
-PRINT_lidar_top_plate              5    126.0    136.0      1412  YES
+PRINT_lidar_top_plate              5    123.7    133.7      1408  YES
 PRINT_camera_base                  8     44.0     60.0       496  YES
-PRINT_camera_cradle                5     31.0     41.0      2288  YES
+PRINT_camera_cradle                5     31.0     41.0      1488  YES
 PRINT_estop_face                   4     58.0     66.0      1456  YES
 PRINT_estop_pedestal_a             8     92.8    108.8       976  YES
 PRINT_estop_pedestal_b             5     92.8    102.8       480  YES

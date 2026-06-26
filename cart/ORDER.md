@@ -80,6 +80,15 @@ buying there. Move to a sunlight-readable panel later only if field daytime visi
 - **Overhead clearance sensor (tree-limb / height detection)** — **JSN-SR04T waterproof ultrasonic** (~$10, Amazon) mounted forward/up; stops the machine before the GPS mast strikes a low branch. *(add to Amazon cart — exact part being finalized by research)*
 - **Incline safety** — uses the **Pixhawk IMU** (no new hardware): max-slope cutoff (~15° rollover limit) + mow up/down, not across. See `docs/BUILD.md`.
 
+### A4. Control electronics (required by the wiring — `docs/WIRING.md`)
+| Item | Where | ~$ | Why |
+|------|-------|---:|-----|
+| **Holybro PM02 power module** (or buy Pixhawk 6C **+PM02** variant) | Holybro | $25 | clean 5V to Pixhawk POWER1 + battery V/I sensing (do NOT skip) |
+| **ESP32 DevKit** | Amazon | $8 | lap-bar **position controller** — closes the loop FC→pot→BTS7960 (`firmware/lapbar_controller`) |
+| **JSN-SR04T waterproof ultrasonic** | Amazon | $10 | overhead/tree-limb clearance (forward-up) |
+| **+1 40 A relay** (DRIVE-RELAY for the kill chain) | Amazon | $7 | e-stop drops actuator motor power; the Recoil 2-pack covers PTO + drive |
+| | | **+ ≈ $50** | |
+
 Notes: ArduSimple ships from the EU — expect EUR→USD conversion + import shipping/duties. Tip: order the
 Pixhawk 6C from Holybro and both ArduSimple items together to save on shipping; PiShop covers the 3 Pi items.
 
