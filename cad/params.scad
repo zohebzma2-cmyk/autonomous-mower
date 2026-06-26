@@ -20,14 +20,20 @@ $fn = $preview ? 48 : 120;
 // ============================================================================
 //  SECTION 1 — MACHINE-SPECIFIC ("ANY ZTR") MEASUREMENTS
 //  >>> THESE ARE THE ONLY NUMBERS YOU MUST RE-MEASURE PER MACHINE <<<
-//  Defaults below are NOMINAL for a Gravely ZT XL / ZT HD 52". MEASURE YOURS.
+//  Defaults are NOMINAL for a Gravely ZT X/XL 52" (res) or ZT HD 52".
+//  >>> READ THE MODEL/SERIAL PLATE (under seat / LH frame rail) to confirm:
+//      918015 = ZT XL 52,  991083 = ZT HD 52.  Then MEASURE the items below.
+//  VERIFIED (Gravely spec pages): deck = 52" = 1321mm; electric 12V Warner PTO
+//  clutch (relay-switched); 23hp Kawasaki FR691V; 12V Group-U1 battery;
+//  lap bars = ROUND tubular steel; return-to-neutral is SPRING/DAMPER loaded
+//  (OEM 09282900) -> actuator must overcome a centering force (size for it).
 // ============================================================================
 
 // --- Lap bars (the twin steering levers) ---
-// Most ZTR lap bars are round or oval steel tube. Measure the OUTSIDE diameter
-// of the GRIP-ARM SECTION where a clamp can sit (not the grip foam).
-LAP_BAR_TUBE_OD      = 25.4;   // [MEASURE] 1.00" round tube nominal
-LAP_BAR_IS_OVAL      = false;  // set true if oval; then set the two axes below
+// VERIFIED round steel (not oval). OD is NOT published by Gravely -> MIC IT.
+// Design the clamp adjustable across ~0.8-1.25" (20-32mm) before cutting.
+LAP_BAR_TUBE_OD      = 25.4;   // [MEASURE] 1.00" round nominal; verified round
+LAP_BAR_IS_OVAL      = false;  // VERIFIED round on Gravely; true only on other ZTRs
 LAP_BAR_OVAL_W       = 31.8;   // [MEASURE] oval major axis (if oval)
 LAP_BAR_OVAL_H       = 19.0;   // [MEASURE] oval minor axis (if oval)
 
