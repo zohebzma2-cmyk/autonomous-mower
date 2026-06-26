@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Autonomous ZTR Retrofit — Final Order</title>
+<style>
+:root{--bg:#0e1116;--card:#161b22;--card2:#1c232c;--ink:#e8edf2;--mut:#94a3b1;--line:#283139;--acc:#36c08a;--amz:#ff9900;--dir:#36c08a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{padding:24px 22px 16px;border-bottom:3px solid var(--acc);background:linear-gradient(180deg,#131922,#0e1116)}
+h1{margin:0 0 3px;font-size:21px}.sub{color:var(--mut);font-size:13px}
+.wrap{max-width:1000px;margin:0 auto;padding:20px}
+.tot{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+.pill{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px}.pill b{font-size:18px;color:var(--acc)}
+h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:26px 0 10px;display:flex;gap:10px;align-items:center}h2 .ln{flex:1;height:1px;background:var(--line)}
+.row{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin:8px 0;display:flex;gap:14px;align-items:center}
+.row .main{flex:1}.name{font-weight:600}.note{color:var(--mut);font-size:12.5px;margin-top:2px}
+.price{font-variant-numeric:tabular-nums;white-space:nowrap;min-width:80px;text-align:right}
+a.buy{display:inline-block;font-size:12.5px;text-decoration:none;border-radius:8px;padding:8px 13px;border:1px solid var(--line);background:var(--card2);color:#bfe9d6;white-space:nowrap}
+a.buy:hover{border-color:var(--acc)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+button{font-size:12.5px;border-radius:8px;padding:9px 13px;border:1px solid var(--line);background:var(--card2);color:var(--ink);cursor:pointer}button:hover{border-color:var(--acc)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:hidden;font-size:13px}
+td,th{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left}th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);background:#10151b}tr:last-child td{border-bottom:none}
+td.p{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.note2{background:#1a1410;border:1px solid #4a3a1c;color:#e8d3a6;border-radius:10px;padding:11px 13px;font-size:13px;margin:16px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--acc);color:#04130c;font-weight:600;padding:9px 16px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none}.toast.show{opacity:1}
+code{background:#10151b;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+</style></head><body>
+<header><div class="wrap" style="padding:0">
+<h1>Autonomous ZTR Retrofit — Final Order</h1>
+<div class="sub">Gravely ZT 52" · design ✅ complete · Amazon cart ✅ loaded · place the 5 vendor-direct items below</div>
+<div class="tot">
+<div class="pill">Amazon cart <b>≈ $909</b></div>
+<div class="pill">Vendor-direct <b>≈ $596</b></div>
+<div class="pill">Full build <b>≈ $1,505</b></div>
+</div></div></header>
+<div class="wrap">
+
+<h2>Place these now — not on Amazon <span class="ln"></span></h2>
+<div class="bar">
+  <button onclick="openAllVendors()">Open all 4 vendor pages</button>
+  <button onclick="copyVendors()">Copy vendor list</button>
+</div>
+<div id="vendors"></div>
+
+<h2>Already in your Amazon cart (review &amp; place) <span class="ln"></span></h2>
+<div class="bar"><a class="buy" href="https://www.amazon.com/gp/cart/view.html" target="_blank" rel="noopener" style="border-color:#5a4413;color:#ffcf80">Open Amazon cart</a></div>
+<table><thead><tr><th>Part</th><th class="p">$</th></tr></thead><tbody id="amz"></tbody>
+<tr><td><b>Amazon subtotal</b></td><td class="p"><b>≈ 908.90</b></td></tr></table>
+
+<div class="note2"><b>Tips:</b> order the Pixhawk (Holybro) + both ArduSimple items together to save shipping; PiShop covers the 3 Pi items. ArduSimple ships from the EU (duties/FX apply). Swap-to-save: microSD 1-pack (~$13) and a 55 ml brush-on 422B (~$15) trim ~$55.</div>
+
+<div class="note">Full per-item detail: <code>cart/ORDER.md</code> · Build &amp; safety: <code>docs/BUILD.md</code> · Print guide: <code>docs/PRINT_GUIDE.md</code></div>
+</div>
+<div class="toast" id="toast">Copied</div>
+<script>
+const VENDORS=[
+ ["Pixhawk 6C flight controller (genuine — avoid eBay clones)","Holybro","https://holybro.com/products/pixhawk-6c","$165.99"],
+ ["simpleRTK2B Budget (u-blox ZED-F9P) RTK board","ArduSimple","https://www.ardusimple.com/product/simplertk2b/","€172 (~$186)"],
+ ["ANN-MB-00 multiband GNSS antenna (IP67)","ArduSimple","https://www.ardusimple.com/product/ann-mb-00-ip67/","€53.80 (~$58)"],
+ ["Raspberry Pi AI HAT+ (Hailo-8L, 13 TOPS)","PiShop","https://www.pishop.us/product/raspberry-pi-ai-hat-13-tops/","$76.95"],
+ ["Raspberry Pi 5, 8 GB (board)","PiShop","https://www.pishop.us/product/raspberry-pi-5-8gb/","~$80"],
+ ["Pi Camera Module 3","PiShop","https://www.pishop.us/product/raspberry-pi-camera-module-3/","$29.25"],
+];
+const AMZ=[["Progressive Automations actuator ×2 (100mm, feedback, IP65)","310.78"],["E-stop IP65/NC","9.96"],["BTS7960 driver 2-pack","13.37"],["FlySky FS-i6X + iA6B","59.99"],["Relay 40A 2-pack","13.99"],["ANNIMOS 25kg servo","17.99"],["Buck 12→5V 5A 2-pack","16.59"],["Buck adjustable 2-pack","7.99"],["RPLidar A1M8","99.00"],["XINYIELE IP67 enclosure (incl. glands+plate)","19.88"],["10 AWG tinned marine 50ft","65.95"],["14 AWG tinned marine 50ft","32.95"],["22 AWG 6-color silicone","24.48"],["MG 422B conformal coating","49.99"],["Permatex dielectric grease","10.49"],["XT60 20-pair + heat shrink","9.99"],["Inline fuse holders + 40 fuses","7.99"],["304 SS M3/M4/M5/M6 kit (1220pc)","21.99"],["12-circuit fuse block w/ neg bus","29.95"],["Heat-set inserts M2–M5 (520pc)","13.59"],["20mm aluminium tube","17.19"],["Split wire loom 3-pack","19.95"],["SanDisk Extreme 64GB A2","34.85"]];
+const v=document.getElementById('vendors');
+for(const [n,vend,url,price] of VENDORS){const d=document.createElement('div');d.className='row';
+ d.innerHTML=`<div class="main"><div class="name">${n}</div><div class="note">${vend}</div></div><div class="price">${price}</div><a class="buy" href="${url}" target="_blank" rel="noopener">Buy at ${vend}</a>`;v.appendChild(d);}
+const a=document.getElementById('amz');
+for(const [n,p] of AMZ){const tr=document.createElement('tr');tr.innerHTML=`<td>${n}</td><td class="p">${p}</td>`;a.appendChild(tr);}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1100);}
+function openAllVendors(){[...new Set(VENDORS.map(x=>x[2]))].forEach((u,i)=>setTimeout(()=>window.open(u,'_blank'),i*250));}
+function copyVendors(){navigator.clipboard.writeText(VENDORS.map(x=>`- ${x[0]} — ${x[1]} — ${x[2]} — ${x[3]}`).join("\n")).then(()=>toast('Vendor list copied'));}
+</script></body></html>
