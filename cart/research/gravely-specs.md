@@ -12,8 +12,10 @@ Owner confirmed: ZT X 52, ~2021, Kohler engine → model **915256 / 918010**-cla
 | Deck | 52″ = 1321 mm, 11-ga fabricated, 3 spindles | ✅ matches |
 | Rear tires | **20×10-8** (508 mm dia, 254 wide) | mower mock updated (was 22″) |
 | Front casters | **11×6-5** (279 mm dia, 152 wide) | mower mock updated |
-| Weight | 695 lb | (lighter than ZT HD) |
-| Overall | L 74.5″/1892 · W 55.6″/1412 (no chute) · H 46″/1168 | — |
+| Weight | **615 lb** (Kohler 915256) | (the 695 lb figure is the Kawasaki 918011 — different chassis) |
+| Overall | **L 77.5″/1968 · W 63.4″/1610 · H 40.9″/1039** (model 915256) | mower mock updated |
+| Lap-bar handle PNs | 05107153 (LH) / 05107053 (RH) "HANDLE, STEERING" | tube OD still unpublished → mic (25–32 mm) |
+| Seat / interlock PNs | seat 05181300, pan 09461053, track 09484351, seat-switch 03654200 | keep seat switch in the interlock |
 | **ROPS** | **NONE (no factory roll bar)** | ⚠️ GPS mast mounts to SEAT FRAME / fabricated post, not a ROPS clamp |
 | Lap bars | round tubular steel; OD **unpublished** | MIC the OD before cutting clamps |
 | Serial plate | ZT X = **915xxx / 918011**-class (under seat) | confirm exact unit |

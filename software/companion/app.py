@@ -259,6 +259,8 @@ class H(BaseHTTPRequestHandler):
             return self._serve_static(self.path)
         if self.path.startswith("/camera/"):
             name = self.path.split("/")[-1].split(".")[0].split("?")[0]
+            if name not in ("front", "rear"):           # allowlist — name flows into SVG output
+                self._send(404, "unknown camera"); return
             self._send(200, _camera_svg(name, S.snapshot()), "image/svg+xml"); return
         if self.path == "/api/state":
             self._send(200, json.dumps(S.snapshot())); return

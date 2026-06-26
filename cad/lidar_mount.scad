@@ -160,9 +160,12 @@ module top_plate() {
             translate([0, 0, TP])
                 bolt_circle(DOME_PCD, 3) cylinder(d = DOME_BOSS_D, h = DOME_BOSS_H);
         }
-        // 3x lidar mount holes — M3 TAP (LIDAR_HOLE_PCD / LIDAR_HOLE_N)
-        bolt_circle(LIDAR_HOLE_PCD, LIDAR_HOLE_N)
-            translate([0, 0, -EPS]) cylinder(d = M3_TAP, h = TP + 2*EPS);
+        // 4x lidar mount holes — EXACT trapezoid (Slamtec LD108 datasheet): two rows
+        // 70mm apart along the long axis; wide-end pair 56mm, narrow-end pair 40mm; Ø3.4.
+        for (sy = [-1, 1]) {
+            translate([ LIDAR_HOLE_ROW/2, sy*LIDAR_HOLE_TOP/2, -EPS]) cylinder(d=LIDAR_HOLE_D, h=TP+2*EPS);
+            translate([-LIDAR_HOLE_ROW/2, sy*LIDAR_HOLE_BOT/2, -EPS]) cylinder(d=LIDAR_HOLE_D, h=TP+2*EPS);
+        }
         // central 12 mm cable pass-through
         translate([0, 0, -EPS]) cylinder(d = CABLE_D, h = TP + 2*EPS);
         // 4x mounting holes down to the upper-mast flange (M4 clearance)

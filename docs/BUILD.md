@@ -54,8 +54,9 @@ A 52" deck spins ~3 lb of steel at ~18,000 fpm tip speed. An autonomous bug here
 
 ## 2. Drive control — lap-bar actuators
 
-- **Actuators:** 2× heavy-duty 12 V linear actuators, **100 mm stroke**, with **position-feedback potentiometer**, **IP66**.
-  **Force spec is critical:** a hydrostatic lap bar + return-to-neutral spring can need **100–220 N** to move. Do **not** use hobby micro-actuators (e.g. Actuonix L16 ≈ 200 N max but slow/fragile under side load). Use a stout 150 N+ unit with a metal clevis. Confirm force on YOUR machine with a fish scale before buying.
+- **Actuators:** 2× 12 V linear actuators, **100 mm (4″) stroke**, **position-feedback pot**. Reference unit = **Progressive Automations PA-14P** (exact CAD dims in `params.scad`): body Ø38.1 mm, retracted 241.6 / extended 343.2 mm pin-to-pin, **1/4″ (6.35 mm) clevis pin both ends**, 6-pin Molex feedback (0–10 kΩ).
+  **⚠ Weatherproofing gap:** the genuine PA-14P is **IP54 (splash only), NOT IP66** — for an outdoor mower add a **rubber rod boot + a shield over the rod/gland**, or source a true IP66 actuator. (The Amazon listing claims "IP65/169 lb"; PA-14P 4″ datasheet is 35–150 lb / IP54 — verify the actual unit on arrival.)
+  **Force:** a hydrostatic lap bar + return-to-neutral spring needs ~**100–220 N**; the 150 lb (≈667 N) SKU is ample. Do not use hobby micro-actuators (Actuonix L16). Confirm force on YOUR machine with a fish scale.
 - **Linkage:** the printed `lapbar_yoke` clamps the bar; a clevis + pushrod ties to the actuator rod. The actuator body anchors to the frame rail via the printed `rail_anchor`. **Drill the lap bar and add a through-pin** — a clamp alone can creep under vibration.
 - **Closed loop:** the feedback pot tells the FC the true lever position → ArduPilot servo output drives the H-bridge until position matches command. Calibrate full-fwd / neutral / full-rev endpoints in Mission Planner.
 - **Neutral safety:** spring return + actuator default-to-center; on power loss the bars must fall to neutral (machine coasts to stop), never stick in gear. Verify this mechanically.

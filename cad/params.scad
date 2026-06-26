@@ -23,9 +23,9 @@ $fn = $preview ? 48 : 120;
 //  CONFIRMED machine: Gravely ZT X 52, ~2021, KOHLER engine (model 915256/918010-class).
 //    PTO = ELECTRIC clutch (Ogura GT, 12V, relay-switched) -> our design is correct.
 //    24 hp Kohler 7000 Pro Twin (725cc); Hydro-Gear EZT / ZT-2200 transaxles; 7 mph fwd.
-//    deck 52"=1321mm 11-ga fabricated; rear 20x10-8 (508mm dia, 254 wide);
-//    front casters 11x6-5 (279mm dia, 152 wide); weight 695 lb;
-//    overall L 74.5"/1892 · W 55.6"/1412 (no chute) · H 46"/1168.
+//    deck 52"=1321mm 11-ga fabricated; rear 20x10-8 (508mm); front 11x6-5 (279mm);
+//    weight 615 lb; overall (KOHLER model 915256) L 77.5"/1968 · W 63.4"/1610 · H 40.9"/1039.
+//    (the 695 lb / 74.5x55.6 numbers belong to the Kawasaki 918011 variant — NOT this machine.)
 //    lap bars = ROUND tubular steel; return-to-neutral is SPRING/DAMPER loaded
 //    -> actuator must overcome a centering force (the 169-lbf unit is ample).
 //  *** ZT X has NO factory ROPS *** -> the GPS mast cannot clamp a roll-bar post;
@@ -34,8 +34,9 @@ $fn = $preview ? 48 : 120;
 // ============================================================================
 
 // --- Lap bars (the twin steering levers) ---
-// VERIFIED round steel (not oval). OD is NOT published by Gravely -> MIC IT.
-// Design the clamp adjustable across ~0.8-1.25" (20-32mm) before cutting.
+// VERIFIED round steel (not oval). OD NOT published (confirmed via Gravely IPL) -> MIC IT.
+// Realistic range 25-32mm (1.0-1.25"); design the clamp band adjustable. Handle part #s:
+// 05107153 (LH) / 05107053 (RH) "HANDLE, STEERING" for model 915256.
 LAP_BAR_TUBE_OD      = 25.4;   // [MEASURE] 1.00" round nominal; verified round
 LAP_BAR_IS_OVAL      = false;  // VERIFIED round on Gravely; true only on other ZTRs
 LAP_BAR_OVAL_W       = 31.8;   // [MEASURE] oval major axis (if oval)
@@ -93,18 +94,22 @@ RTK_HOLE_D = 3.2;                         // 3x M3 on Arduino-Uno pattern; SMA +
 // --- GPS antenna puck (survey/helical, center-bolt mount) [V] ---
 GPS_ANT_DIA = 60; GPS_ANT_H = 22; GPS_ANT_BOLT = 6.4;  // 1/4"-20 center stud
 
-// --- RPLidar A1M8 (2D 360 scanner) ---
-// [!! VERIFY ON ARRIVAL !!] Sources disagree on base diameter (70 vs ~97 mm).
-// Plate is sized to the LARGER value so it can never be too small; drill the
-// 3 mount holes to match YOUR unit (measure the bolt circle with calipers).
-LIDAR_DIA = 99; LIDAR_H = 41;          // generous; verify
-LIDAR_HOLE_PCD = 76;                    // [VERIFY] measure your unit
-LIDAR_HOLE_D = 3.2;
-LIDAR_HOLE_N = 3;
+// --- RPLidar A1M8 (2D 360 scanner) — EXACT from Slamtec LD108 datasheet (Fig 5-2) ---
+// Base is a TEARDROP, not a circle: footprint 96.74 (L) x 70.28 (W) mm; turret Ø70.04;
+// height 51; Ø32 centring boss underneath (use it to register the plate). Cable exits
+// at the pointed (motor) tip. MOUNT = 4 x Ø3.4 holes in a trapezoid about the long axis:
+//   top pair 56 apart, bottom pair 40 apart, 70 between the two rows.
+LIDAR_L = 96.74; LIDAR_W = 70.28; LIDAR_H = 51;
+LIDAR_TURRET_DIA = 70.04; LIDAR_BOSS_DIA = 32;
+LIDAR_HOLE_D = 3.4;
+LIDAR_HOLE_TOP = 56;   // top pair spacing (mm)
+LIDAR_HOLE_BOT = 40;   // bottom pair spacing
+LIDAR_HOLE_ROW = 70;   // row-to-row distance
+LIDAR_DIA = 96.74; LIDAR_HOLE_N = 4;   // legacy aliases (plate sized to the long axis)
 
-// --- Pi Camera Module 3 [DS] ---
-CAM_L = 25; CAM_W = 24; CAM_H = 9;
-CAM_HOLE_DX = 21; CAM_HOLE_DY = 12.5; CAM_HOLE_D = 2.2;
+// --- Pi Camera Module 3 — EXACT from official mech drawing ---
+CAM_L = 25; CAM_W = 24; CAM_H = 11.5;   // standard Z=11.5 (wide=12.4); lens barrel Ø5.75 std / 6.95 wide
+CAM_HOLE_DX = 21; CAM_HOLE_DY = 14.5; CAM_HOLE_D = 2.2;  // vert pitch 14.5 (the "12.5" is optical half-width)
 
 // --- DC-DC buck converter module (qty 2) [V] ---
 BUCK_L = 65; BUCK_W = 37; BUCK_H = 24; BUCK_HOLE_D = 3.2; BUCK_HOLE_INSET = 4;
@@ -113,12 +118,16 @@ BUCK_L = 65; BUCK_W = 37; BUCK_H = 24; BUCK_HOLE_D = 3.2; BUCK_HOLE_INSET = 4;
 ESTOP_PANEL_HOLE = 22.5;     // standard 22mm device cutout
 ESTOP_BEZEL_DIA = 40;
 
-// --- Linear actuator (lap-bar driver, qty 2) [V — confirm your model] ---
-ACT_BODY_DIA   = 45;    // body tube OD
-ACT_STROKE     = 100;   // chosen stroke (>= LAP_BAR_TRAVEL + margin)
-ACT_CLEVIS_W   = 12;    // clevis tang thickness slot
-ACT_CLEVIS_PIN = 8;     // clevis pin diameter
-ACT_RETRACTED_L= 230;   // pin-to-pin retracted (for reach geometry only)
+// --- Linear actuator: Progressive Automations PA-14P, 4" (100mm) stroke, feedback ---
+//   EXACT from the PA dimensional drawing + downloaded STEP (cad/vendor/PA-14.stp).
+//   !! PA-14P is IP54 (splash only), NOT IP66 — for an outdoor mower add a rubber rod
+//      boot + shield over the rod/gland, or source a genuinely IP66 actuator. !!
+//   Force SKUs (35/50/75/110/150 lb) share ONE body, so these bracket dims hold for any.
+ACT_BODY_DIA   = 38.1;  // motor/gearbox section Ø1.50" (barrel tube is Ø29.7)
+ACT_STROKE     = 100;   // 4" stroke
+ACT_CLEVIS_W   = 12;    // clevis tang slot
+ACT_CLEVIS_PIN = 6.35;  // 1/4" clevis pin (eye hole Ø0.25")
+ACT_RETRACTED_L= 241.6; // pin-to-pin retracted (4" stroke); extended 343.2
 
 // ============================================================================
 //  SECTION 3 — ENCLOSURE (the seat-mounted weatherproof "brain box")
