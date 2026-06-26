@@ -42,7 +42,8 @@ class State:
             overhead_m=5.0,                     # upward sensor: branch clearance (m)
             cameras=["front", "rear"],          # camera feeds available
             mode_options=["MANUAL", "HOLD", "AUTO"],
-            taught_points=0, msg="sim: ready",
+            taught_points=0, route_id=None, progress=0,   # active route id + % complete
+            msg="sim: ready",
         )
 
     def snapshot(self):
@@ -77,8 +78,9 @@ def handle_command(cmd, args=None):
     """Apply a control command to state. Returns (ok, message)."""
     d = S.snapshot()
     if cmd == "estop":
-        S.update(estop=True, blade=False, armed=False, mode="HOLD",
-                 mission="idle", speed=0.0, msg="E-STOP — drive + blade killed")
+        S.active_route = []
+        S.update(estop=True, blade=False, armed=False, mode="HOLD", mission="idle",
+                 speed=0.0, route_id=None, progress=0, msg="E-STOP — drive + blade killed")
         return True, "E-STOP engaged"
     if d["estop"] and cmd != "clear_estop":
         return False, "E-STOP is engaged — clear it first"
@@ -94,7 +96,9 @@ def handle_command(cmd, args=None):
         S.update(armed=True, msg="armed")
         return True, "armed"
     if cmd == "disarm":
-        S.update(armed=False, mission="idle", speed=0.0, blade=False, msg="disarmed")
+        S.active_route = []
+        S.update(armed=False, mission="idle", speed=0.0, blade=False,
+                 route_id=None, progress=0, msg="disarmed")
         return True, "disarmed"
     if cmd == "mode":
         m = (args or {}).get("mode", "")
@@ -138,6 +142,7 @@ def handle_command(cmd, args=None):
         S.active_route = list(r["points"]); S.route_idx = 0
         lat0, lon0 = r["points"][0]
         S.update(mode="AUTO", mission="running", lat=lat0, lon=lon0,
+                 route_id=r["id"], progress=0,
                  msg=f"running '{r['name']}' ({len(r['points'])} wpts)")
         return True, "running"
     return False, f"unknown command {cmd}"
@@ -170,11 +175,13 @@ def sim_loop():
             elif S.active_route and S.route_idx < len(S.active_route):
                 tgt = S.active_route[S.route_idx]
                 lat, lon, hdg, reached = missions.step_towards(d["lat"], d["lon"], tgt, STEP)
-                upd.update(lat=lat, lon=lon, heading=hdg, speed=SPD)
+                upd.update(lat=lat, lon=lon, heading=hdg, speed=SPD,
+                           progress=round(S.route_idx / len(S.active_route) * 100))
                 if reached:
                     S.route_idx += 1
                     if S.route_idx >= len(S.active_route):
-                        upd.update(mission="idle", speed=0.0, msg="mission complete ✓"); S.active_route = []
+                        upd.update(mission="idle", speed=0.0, progress=100, msg="mission complete ✓")
+                        S.active_route = []
             else:                                                    # manual start, no route → wander
                 upd.update(speed=SPD, heading=round((d["heading"]+2) % 360, 1))
                 hx = math.cos(math.radians(d["heading"]))
@@ -267,6 +274,11 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(S.snapshot())); return
         if self.path == "/api/missions":
             self._send(200, json.dumps(missions.list_routes())); return
+        if self.path.startswith("/api/route"):
+            from urllib.parse import urlparse, parse_qs
+            rid = parse_qs(urlparse(self.path).query).get("id", [""])[0]
+            r = missions.get_route(rid)
+            self._send(200 if r else 404, json.dumps(r or {"error": "not found"})); return
         if self.path == "/events":
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")

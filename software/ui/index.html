@@ -195,7 +195,7 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
 
 <script src="/vendor/leaflet/leaflet.js"></script>
 <script>
-let st={}, map, marker, path, pts=[], mapReady=false;
+let st={}, map, marker, path, pts=[], mapReady=false, planRoute=null, shownRouteId=null;
 
 function initMap(lat,lon){
   map=L.map('map',{zoomControl:false,attributionControl:false}).setView([lat,lon],18);
@@ -282,12 +282,23 @@ async function delRoute(id){
   loadRoutes();
 }
 setInterval(loadRoutes, 4000);   // pick up teach-saved routes
+async function loadPlan(id){
+  try{ const r=await (await fetch('/api/route?id='+encodeURIComponent(id))).json();
+    if(r&&r.points){ if(planRoute) planRoute.remove();
+      planRoute=L.polyline(r.points,{color:'#3a8ddb',weight:3,opacity:.45,dashArray:'4 6'}).addTo(map);
+      map.fitBounds(planRoute.getBounds(),{padding:[30,30],maxZoom:19}); } }catch(e){}
+}
 function updateMap(s){
   if(!mapReady){ initMap(s.lat,s.lon); }
+  if(s.route_id!==shownRouteId){                    // new run (or cleared) → reset overlays
+    shownRouteId=s.route_id; pts=[]; path.setLatLngs([]);
+    if(s.route_id) loadPlan(s.route_id);
+    else if(planRoute){ planRoute.remove(); planRoute=null; }
+  }
   const ll=[s.lat,s.lon];
   marker.setLatLng(ll);
   const a=document.getElementById('arrow'); if(a) a.style.transform='rotate('+(s.heading||0)+'deg)';
-  if(s.speed>0){ pts.push(ll); path.setLatLngs(pts); }
+  if(s.speed>0){ pts.push(ll); path.setLatLngs(pts); }     // green = actually mowed
   map.panTo(ll,{animate:true,duration:.6});
 }
 
@@ -328,6 +339,7 @@ function render(s){
   document.getElementById('status').className='status '+cls;
   document.getElementById('stage').className='stage '+cls;
   let sub = s.mode+' · '+(s.speed??0).toFixed(1)+' m/s';
+  if(s.mission==='running' && s.route_id!=null) sub += ' · '+(s.progress||0)+'% mowed';
   if(s.mission==='teaching') sub='recording · '+s.taught_points+' pts';
   if(s.estop) sub='tap E-STOP to clear';
   if(s.obstacle) sub='obstacle '+(s.obstacle_range||'')+' m ahead';

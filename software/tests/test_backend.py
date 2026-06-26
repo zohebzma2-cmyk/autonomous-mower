@@ -130,6 +130,18 @@ def test_run_route_requires_armed_and_valid_id():
     assert ok and app.S.snapshot()["mission"] == "running" and app.S.active_route
     missions.delete_route(rid)
 
+def test_run_route_sets_progress_and_clears():
+    reset(); app.S.update(gps_fix="rtk_fixed")
+    rid = missions.add_taught("r", [[42.8060,-71.3675],[42.8061,-71.3675],[42.8062,-71.3675]])
+    app.handle_command("arm")
+    app.handle_command("run_route", {"id": rid})
+    s = app.S.snapshot()
+    assert s["route_id"] == rid and s["progress"] == 0, "run sets active route + progress 0"
+    assert len(missions.get_route(rid)["points"]) == 3, "route exposes full points (for /api/route)"
+    app.handle_command("disarm")
+    assert app.S.snapshot()["route_id"] is None, "disarm clears the active route"
+    missions.delete_route(rid)
+
 # ---------------------------------------------------------------- safety: incline / overhead / obstacle
 def test_safety_blocks_steep_incline():
     ok, why = safety.evaluate({"roll": 20, "pitch": 2})
