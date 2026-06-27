@@ -36,7 +36,7 @@ class State:
             blade=False, estop=False,
             gps_fix="rtk_fixed", sats=22, hdop=0.6,
             battery_v=12.9, battery_pct=92, speed=0.0, heading=0.0,
-            lat=42.8062, lon=-71.3673,          # Windham NH-ish
+            lat=39.8283, lon=-98.5795,          # demo default (recenters on the real GPS fix)
             obstacle=False, obstacle_range=None,
             roll=0.0, pitch=0.0, slope=0.0,     # IMU tilt (deg) → incline safety
             overhead_m=5.0,                     # upward sensor: branch clearance (m)

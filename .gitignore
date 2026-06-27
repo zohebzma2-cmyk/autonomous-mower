@@ -4,6 +4,9 @@ cad/vendor/*.step
 cad/vendor/**/*.stp
 cad/vendor/**/*.step
 
+# research scrape cache (raw scraped pages — not part of the project)
+.firecrawl/
+
 # scratch
 cad/.exp_mod*.scad
 *.log

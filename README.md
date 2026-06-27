@@ -59,4 +59,9 @@ openscad assembly.scad                 # see the whole machine
 **Adapting to another zero-turn:** open `cad/params.scad` → SECTION 1, re-measure the lap bars / frame / seat, re-render, re-slice. That's the whole port.
 
 ## Status
-Design + CAD + cart complete. **Not built yet.** This is a multi-month build requiring fabrication and careful, safety-gated commissioning — not plug-and-play. See [`docs/BUILD.md §12`](docs/BUILD.md) for honest limitations.
+Design + CAD + firmware + control software + docs complete and verified (25/25 tests). **Not physically built yet** — a multi-month, safety-gated build, not plug-and-play. See [`docs/BUILD.md §12`](docs/BUILD.md) for honest limitations and [`docs/00-BUILD-MANUAL.md`](docs/00-BUILD-MANUAL.md) to build it.
+
+## License & safety
+Open source under the [MIT License](LICENSE). ⚠️ **This drives a machine with large blades that can kill** — it's released for education/research; you are solely responsible for safe construction, testing, supervision, and local-law compliance. Keep blades disconnected until every failsafe is proven.
+
+*A personal robotics project by [Zoheb Alvi](https://zohebalvi.com).*
