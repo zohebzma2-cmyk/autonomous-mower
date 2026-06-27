@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif">
+<style>
+  .bg{fill:#0e1116}
+  .box{fill:#171c22;stroke:#2a333d;stroke-width:1.5;rx:9}
+  .pwr{fill:#1f1411;stroke:#5a2a24}
+  .safe{fill:#2a0f0c;stroke:#7a2018;stroke-width:2}
+  .comp{fill:#13202c;stroke:#2c4660}
+  .t{fill:#e8edf2;font-size:13px;font-weight:600}
+  .s{fill:#94a3b1;font-size:10.5px}
+  .red{stroke:#e5504a;stroke-width:2.5;fill:none}
+  .blk{stroke:#6b7682;stroke-width:1.5;fill:none}
+  .orn{stroke:#e0a23a;stroke-width:2;fill:none}
+  .sig{stroke:#3a8ddb;stroke-width:1.8;fill:none}
+  .lbl{fill:#cdd6df;font-size:9.5px}
+  .h{fill:#36c08a;font-size:15px;font-weight:700}
+</style>
+<rect class="bg" width="1180" height="760"/>
+<text x="24" y="34" class="h">Autonomous ZT X 52 — system wiring</text>
+<text x="24" y="52" class="s">RED +12V · grey GND · orange 5V · blue signal/UART/PWM · thick red box = e-stop kill chain. See WIRING.md for pin tables.</text>
+
+<!-- POWER COLUMN -->
+<rect class="box pwr" x="24" y="80" width="150" height="56" rx="9"/>
+<text x="34" y="104" class="t">12V Battery</text><text x="34" y="122" class="s">Group U1 · on mower</text>
+<rect class="box pwr" x="24" y="160" width="150" height="44" rx="9"/>
+<text x="34" y="186" class="t">Main fuse 30A</text>
+<rect class="box pwr" x="24" y="228" width="150" height="118" rx="9"/>
+<text x="34" y="252" class="t">Fuse block</text><text x="34" y="270" class="s">+bus / GND bus</text>
+<text x="34" y="292" class="s">5A → Buck #1</text><text x="34" y="308" class="s">3A → Buck #2</text>
+<text x="34" y="324" class="s">2A → PM02</text><text x="34" y="340" class="s">10A → Drive relay</text>
+
+<rect class="box pwr" x="24" y="372" width="150" height="44" rx="9"/><text x="34" y="398" class="t">Buck 12→5V #1</text>
+<rect class="box pwr" x="24" y="440" width="150" height="44" rx="9"/><text x="34" y="466" class="t">Buck 12→5V #2</text>
+<rect class="box pwr" x="24" y="508" width="150" height="44" rx="9"/><text x="34" y="528" class="t">PM02 module</text><text x="34" y="544" class="s">→ Pixhawk POWER1</text>
+
+<!-- SAFETY -->
+<rect class="box safe" x="24" y="592" width="150" height="64" rx="9"/>
+<text x="34" y="616" class="t" style="fill:#ffb9b0">E-STOP (NC×2)</text>
+<text x="34" y="634" class="s" style="fill:#f0b9b1">drops DRIVE+PTO</text>
+<text x="34" y="650" class="s" style="fill:#f0b9b1">relays; signals ESP32</text>
+<rect class="box safe" x="200" y="592" width="150" height="44" rx="9"/><text x="210" y="618" class="t" style="fill:#ffb9b0">DRIVE RELAY 40A</text>
+<rect class="box safe" x="200" y="652" width="150" height="40" rx="9"/><text x="210" y="676" class="t" style="fill:#ffb9b0">PTO RELAY → clutch</text>
+
+<!-- PIXHAWK -->
+<rect class="box comp" x="430" y="100" width="200" height="150" rx="9"/>
+<text x="444" y="126" class="t">Pixhawk 6C</text><text x="444" y="144" class="s">ArduPilot Rover · IMU(slope)</text>
+<text x="444" y="168" class="lbl">SERVO1/3 → ESP32 (L/R PWM)</text>
+<text x="444" y="184" class="lbl">SERVO5 → throttle servo</text>
+<text x="444" y="200" class="lbl">SERVO6 → PTO relay</text>
+<text x="444" y="216" class="lbl">GPS1 ← simpleRTK2B</text>
+<text x="444" y="232" class="lbl">RCIN ← iA6B · TELEM/USB ↔ Pi</text>
+
+<rect class="box comp" x="690" y="100" width="150" height="44" rx="9"/><text x="700" y="120" class="t">simpleRTK2B</text><text x="700" y="136" class="s">+ RTK antenna</text>
+<rect class="box comp" x="690" y="160" width="150" height="44" rx="9"/><text x="700" y="180" class="t">FlySky iA6B</text><text x="700" y="196" class="s">RC override + kill</text>
+<rect class="box pwr" x="690" y="220" width="150" height="40" rx="9"/><text x="700" y="244" class="t">Throttle servo</text>
+
+<!-- ESP32 + drivers + actuators -->
+<rect class="box comp" x="430" y="300" width="200" height="92" rx="9"/>
+<text x="444" y="326" class="t">ESP32 lap-bar controller</text>
+<text x="444" y="346" class="lbl">PWM in ×2 · pot feedback ×2</text>
+<text x="444" y="362" class="lbl">PID → BTS7960 ×2 · e-stop in</text>
+<text x="444" y="378" class="lbl">FAIL-TO-NEUTRAL on loss</text>
+
+<rect class="box comp" x="690" y="300" width="130" height="40" rx="9"/><text x="700" y="324" class="t">BTS7960 #1</text>
+<rect class="box comp" x="690" y="352" width="130" height="40" rx="9"/><text x="700" y="376" class="t">BTS7960 #2</text>
+<rect class="box pwr" x="880" y="300" width="150" height="40" rx="9"/><text x="890" y="324" class="t">L actuator (pot)</text>
+<rect class="box pwr" x="880" y="352" width="150" height="40" rx="9"/><text x="890" y="376" class="t">R actuator (pot)</text>
+
+<!-- PI + sensors -->
+<rect class="box comp" x="430" y="440" width="200" height="120" rx="9"/>
+<text x="444" y="466" class="t">Raspberry Pi 5 + Hailo</text>
+<text x="444" y="486" class="s">companion: web UI, MAVLink,</text>
+<text x="444" y="502" class="s">LiDAR/vision/coverage, safety</text>
+<text x="444" y="524" class="lbl">USB ↔ Pixhawk · USB ← RPLidar</text>
+<text x="444" y="540" class="lbl">CSI0/1 ← cameras · GPIO ← sonar</text>
+
+<rect class="box comp" x="690" y="440" width="150" height="40" rx="9"/><text x="700" y="464" class="t">RPLidar A1 (USB)</text>
+<rect class="box comp" x="690" y="492" width="150" height="40" rx="9"/><text x="700" y="516" class="t">Front + rear cams</text>
+<rect class="box comp" x="690" y="544" width="150" height="40" rx="9"/><text x="700" y="568" class="t">Overhead sonar</text>
+
+<!-- iPad / display -->
+<rect class="box" x="880" y="440" width="150" height="92" rx="9"/>
+<text x="890" y="466" class="t">iPad + on-unit</text><text x="890" y="484" class="t">touchscreen</text>
+<text x="890" y="506" class="s">same web UI over WiFi</text>
+<text x="890" y="522" class="s">+ Chromium kiosk</text>
+
+<!-- POWER LINES (red +12 / orange 5V) -->
+<path class="red" d="M99 136 V160"/>
+<path class="red" d="M99 204 V228"/>
+<path class="red" d="M99 346 V372"/><path class="red" d="M99 416 V440"/><path class="red" d="M99 484 V508"/>
+<path class="red" d="M174 330 H200 V592"/>            <!-- fuse->drive relay -->
+<path class="red" d="M350 614 H400 V330 H430"/>        <!-- drive relay -> ESP32 motor supply path (via BTS) -->
+<path class="orn" d="M174 394 H210 V452 H430"/>        <!-- buck1 -> Pi 5V -->
+<path class="orn" d="M174 462 H196 V350 H430"/>        <!-- buck2 -> ESP32 5V -->
+<path class="red" d="M174 530 H300 V250 H430"/>        <!-- PM02 -> Pixhawk POWER1 -->
+
+<!-- SIGNAL LINES (blue) -->
+<path class="sig" d="M630 175 H660 V346 H690"/>        <!-- SERVO1/3 -> ESP32 (PWM) -->
+<path class="sig" d="M630 192 H690"/>                   <!-- SERVO5 -> throttle servo region -->
+<path class="sig" d="M630 200 H660 V614 H350"/>         <!-- SERVO6 -> PTO relay -->
+<path class="sig" d="M630 216 H690 V122"/>              <!-- GPS1 <- RTK -->
+<path class="sig" d="M630 232 H672 V182"/>              <!-- RCIN <- iA6B -->
+<path class="sig" d="M630 240 H648 V440 H630"/>         <!-- Pixhawk <-> Pi (telem/usb) -->
+<path class="sig" d="M630 330 H690"/>                   <!-- ESP32 -> BTS1 -->
+<path class="sig" d="M630 372 H690"/>                   <!-- ESP32 -> BTS2 -->
+<path class="red" d="M820 320 H880"/><path class="red" d="M820 372 H880"/>  <!-- BTS -> actuators -->
+<path class="sig" d="M1030 320 H1050 V392 H560 V392" /> <!-- pot feedback L (schematic) -->
+<path class="sig" d="M630 524 H690 V460"/>              <!-- Pi <- RPLidar -->
+<path class="sig" d="M630 532 H678 V512"/>              <!-- Pi <- cams -->
+<path class="sig" d="M630 540 H666 V564"/>              <!-- Pi <- sonar -->
+<path class="sig" d="M630 500 H700 V440 M880 486 H840"/><!-- Pi -> iPad/display (wifi, dashed-ish) -->
+
+<!-- e-stop signal to ESP32 -->
+<path class="red" d="M174 624 H210"/>
+<path class="red" d="M350 634 H410 V392 H430"/>
+
+<!-- legend -->
+<rect class="box" x="880" y="600" width="276" height="120" rx="9"/>
+<text x="894" y="624" class="t">Legend</text>
+<line class="red" x1="894" y1="644" x2="924" y2="644"/><text x="932" y="648" class="s">+12 V</text>
+<line class="orn" x1="894" y1="664" x2="924" y2="664"/><text x="932" y="668" class="s">5 V</text>
+<line class="blk" x1="894" y1="684" x2="924" y2="684"/><text x="932" y="688" class="s">GND</text>
+<line class="sig" x1="1010" y1="644" x2="1040" y2="644"/><text x="1048" y="648" class="s">signal/UART/PWM</text>
+<rect class="safe" x="1010" y="658" width="30" height="14" rx="3"/><text x="1048" y="668" class="s">kill chain</text>
+</svg>
