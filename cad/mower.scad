@@ -41,7 +41,7 @@ module mower_frame() mower_mat() {
         cube([M_RAIL, M_FRAME_W+M_RAIL, M_RAIL], center=false);
 }
 
-module mower_wheels() mower_mat() {
+module mower_wheels() mower_blk() {
     // rear drive wheels
     for (y=[-(M_FRAME_W/2+M_REAR_WHEEL_W/2+30), (M_FRAME_W/2+M_REAR_WHEEL_W/2+30)])
         translate([0, y, M_REAR_WHEEL_D/2]) mower_wheel(M_REAR_WHEEL_D, M_REAR_WHEEL_W);
@@ -59,7 +59,7 @@ module mower_engine() mower_mat()
     translate([-M_FRAME_L/2+200+M_ENGINE[0]/2, 0, M_REAR_WHEEL_D/2+M_RAIL+M_ENGINE[2]/2])
         rbox_full(M_ENGINE, 12);
 
-module mower_seat() mower_mat() {
+module mower_seat() mower_blk() {
     // seat pan
     translate([M_WHEELBASE*0.18, 0, M_SEAT_Z])
         rbox_full([SEAT_DEPTH, SEAT_WIDTH, 50], 20);
@@ -76,7 +76,7 @@ module mower_rops() mower_mat() {
 }
 
 // Twin lap bars. angle: 0 = neutral; +fwd. Pivot near the seat front.
-module mower_lapbar(side=1, angle=0) mower_mat() {
+module mower_lapbar(side=1, angle=0) mower_blk() {
     px = M_WHEELBASE*0.18 + SEAT_DEPTH/2 - 40;     // pivot x
     py = side*LAP_BAR_SPACING/2;
     pz = M_SEAT_Z - 60;                            // pivot z

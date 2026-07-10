@@ -115,7 +115,8 @@ module standoff(h=PI5_STANDOFF, d=6, pilot=HEATSET_M3_D, pilot_l=4) {
 // ---- A simple ghost() wrapper to show vendor meshes faintly -----------------
 module ghost() { color([0.6,0.6,0.65,0.35]) children(); }
 module proxy() { color([0.30,0.55,0.85,0.85]) children(); }   // our printed parts
-module mower_mat() { color([0.18,0.18,0.20]) children(); }     // mower steel
+module mower_mat() { color([0.70,0.11,0.10]) children(); }     // Gravely red body
+module mower_blk() { color([0.09,0.09,0.10]) children(); }     // black — wheels, seat, lap bars
 
 // import a vendor STL if present, else render a labelled proxy box of dims.
 module vendor_or_proxy(file, dims, label="part") {
