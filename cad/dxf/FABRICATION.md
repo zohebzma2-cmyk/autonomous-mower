@@ -20,26 +20,28 @@ Send this sheet **plus the referenced files** to the shop (SendCutSend, OSH Cut,
 | Relay lid | `dxf/PRINT_relay_lid.dxf` | 76 × 56 mm | 6 mm | 1 |
 | Nameplate badge | `dxf/PRINT_badge.dxf` | 114 × 34 mm | 3 mm | 1 |
 
-## B. 3D parts — CNC milled (send a STEP)  ⚠ STEP TODO
-These have pockets/bosses/contours → CNC from billet. **STL is not machinable** — re-model each to a STEP solid in FreeCAD/CadQuery from the OpenSCAD dims (see the sourcing doc), then send the STEP + a dimensioned PDF for any threaded/critical part.
+## B. 3D parts — CNC milled (send a STEP)  ✅ STEP solids generated
+These have pockets/bosses/contours → CNC from billet. **STL is not machinable**, so each has been converted to a **solid STEP** with `../stl_to_step.py` (CadQuery/OCP mesh-sew). The STEP files are faceted-but-valid closed solids that instant CNC quoters (SendCutSend, OSH Cut, Xometry) accept for upload. Regenerate locally with `python stl_to_step.py` → `../step/*.step` (gitignored, ~173 MB). For threaded/critical parts also send the dimensioned PDF.
 
-| Part | Source | Envelope (X × Y × Z) | Qty |
+| Part | STEP (regenerate → `step/`) | Envelope (X × Y × Z) | Qty |
 |---|---|---|---|
-| Enclosure foot | `stl/PRINT_box_foot.stl` → STEP | 40 × 40 × 26 mm | 1 |
-| Equipment plate | `stl/PRINT_equipment_plate.stl` → STEP | 140 × 140 × 38 mm | 1 |
-| Frame-rail anchor (lower) | `stl/PRINT_rail_anchor_bottom.stl` → STEP | 57 × 71 × 46 mm | 1 |
-| Frame-rail anchor (upper) | `stl/PRINT_rail_anchor_top.stl` → STEP | 57 × 28 × 46 mm | 1 |
-| GPS mast clamp A | `stl/PRINT_gps_clamp_a.stl` → STEP | 104 × 58 × 50 mm | 1 |
-| GPS mast clamp B | `stl/PRINT_gps_clamp_b.stl` → STEP | 104 × 38 × 50 mm | 1 |
-| LiDAR base A | `stl/PRINT_lidar_base_a.stl` → STEP | 60 × 89 × 28 mm | 1 |
-| LiDAR base B | `stl/PRINT_lidar_base_b.stl` → STEP | 64 × 89 × 34 mm | 1 |
-| LiDAR mast (lower) | `stl/PRINT_lidar_mast_lower.stl` → STEP | 82 × 82 × 112 mm | 1 |
-| LiDAR mast (upper) | `stl/PRINT_lidar_mast_upper.stl` → STEP | 82 × 82 × 112 mm | 1 |
-| Camera base | `stl/PRINT_camera_base.stl` → STEP | 44 × 44 × 50 mm | 1 |
-| Camera cradle | `stl/PRINT_camera_cradle.stl` → STEP | 31 × 50 × 30 mm | 1 |
-| E-stop pedestal A | `stl/PRINT_estop_pedestal_a.stl` → STEP | 93 × 83 × 139 mm | 1 |
-| E-stop pedestal B | `stl/PRINT_estop_pedestal_b.stl` → STEP | 93 × 50 × 30 mm | 1 |
-| Relay box | `stl/PRINT_relay_box.stl` → STEP | 76 × 56 × 45 mm | 1 |
-| Throttle-servo bracket | `stl/PRINT_throttle_servo_bracket.stl` → STEP | 57 × 44 × 42 mm | 1 |
+| Enclosure foot | `step/PRINT_box_foot.step` | 40 × 40 × 26 mm | 1 |
+| Equipment plate | `step/PRINT_equipment_plate.step` | 140 × 140 × 38 mm | 1 |
+| Frame-rail anchor (lower) | `step/PRINT_rail_anchor_bottom.step` † | 57 × 71 × 46 mm | 1 |
+| Frame-rail anchor (upper) | `step/PRINT_rail_anchor_top.step` † | 57 × 28 × 46 mm | 1 |
+| GPS mast clamp A | `step/PRINT_gps_clamp_a.step` | 104 × 58 × 50 mm | 1 |
+| GPS mast clamp B | `step/PRINT_gps_clamp_b.step` | 104 × 38 × 50 mm | 1 |
+| LiDAR base A | `step/PRINT_lidar_base_a.step` | 60 × 89 × 28 mm | 1 |
+| LiDAR base B | `step/PRINT_lidar_base_b.step` | 64 × 89 × 34 mm | 1 |
+| LiDAR mast (lower) | `step/PRINT_lidar_mast_lower.step` | 82 × 82 × 112 mm | 1 |
+| LiDAR mast (upper) | `step/PRINT_lidar_mast_upper.step` | 82 × 82 × 112 mm | 1 |
+| Camera base | `step/PRINT_camera_base.step` | 44 × 44 × 50 mm | 1 |
+| Camera cradle | `step/PRINT_camera_cradle.step` | 31 × 50 × 30 mm | 1 |
+| E-stop pedestal A | `step/PRINT_estop_pedestal_a.step` | 93 × 83 × 139 mm | 1 |
+| E-stop pedestal B | `step/PRINT_estop_pedestal_b.step` | 93 × 50 × 30 mm | 1 |
+| Relay box | `step/PRINT_relay_box.step` | 76 × 56 × 45 mm | 1 |
+| Throttle-servo bracket | `step/PRINT_throttle_servo_bracket.step` | 57 × 44 × 42 mm | 1 |
 
-*Regenerate the DXFs with `./export_dxf.sh`. Bounding boxes auto-measured by `export_stl.sh` (MANIFEST.csv).*
+† The two rail-anchor meshes don't sew into a single closed shell, so their STEP is exported as a sewn surface solid (still uploads/quotes; re-model in FreeCAD if the shop wants a watertight B-rep).
+
+*Regenerate the DXFs with `./export_dxf.sh`, the STEP solids with `python stl_to_step.py`, the drawing PDFs with `python export_drawings.py`. Bounding boxes auto-measured by `export_stl.sh` (MANIFEST.csv).*
