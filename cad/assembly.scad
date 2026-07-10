@@ -69,6 +69,8 @@ module retrofit() {
 // Default "all" renders the whole machine as before.
 SHOW = is_undef(SHOW) ? "all" : SHOW;
 if (SHOW=="all")   { mower(lap_angle=6); retrofit(); }
-if (SHOW=="body")  { mower_frame(); mower_deck(); mower_engine(); }
-if (SHOW=="black") { mower_wheels(); mower_seat(); mower_lapbar(1,6); mower_lapbar(-1,6); }
+if (SHOW=="body")  { mower_frame(); mower_deck(); mower_engine(); mower_footdeck(); mower_fenders(); }
+if (SHOW=="black") { mower_wheels(); mower_seat(); mower_lapbar(1,6); mower_lapbar(-1,6);
+                     mower_casters(); mower_fueltanks(); mower_seatframe(); mower_dash();
+                     mower_engine_detail(); mower_deck_details(); }
 if (SHOW=="retro") retrofit();
