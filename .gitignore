@@ -11,3 +11,16 @@ cad/vendor/**/*.step
 cad/.exp_mod*.scad
 *.log
 .DS_Store
+
+# generated machining STEP (huge faceted solids — regenerate with stl_to_step.py)
+cad/step/
+
+# generated machining outputs (large — regenerate with the scripts)
+cad/step/
+cad/drawings/*.svg
+cad/vendor/*.pdf
+cad/vendor/*.zip
+cad/vendor/*.DWG
+cad/vendor/*.dxf
+cad/vendor/*.SLDPRT
+cad/vendor/*.igs
