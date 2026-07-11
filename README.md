@@ -1,5 +1,13 @@
 # Autonomous Zero-Turn Retrofit Kit
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-3fb950.svg)](LICENSE)
+[![Status: active build](https://img.shields.io/badge/status-active%20build-f0883e.svg)](#status--honest-limitations)
+[![Tests](https://img.shields.io/badge/tests-25%2F25-3fb950.svg)](software/tests)
+[![Autopilot: ArduPilot Rover](https://img.shields.io/badge/autopilot-ArduPilot%20Rover-5ab0ff.svg)](https://ardupilot.org/rover)
+[![Discussions](https://img.shields.io/badge/community-Discussions-3fb950.svg)](https://github.com/zohebzma2-cmyk/autonomous-mower/discussions)
+
+> **Most open-source mowers convert a toy robot-mower. This retrofits a 615 lb commercial gas zero-turn.**
+
 Turn a seated zero-turn mower into a self-driving, iPad-controlled robot — **RTK GPS + LiDAR + cameras + on-device AI** — weatherproofed to live outdoors, and **reproducible on any ZTR** by re-measuring a handful of dimensions.
 
 > **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (25/25 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
@@ -73,6 +81,9 @@ autonomous-mower/
 ├── firmware/
 │   ├── lapbar_controller/   ← ESP32: FC-PWM → pot → BTS7960 position loop, fail-to-neutral
 │   └── ardupilot/           ← rover_params.parm (skid-steer, RTK, geofence, moving-baseline)
+├── hardware/pcb/            ← ★ MowerCarrier: power + kill-chain + ESP32 carrier board
+│   ├── schematic.svg · layout.svg   ← generated (gen_schematic.py / gen_layout.py)
+│   └── README.md · netlist.md · BOM.md · FABRICATION.md
 └── cart/                    ← ORDER.md (real BOM + links), order.html
 ```
 
@@ -157,6 +168,22 @@ Open [`cad/params.scad`](cad/params.scad) → **SECTION 1**, re-measure the lap 
 ## Status & honest limitations
 
 Design + CAD + firmware + control software + docs are complete and verified (25/25 tests). The build is **in progress in person**. Remaining work is hardware-gated: SITL/on-FC validation of the MAVLink handshake, training the Hailo `.hef` model, and the future fleet/RaaS layer. See [`docs/BUILD.md §12`](docs/BUILD.md).
+
+## Related open-source mowers & rovers
+
+This project stands on the shoulders of a great open community — go star these too:
+
+- **[OpenMower](https://github.com/ClemensElflein/OpenMower)** (Clemens Elflein) — the flagship: retrofits *consumer* robot mowers with a custom mainboard + RTK + ROS. Same RTK/Pi/vision philosophy; we take it to a full-size gas ZTR.
+- **[Ardumower / Sunray](https://github.com/Ardumower/Sunray)** — the original DIY-mower ecosystem; Sunray pioneered RTK-without-a-perimeter-wire.
+- **[ArduPilot Rover](https://ardupilot.org/rover)** — the autopilot this build runs. The [robot-mower threads](https://discuss.ardupilot.org/t/robot-mower-based-on-ardurover/61999) on their Discourse are the best place to talk shop.
+- **[Twisted Fields — Acorn](https://github.com/Twisted-Fields/acorn-precision-farming-rover)** & **[FarmBot](https://github.com/farmbot)** — adjacent open outdoor-autonomy / ag-robotics done well.
+
+## Community & contributing
+
+- 💬 **[GitHub Discussions](https://github.com/zohebzma2-cmyk/autonomous-mower/discussions)** — *Show & Tell* your ZTR build, ask in *Q&A*, propose *Ideas*, follow *Build logs*.
+- 🔧 **Adapting to a different zero-turn?** That's the whole point — a new machine profile is the most valuable contribution you can make. See [`Adapting to another zero-turn`](#adapting-to-another-zero-turn) and open a PR with your `params.scad` SECTION 1.
+- 🛠️ **Custom carrier PCB** — the power/kill-chain/ESP32 board lives in [`hardware/pcb/`](hardware/pcb/) (schematic, placement, netlist, BOM). Remix it for your machine.
+- See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the safety-gated workflow. Good first issues are labeled `good first issue`.
 
 ## License & safety
 
