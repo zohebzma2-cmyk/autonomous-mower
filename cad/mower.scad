@@ -32,14 +32,15 @@ M_HAS_ROPS    = false;  // ZT X 52 has NO factory ROPS (residential) → GPS mas
 M_ROPS_H      = 1100;   // (only used if a ROPS is fitted)
 
 M_DECK_X      = 405;    // deck centre (prototype-v1 datum — clears the caster swing)
-M_CHUTE_L     = 185;    // discharge deflector length → overall width ≈ 1610 spec
+M_DECK_SHELL  = 1400;   // deck SHELL width (wider than the 1321 cutting width)
+M_CHUTE_L     = 264;    // discharge deflector length; shell + deflector = 1610 spec width
 M_SEATBACK_TOP= 1039;   // spec overall height = top of the seat back
 
 // Ground = z0. Rear axle centred at x=0; front casters forward (+X).
 
 // ---- envelope self-check (echoed on every render) ---------------------------
 ENV_L = (M_WHEELBASE + M_FRONT_CASTER_D/2) - (-656);          // guard tail → caster front
-ENV_W = 2*(M_DECK_W/2 - 6 + M_CHUTE_L*cos(35));               // deck + deflector down
+ENV_W = M_DECK_SHELL/2 + (M_DECK_SHELL/2 - 6 + M_CHUTE_L*cos(35)); // shell edge → deflector tip
 echo(str("ENVELOPE  L=", ENV_L, " (spec 1968; wheelbase [MEASURE])",
          "  W=", ENV_W, " (spec 1610)",
          "  H=", M_SEATBACK_TOP, " (spec 1039)",
@@ -125,11 +126,11 @@ module mower_frame() mower_mat() {
 module mower_deck() mower_mat() {
     dx = M_DECK_X;
     hull() {                                                       // tapered shell
-        translate([dx-70, 0, M_DECK_Z+M_DECK_H/2]) rbox_full([M_DECK_D-140, M_DECK_W, M_DECK_H], 20);
-        translate([dx+M_DECK_D/2-45, 0, M_DECK_Z+M_DECK_H*0.36]) rbox_full([90, M_DECK_W*0.86, M_DECK_H*0.72], 20);
+        translate([dx-70, 0, M_DECK_Z+M_DECK_H/2]) rbox_full([M_DECK_D-140, M_DECK_SHELL, M_DECK_H], 20);
+        translate([dx+M_DECK_D/2-45, 0, M_DECK_Z+M_DECK_H*0.36]) rbox_full([90, M_DECK_SHELL*0.86, M_DECK_H*0.72], 20);
     }
     // hinged discharge deflector (down position) — sets overall width to spec
-    translate([dx, M_DECK_W/2-6, M_DECK_Z+M_DECK_H-14]) rotate([-35,0,0])
+    translate([dx, M_DECK_SHELL/2-6, M_DECK_Z+M_DECK_H-14]) rotate([-35,0,0])
         translate([0, M_CHUTE_L/2, -5]) rbox([300, M_CHUTE_L, 10], 14);
 }
 
@@ -186,7 +187,7 @@ module mower_branding() mower_blk() {
     translate([ex-M_ENGINE[0]/2-8, 0, ez+M_ENGINE[2]*0.55]) rotate([0,90,0]) rbox([84, 340, 10], 10);
     translate([ex-M_ENGINE[0]/2-8, 0, ez+M_ENGINE[2]*0.55]) rotate([90,0,-90]) raised_text("GRAVELY", 40);
     // GRAVELY along both deck side skirts (rear full-width band of the shell)
-    for (s=[-1,1]) translate([M_DECK_X-180, s*(M_DECK_W/2-0.5), M_DECK_Z+M_DECK_H*0.52])
+    for (s=[-1,1]) translate([M_DECK_X-180, s*(M_DECK_SHELL/2-0.5), M_DECK_Z+M_DECK_H*0.52])
         rotate([0,0, s>0 ? 180 : 0]) rotate([90,0,0]) raised_text("GRAVELY", 42);
     // ZT X 52 on the deck nose
     translate([M_DECK_X+M_DECK_D/2+0.5, 0, M_DECK_Z+M_DECK_H*0.40]) rotate([90,0,90]) raised_text("ZT X 52", 30);
