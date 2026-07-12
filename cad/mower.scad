@@ -25,23 +25,31 @@ M_REAR_WHEEL_D= 508;    // ZT X 52: 20x10-8 → 20" dia (spec)
 M_REAR_WHEEL_W= 254;    // 10" wide (spec)
 M_FRONT_CASTER_D = 279; // 11x6-5 → 11" dia (spec)
 M_FRONT_CASTER_W = 152; // 6" wide (spec)
-M_WHEELBASE   = 900;    // [MEASURE] — compresses overall length vs spec
+M_WHEELBASE   = 1170;   // derived: tail + wheelbase + caster radius = published 1968
+                        // overall length (was 900, which jammed the deck into the
+                        // tyres). Confirm with a tape measure on the real machine.
 M_SEAT_Z      = 580;    // seat pan height off ground
 M_ENGINE      = [430, 480, 360];
 M_HAS_ROPS    = false;  // ZT X 52 has NO factory ROPS (residential) → GPS mast mounts to seat frame
 M_ROPS_H      = 1100;   // (only used if a ROPS is fitted)
 
-M_DECK_X      = 405;    // deck centre (prototype-v1 datum — clears the caster swing)
+M_TAIL        = -658.5; // rear guard-hoop extreme (engine overhang behind axle)
+M_DECK_X      = 620;    // deck centre — rear edge clears the 508 tyres (254+6mm),
+                        // front edge + rollers clear the caster swing by ~50mm
 M_DECK_SHELL  = 1400;   // deck SHELL width (wider than the 1321 cutting width)
 M_CHUTE_L     = 264;    // discharge deflector length; shell + deflector = 1610 spec width
 M_SEATBACK_TOP= 1039;   // spec overall height = top of the seat back
 
+// Blades — 52" triple spindle: 3 x 18" (460mm) blades, 63.5 wide, 5.2 thick
+BLADE_L = 460; BLADE_W = 63.5; BLADE_T = 5.2; BLADE_HOLE = 15.9;
+function blade_pos(i) = [M_DECK_X, i*M_DECK_W*0.3, 112];   // i in -1/0/1
+
 // Ground = z0. Rear axle centred at x=0; front casters forward (+X).
 
 // ---- envelope self-check (echoed on every render) ---------------------------
-ENV_L = (M_WHEELBASE + M_FRONT_CASTER_D/2) - (-656);          // guard tail → caster front
+ENV_L = (M_WHEELBASE + M_FRONT_CASTER_D/2) - M_TAIL;               // guard tail → caster front
 ENV_W = M_DECK_SHELL/2 + (M_DECK_SHELL/2 - 6 + M_CHUTE_L*cos(35)); // shell edge → deflector tip
-echo(str("ENVELOPE  L=", ENV_L, " (spec 1968; wheelbase [MEASURE])",
+echo(str("ENVELOPE  L=", ENV_L, " (spec 1968; wheelbase derived — tape-measure to confirm)",
          "  W=", ENV_W, " (spec 1610)",
          "  H=", M_SEATBACK_TOP, " (spec 1039)",
          "  deck=", M_DECK_W, " (spec 1321)"));
@@ -100,24 +108,24 @@ module mower_rims() mower_mat() {
 //  FRAME — rails, cross members, caster arms, nose plate, rear guard hoop
 // ============================================================================
 module mower_frame() mower_mat() {
-    // two main rails
+    // two main rails — rear datum to just behind the caster posts
     for (y=[-M_FRAME_W/2, M_FRAME_W/2])
-        translate([-M_FRAME_L/2+200, y, M_REAR_WHEEL_D/2])
-            cube([M_FRAME_L, M_RAIL, M_RAIL]);
+        translate([-550, y, M_REAR_WHEEL_D/2])
+            cube([M_WHEELBASE+640, M_RAIL, M_RAIL]);
     // rear cross member (engine deck / actuator anchor rail)
-    translate([-M_FRAME_L/2+250, 0, M_REAR_WHEEL_D/2])
+    translate([-500, 0, M_REAR_WHEEL_D/2])
         cube([M_RAIL, M_FRAME_W+M_RAIL, M_RAIL], center=false);
     // front cross member
     translate([M_WHEELBASE-100, 0, M_REAR_WHEEL_D/2])
         cube([M_RAIL, M_FRAME_W+M_RAIL, M_RAIL], center=false);
     // caster arms — rail nose down to each swivel-post top plate
-    for (s=[-1,1]) bent_tube([[M_FRAME_L/2+195, s*(M_FRAME_W/2-40), M_REAR_WHEEL_D/2+20],
-                              [M_WHEELBASE,     s*(M_FRAME_W/2-40), M_FRONT_CASTER_D/2+150]], 44);
+    for (s=[-1,1]) bent_tube([[M_WHEELBASE+45, s*(M_FRAME_W/2-40), M_REAR_WHEEL_D/2+20],
+                              [M_WHEELBASE,    s*(M_FRAME_W/2-40), M_FRONT_CASTER_D/2+150]], 44);
     // nose plate between the arms
     translate([M_WHEELBASE-12, 0, M_FRONT_CASTER_D/2+165])
         rotate([0,14,0]) rbox_full([90, M_FRAME_W-60, 18], 8);
     // rear engine-guard hoop
-    bent_tube([[-560,-260,M_REAR_WHEEL_D/2], [-656,-260,430], [-656,260,430], [-560,260,M_REAR_WHEEL_D/2]], 34);
+    bent_tube([[-560,-260,M_REAR_WHEEL_D/2], [M_TAIL,-260,430], [M_TAIL,260,430], [-560,260,M_REAR_WHEEL_D/2]], 34);
 }
 
 // ============================================================================
@@ -125,9 +133,15 @@ module mower_frame() mower_mat() {
 // ============================================================================
 module mower_deck() mower_mat() {
     dx = M_DECK_X;
-    hull() {                                                       // tapered shell
-        translate([dx-70, 0, M_DECK_Z+M_DECK_H/2]) rbox_full([M_DECK_D-140, M_DECK_SHELL, M_DECK_H], 20);
-        translate([dx+M_DECK_D/2-45, 0, M_DECK_Z+M_DECK_H*0.36]) rbox_full([90, M_DECK_SHELL*0.86, M_DECK_H*0.72], 20);
+    difference() {                                                 // tapered shell…
+        hull() {
+            translate([dx-70, 0, M_DECK_Z+M_DECK_H/2]) rbox_full([M_DECK_D-140, M_DECK_SHELL, M_DECK_H], 20);
+            translate([dx+M_DECK_D/2-45, 0, M_DECK_Z+M_DECK_H*0.36]) rbox_full([90, M_DECK_SHELL*0.86, M_DECK_H*0.72], 20);
+        }
+        hull() {                                                   // …hollowed underneath (blades live here)
+            translate([dx-70, 0, M_DECK_Z+M_DECK_H/2-16]) rbox_full([M_DECK_D-176, M_DECK_SHELL-36, M_DECK_H], 20);
+            translate([dx+M_DECK_D/2-45, 0, M_DECK_Z+M_DECK_H*0.36-16]) rbox_full([64, M_DECK_SHELL*0.86-36, M_DECK_H*0.72], 20);
+        }
     }
     // hinged discharge deflector (down position) — sets overall width to spec
     translate([dx, M_DECK_SHELL/2-6, M_DECK_Z+M_DECK_H-14]) rotate([-35,0,0])
@@ -141,11 +155,38 @@ module mower_deck_details() mower_blk() {
         cylinder(d=72, h=42);
         translate([0,0,42]) cylinder(d=30, h=10);                      // grease cap
     }
+    for (i=[-1,0,1]) {                                                  // spindle shafts + blade bolts
+        p = blade_pos(i);
+        translate([p[0], p[1], p[2]]) cylinder(d=25.4, h=dz-p[2]+2);
+        translate([p[0], p[1], p[2]-10]) cylinder(d=32, h=10, $fn=6);   // hex blade bolt
+    }
     translate([dx-M_DECK_D*0.32, 0, dz+10])                            // belt / pulley cover
         rbox_full([100, M_DECK_W*0.78, 26], 12);
     for (y=[-M_DECK_W*0.34, M_DECK_W*0.34])                            // anti-scalp rollers
         translate([dx+M_DECK_D*0.46, y, M_DECK_Z-6]) rotate([90,0,0]) cylinder(d=54,h=26,center=true);
 }
+
+// ============================================================================
+//  BLADES — one 18" high-lift blade, modeled CENTERED AT ORIGIN so the GLB
+//  can place three instances as separate nodes and spin them about local Z.
+// ============================================================================
+module mower_blade() {
+    difference() {
+        union() {
+            hull() for (s=[-1,1]) translate([s*(BLADE_L/2-BLADE_W/2), 0, 0])   // bar
+                cylinder(d=BLADE_W, h=BLADE_T);
+            for (s=[-1,1]) translate([s*(BLADE_L/2-42), -s*(BLADE_W/2-9), BLADE_T])  // lift wings
+                rotate([s*38,0,0]) translate([0,0,1]) rbox([84, 26, 14], 6);
+        }
+        translate([0,0,-EPS]) cylinder(d=BLADE_HOLE, h=BLADE_T+2*EPS);          // centre hole
+        for (s=[-1,1]) translate([s*(BLADE_L/2-30), s*(BLADE_W/2-2), BLADE_T*0.45])  // cutting-edge bevels
+            rotate([s*28,0,0]) translate([0,0,10]) cube([140, 30, 20], center=true);
+    }
+}
+module blade_steel() color([0.72,0.73,0.76]) children();
+module mower_blades_placed()                       // static preview placement
+    for (i=[-1,0,1]) translate(blade_pos(i)) rotate([0,0, i*38+18])
+        blade_steel() mower_blade();
 
 // ============================================================================
 //  ENGINE — rounded hood + louvres, pull start, muffler, air filter
@@ -171,8 +212,25 @@ module mower_engine_detail() mower_blk() {
     // muffler + heat shield
     translate([ex, M_ENGINE[1]/2+22, ez+M_ENGINE[2]*0.4]) rotate([90,0,0]) cylinder(d=62,h=95);
     translate([ex, M_ENGINE[1]/2+30, ez+M_ENGINE[2]*0.4+40]) rbox([120, 90, 8], 12);
-    // air-filter canister
+    // air-filter canister + intake elbow (Kohler 7000 style)
     translate([ex, 0, ez+M_ENGINE[2]+26]) rbox_full([120,150,56],22);
+    translate([ex, -70, ez+M_ENGINE[2]+8]) rotate([90,0,0]) cylinder(d=40, h=50);
+    // spin-on oil filter, low on the left flank
+    translate([ex+60, -M_ENGINE[1]/2-14, ez+70]) rotate([90,0,0]) cylinder(d=76, h=90);
+    // dipstick tube (the yellow ring handle is in the accent group)
+    translate([ex-80, -M_ENGINE[1]/2-8, ez+90]) rotate([12,0,0]) cylinder(d=14, h=170);
+}
+
+// Yellow service touch-points — the bits a Kohler owner actually grabs  [accent]
+module mower_accents() color([0.93,0.76,0.13]) {
+    ex = -M_FRAME_L/2+200+M_ENGINE[0]/2; ez = M_REAR_WHEEL_D/2+M_RAIL;
+    // dipstick ring handle atop its tube
+    translate([ex-80, -M_ENGINE[1]/2-8, ez+90]) rotate([12,0,0]) translate([0,0,170])
+        rotate([0,90,0]) rotate_extrude($fn=32) translate([16,0]) circle(d=9);
+    // oil-fill cap beside the tube
+    translate([ex-30, -M_ENGINE[1]/2+30, ez+M_ENGINE[2]*0.72]) cylinder(d=34, h=14);
+    // PTO knob on the dash (yellow pull-up knob, like the real one)
+    translate([M_WHEELBASE*0.34, 86, M_SEAT_Z+26]) { cylinder(d=26, h=16); translate([0,0,16]) cylinder(d=34, h=12); }
 }
 
 // ============================================================================
@@ -228,7 +286,7 @@ module mower_dash() mower_blk() {
         translate([0,0,54]) sphere(d=18);
     }
     translate([dxp, -86, M_SEAT_Z+28]) cylinder(d=16, h=10);                 // key switch
-    translate([dxp, 86, M_SEAT_Z+26]) { cylinder(d=26, h=16); translate([0,0,16]) cylinder(d=34, h=12); } // PTO knob
+    // (yellow PTO knob lives in mower_accents)
 }
 
 // Dual fuel tanks flanking the seat, with filler caps  [black]
@@ -306,8 +364,10 @@ module mower(lap_angle=0) {
     mower_casters();
     mower_deck();
     mower_deck_details();
+    mower_blades_placed();
     mower_engine();
     mower_engine_detail();
+    mower_accents();
     mower_branding();
     mower_fueltanks();
     mower_seat();

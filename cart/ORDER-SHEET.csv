@@ -1,0 +1,38 @@
+section,item,id_or_source,vendor,qty,unit_price_usd,notes
+amazon,Progressive Automations 12V linear actuator 4in 100mm 169lbs potentiometer feedback IP65,search: Progressive Automations 4" 169lbs feedback,Amazon,2,310.78,pair price verified 2026-06-26; needs rod boot outdoors (IP54 body)
+amazon,dstfuy E-stop 22mm IP65 1NC,B0BHQ6JQS4,Amazon,1,9.96,kill-chain mushroom switch
+amazon,BTS7960 (IBT-2) 43A dual H-bridge 2-pack,B0BGR92TCD,Amazon,1,13.37,lap-bar actuator drivers
+amazon,FlySky FS-i6X + iA6B receiver,B0744DPPL8,Amazon,1,59.99,RC override / manual takeover
+amazon,Recoil 40A 5-pin SPDT relays + sockets + fuse holders 2-pack,B08BHR2RM7,Amazon,1,13.99,PTO + drive kill relays
+amazon,ANNIMOS 25kg metal-gear waterproof servo,B07GK1G5FV,Amazon,1,17.99,throttle servo
+amazon,DC-DC buck 12to5V 5A 2-pack,B0DQL5HFQP,Amazon,1,16.59,Pi + peripherals rail
+amazon,Maxmoral LM2596 adjustable buck 2-pack,B07MKQXNWG,Amazon,1,7.99,adjustable rails
+amazon,Slamtec RPLidar A1M8 360deg 2D,B07TJW5SXF,Amazon,1,99.00,obstacle-stop lidar; teardrop base + trapezoid bolt pattern
+amazon,XINYIELE IP67 enclosure 221x170x114mm incl glands + plate,B0C5TKF5CN,Amazon,1,19.88,brain box
+amazon,10/2 AWG tinned marine duplex 50ft,B00MI5I98K,Amazon,1,65.95,main power runs
+amazon,14/2 AWG tinned marine duplex 50ft,B00MI59JD4,Amazon,1,32.95,branch power
+amazon,NAOEVO 22AWG 6-color silicone 60ft each,B0CMLGS4YG,Amazon,1,24.48,signal wiring
+amazon,MG Chemicals 422B silicone conformal coating,B008O9YGQI,Amazon,1,49.99,weatherproofing PCBs; smaller can trims ~$35
+amazon,Permatex 22058 dielectric grease,B000AL8VD2,Amazon,1,10.49,connector weatherproofing
+amazon,XT60 connectors 20 pairs + 80pc heat-shrink,B0GYZ6M37R,Amazon,1,9.99,one power-connector standard
+amazon,Anyongora waterproof inline fuse holders + 40 fuses,B0CL7MLY6T,Amazon,1,7.99,branch fusing
+amazon,304 SS socket-head kit M3/M4/M5/M6 1220pc,search: 1220pcs 304 stainless M3 M4 M5 M6,Amazon,1,21.99,outdoor fasteners
+amazon,Snlazp 12-circuit fuse block w/ negative bus waterproof,B0CP7NLFVD,Amazon,1,29.95,power distribution
+amazon,Kadrick 520pc M2-M5 brass heat-set inserts,B0D5V3TZLB,Amazon,1,13.59,for printed parts
+amazon,uxcell 20mm OD aluminium tube 4x200mm,B09FNX7BRX,Amazon,1,17.19,sensor masts
+amazon,BEST CONNECTIONS split wire loom 3-pack,B07JR7727L,Amazon,1,19.95,harness protection
+amazon,SanDisk Extreme 64GB microSDXC A2 V30,SDSQXAH-064G,Amazon,1,34.85,Pi boot; 1-pack ~$13 alternative
+amazon_a4,ESP32 DevKit,Amazon,Amazon,1,8.00,lap-bar position controller (firmware/lapbar_controller)
+amazon_a4,JSN-SR04T waterproof ultrasonic,Amazon,Amazon,1,10.00,overhead / tree-limb clearance
+amazon_a4,40A SPDT relay (+1 DRIVE-RELAY for kill chain),Amazon,Amazon,1,7.00,e-stop drops actuator motor power
+vendor,Pixhawk 6C flight controller (genuine),https://holybro.com/products/pixhawk-6c,Holybro,1,165.99,avoid eBay clones; consider +PM02 variant
+vendor,Holybro PM02 power module,https://holybro.com,Holybro,1,25.00,clean 5V to POWER1 + V/I sense — do not skip
+vendor,simpleRTK2B Budget (u-blox ZED-F9P),https://www.ardusimple.com/product/simplertk2b/,ArduSimple,1,186.00,EUR 172; EU shipping + duties apply
+vendor,ANN-MB-00 multiband GNSS antenna IP67,https://www.ardusimple.com/product/ann-mb-00-ip67/,ArduSimple,1,58.00,EUR 53.80
+vendor_upgrade,simpleRTK2Blite (2nd RTK board — moving-baseline heading),https://www.ardusimple.com/product/simplertk2blite/,ArduSimple,1,110.00,recommended: ~0.4deg true heading
+vendor_upgrade,ANN-MB-00 (2nd antenna for heading baseline >=50cm),https://www.ardusimple.com/product/ann-mb-00-ip67/,ArduSimple,1,58.00,print 2x gps_mast
+vendor,Raspberry Pi AI HAT+ (Hailo-8L 13 TOPS),https://www.pishop.us/product/raspberry-pi-ai-hat-13-tops/,PiShop,1,76.95,camera AI
+vendor,Raspberry Pi 5 8GB,https://www.pishop.us/product/raspberry-pi-5-8gb/,PiShop,1,80.00,companion computer
+vendor,Pi Camera Module 3 (front — obstacle + vision),https://www.pishop.us/product/raspberry-pi-camera-module-3/,PiShop,1,29.25,
+vendor,Pi Camera Module 3 (rear feed),https://www.pishop.us/product/raspberry-pi-camera-module-3/,PiShop,1,29.25,
+vendor,Raspberry Pi Touch Display 2 (7in DSI on-unit screen),https://www.pishop.us/product/raspberry-pi-touch-display-2/,PiShop,1,60.00,hard to read in direct sun; ~1000-nit panel is the +$120 upgrade

@@ -19,6 +19,10 @@ Turn a seated zero-turn mower into a self-driving, iPad-controlled robot — **R
 
 > 🏁 **New here? Start with [`docs/00-BUILD-MANUAL.md`](docs/00-BUILD-MANUAL.md)** — the end-to-end build sequence.
 >
+> 📓 **How it evolved:** [`docs/DESIGN-LOG.md`](docs/DESIGN-LOG.md) — every iteration, every wrong turn, constraints A–Z.
+> **What's next:** [`docs/ROADMAP-75.md`](docs/ROADMAP-75.md) — 75 planned upgrades.
+> **Ordering:** [`cart/ORDER.md`](cart/ORDER.md) + machine-readable [`cart/ORDER-SHEET.csv`](cart/ORDER-SHEET.csv).
+>
 > 🌐 **Interactive writeup:** [zohebalvi.com/projects/autonomous-mower](https://zohebalvi.com/projects/autonomous-mower.html) — 3D model, live control-UI demo, architecture, and the full parts list with order links.
 
 > ⚠️ **A 52″ mower deck can kill.** Read [`docs/BUILD.md` §0 Safety](docs/BUILD.md) before powering anything. **Blades stay disconnected until drive + navigation + every failsafe is proven.**
