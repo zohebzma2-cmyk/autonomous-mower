@@ -16,8 +16,18 @@ module c_safety() color([0.85,0.18,0.16]) children();   // e-stop (red)
 module c_mast()   color([0.55,0.57,0.60]) children();   // aluminium masts
 
 // ---- subsystem proxies (accurate envelopes) --------------------------------
-module px_brain_box() c_brain()                          // COTS IP65 ~200x150x100
+module px_brain_box() c_brain() difference() {           // COTS IP65 ~200x150x100
     rbox_full([210,160,105], 8);
+    // engraved brand mark + wordmark on the lid (matches badge.scad)
+    translate([0, 0, 52.5-1.4]) linear_extrude(1.6) {
+        translate([-62, 0]) difference() { circle(d=34); circle(d=27); }  // ring
+        translate([-62, 0]) circle(d=17);                                 // centre dot
+        translate([12, 5.5]) text("AUTOACRE", size=13, font="Helvetica:style=Bold",
+                                  halign="center", valign="center");
+        translate([12, -12]) text("autonomous ZTR", size=7.5, font="Helvetica",
+                                  halign="center", valign="center");
+    }
+}
 
 module px_actuator() c_act() {                           // body + extended rod
     rotate([0,90,0]) cylinder(d=ACT_BODY_DIA, h=ACT_RETRACTED_L);
@@ -69,8 +79,9 @@ module retrofit() {
 // Default "all" renders the whole machine as before.
 SHOW = is_undef(SHOW) ? "all" : SHOW;
 if (SHOW=="all")   { mower(lap_angle=6); retrofit(); }
-if (SHOW=="body")  { mower_frame(); mower_deck(); mower_engine(); mower_footdeck(); mower_fenders(); }
+if (SHOW=="body")  { mower_frame(); mower_deck(); mower_engine(); mower_footdeck(); mower_fenders();
+                     mower_rims(); }
 if (SHOW=="black") { mower_wheels(); mower_seat(); mower_lapbar(1,6); mower_lapbar(-1,6);
                      mower_casters(); mower_fueltanks(); mower_seatframe(); mower_dash();
-                     mower_engine_detail(); mower_deck_details(); }
+                     mower_engine_detail(); mower_deck_details(); mower_branding(); }
 if (SHOW=="retro") retrofit();
