@@ -40,11 +40,12 @@ module px_estop()   c_safety() { cylinder(d=30,h=40); translate([0,0,40]) sphere
 module px_mast(h)   c_mast() cylinder(d=20, h=h);
 
 // ---- placement on the machine ----------------------------------------------
-module retrofit() {
-    // 1) brain box on the seat pan
+// Each subsystem is its own module so the GLB can export them as separate
+// nodes (exploded-view animation on the site). retrofit() = the whole kit.
+module retro_brain()                                   // 1) brain box on the seat pan
     translate([M_WHEELBASE*0.18, 0, M_SEAT_Z+25+52]) px_brain_box();
 
-    // 2) actuators: from frame rail up to each lap-bar clamp point
+module retro_actuators()                               // 2) rail up to each lap-bar clamp
     for (s=[-1,1]) {
         cp = lapbar_clamp_pos(s);                 // clamp point (world)
         anchor = [cp[0]-ACT_RETRACTED_L*0.6, cp[1], M_REAR_WHEEL_D/2+M_RAIL+40];
@@ -54,25 +55,34 @@ module retrofit() {
                     px_actuator();
     }
 
-    // 3) GPS mast on the LEFT ROPS post, antenna high & clear
+module retro_gps() {                                   // 3) GPS mast, antenna high & clear
     rops_x = M_WHEELBASE*0.18 - SEAT_DEPTH/2 - 40 + 30;
     translate([rops_x, -M_FRAME_W/2, M_SEAT_Z+200]) {
         px_mast(560);
         translate([0,0,560]) px_gps_ant();
     }
+}
 
-    // 4) LiDAR on a front mast above the front cross member
+module retro_lidar()                                   // 4) LiDAR on a front mast
     translate([M_WHEELBASE-60, 0, M_REAR_WHEEL_D/2+M_RAIL]) {
         px_mast(255);
         translate([0,0,255]) px_lidar();
     }
 
-    // 5) camera just below the LiDAR, looking forward
+module retro_camera()                                  // 5) camera below the LiDAR
     translate([M_WHEELBASE-30, 0, M_REAR_WHEEL_D/2+M_RAIL+180])
         rotate([0,15,0]) px_camera();
 
-    // 6) e-stop on the right frame rail, slap-reachable
+module retro_estop()                                   // 6) e-stop on the right rail
     translate([M_WHEELBASE*0.05, M_FRAME_W/2+30, M_REAR_WHEEL_D/2+M_RAIL]) px_estop();
+
+module retrofit() {
+    retro_brain();
+    retro_actuators();
+    retro_gps();
+    retro_lidar();
+    retro_camera();
+    retro_estop();
 }
 
 // SHOW selects a colour group for multi-material export (-D SHOW='"body"' etc.)
@@ -89,3 +99,10 @@ if (SHOW=="black")  { mower_wheels(); mower_seat(); mower_lapbar(1,6); mower_lap
 if (SHOW=="retro")  retrofit();
 if (SHOW=="accent") mower_accents();
 if (SHOW=="blade")  mower_blade();
+// per-subsystem exports for the exploded-view GLB nodes
+if (SHOW=="retro_brain")     retro_brain();
+if (SHOW=="retro_actuators") retro_actuators();
+if (SHOW=="retro_gps")       retro_gps();
+if (SHOW=="retro_lidar")     retro_lidar();
+if (SHOW=="retro_camera")    retro_camera();
+if (SHOW=="retro_estop")     retro_estop();
