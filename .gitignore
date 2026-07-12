@@ -24,3 +24,8 @@ cad/vendor/*.DWG
 cad/vendor/*.dxf
 cad/vendor/*.SLDPRT
 cad/vendor/*.igs
+
+# python bytecode + companion runtime state
+__pycache__/
+*.pyc
+software/companion/data/

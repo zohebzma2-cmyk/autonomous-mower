@@ -25,6 +25,37 @@ MIN_OVERHEAD_M = MAST_HEIGHT_M + OVERHEAD_MARGIN_M    # 1.60 m
 # --- horizontal obstacle ---
 OBSTACLE_STOP_M = 2.0     # RPLidar stop-zone radius ahead
 
+# --- geofence ---
+# The operator draws a boundary polygon on the map; the machine must never move
+# while outside it. Mirrors ArduPilot's inclusion fence (FENCE_TYPE polygon) —
+# in --mav mode the same polygon is what gets pushed to the FC, this is the
+# companion-side belt to the FC's suspenders.
+FENCE_MIN_POINTS = 3
+
+def point_in_polygon(lat, lon, poly):
+    """Ray-casting point-in-polygon. poly = [[lat,lon], ...]; returns bool.
+    Even-odd rule; points exactly on an edge count as inside (safe side)."""
+    if not poly or len(poly) < FENCE_MIN_POINTS:
+        return False
+    inside = False
+    j = len(poly) - 1
+    for i in range(len(poly)):
+        yi, xi = poly[i][0], poly[i][1]
+        yj, xj = poly[j][0], poly[j][1]
+        if (xi > lon) != (xj > lon):
+            t = (lon - xi) / (xj - xi)
+            if lat < yi + t * (yj - yi):
+                inside = not inside
+        j = i
+    return inside
+
+def fence_breach(s):
+    """True when a fence is set+enabled and the machine is outside it."""
+    poly = s.get("fence") or []
+    if not s.get("fence_enabled") or len(poly) < FENCE_MIN_POINTS:
+        return False
+    return not point_in_polygon(s.get("lat"), s.get("lon"), poly)
+
 def slope_of(roll, pitch):
     """Worst-case tilt magnitude (deg) from roll & pitch."""
     return round(max(abs(roll or 0.0), abs(pitch or 0.0)), 1)
@@ -34,6 +65,8 @@ def evaluate(s):
     Reason is the single most important blocker, checked in priority order."""
     if s.get("estop"):
         return False, "E-STOP"
+    if fence_breach(s):
+        return False, "outside geofence — holding"
     slope = slope_of(s.get("roll"), s.get("pitch"))
     if slope > MAX_SLOPE_DEG:
         return False, f"too steep ({slope:.0f}°) — rollover risk"

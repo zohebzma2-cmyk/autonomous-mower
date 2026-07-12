@@ -84,6 +84,19 @@ def run_mavlink(endpoint, S, _handle_command):
                 set_mode("AUTO")
                 m.mav.command_long_send(m.target_system, m.target_component,
                     mavutil.mavlink.MAV_CMD_MISSION_START, 0, 0, 0, 0, 0, 0, 0, 0)
+        elif cmd == "fence":                          # geofence polygon → ArduPilot inclusion fence
+            pts = args.get("points") or []
+            n = len(pts)
+            if n >= 3:
+                # MISSION_ITEM upload on the FENCE mission type (polygon inclusion vertices)
+                m.mav.mission_count_send(m.target_system, m.target_component, n,
+                    mavutil.mavlink.MAV_MISSION_TYPE_FENCE)
+                for i, (lat, lon) in enumerate(pts):
+                    m.mav.mission_item_int_send(m.target_system, m.target_component, i,
+                        mavutil.mavlink.MAV_FRAME_GLOBAL,
+                        mavutil.mavlink.MAV_CMD_NAV_FENCE_POLYGON_VERTEX_INCLUSION,
+                        0, 0, n, 0, 0, 0, int(lat*1e7), int(lon*1e7), 0,
+                        mavutil.mavlink.MAV_MISSION_TYPE_FENCE)
         # blade / GPIO relay → wired to the safety MCU on the real build
 
     def set_mode(name):

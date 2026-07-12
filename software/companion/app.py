@@ -44,8 +44,10 @@ class State:
             cameras=["front", "rear"],          # camera feeds available
             mode_options=["MANUAL", "HOLD", "AUTO"],
             taught_points=0, route_id=None, progress=0,   # active route id + % complete
+            fence=[], fence_enabled=False, fence_breach=False,   # geofence polygon [[lat,lon],..]
             msg="sim: ready",
         )
+        self.d.update(_load_fence())               # restore a persisted fence
 
     def snapshot(self):
         with self.lock:
@@ -71,6 +73,38 @@ class State:
     def unsubscribe(self, q):
         with self.lock:
             if q in self.subscribers: self.subscribers.remove(q)
+
+# ---------------------------------------------------------------- geofence
+def _fence_path():
+    return os.path.join(missions.DATA, "fence.json")
+
+def _load_fence():
+    try:
+        with open(_fence_path()) as f:
+            j = json.load(f)
+        poly = j.get("fence") or []
+        if len(poly) >= safety.FENCE_MIN_POINTS:
+            return dict(fence=poly, fence_enabled=bool(j.get("enabled", True)))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        pass
+    return {}
+
+def set_fence(polygon):
+    """Set (>=3 points) or clear (empty) the geofence. Returns (ok, msg)."""
+    poly = [[float(p[0]), float(p[1])] for p in (polygon or [])]
+    if poly and len(poly) < safety.FENCE_MIN_POINTS:
+        return False, f"fence needs at least {safety.FENCE_MIN_POINTS} points"
+    enabled = bool(poly)
+    try:
+        os.makedirs(missions.DATA, exist_ok=True)
+        with open(_fence_path(), "w") as f:
+            json.dump({"fence": poly, "enabled": enabled}, f)
+    except OSError:
+        pass                                       # persistence is best-effort
+    S.update(fence=poly, fence_enabled=enabled,
+             fence_breach=safety.fence_breach({**S.snapshot(), "fence": poly, "fence_enabled": enabled}),
+             msg=(f"geofence set ({len(poly)} points)" if enabled else "geofence cleared"))
+    return True, ("set" if enabled else "cleared")
 
 S = State()
 
@@ -166,6 +200,7 @@ def sim_loop():
         overhead = 1.35 if (int(t) % 47) < 2 else 5.0               # occasional low tree limb
         upd.update(roll=roll, pitch=pitch, slope=safety.slope_of(roll, pitch),
                    overhead_m=round(overhead, 2))                   # obstacle now comes from vision.py
+        upd["fence_breach"] = safety.fence_breach(d)                # live geofence status for the UI
 
         if d["mission"] == "running":
             allow, reason = safety.evaluate({**d, **upd})            # incline/overhead/obstacle/estop
@@ -331,6 +366,13 @@ class H(BaseHTTPRequestHandler):
         if self.path == "/api/missions/delete":
             missions.delete_route(p.get("id", ""))
             self._send(200, json.dumps({"ok": True, "msg": "deleted"})); return
+
+        if self.path == "/api/fence":
+            ok, msg = set_fence(p.get("polygon", []))
+            if S.mav_cmd and ok:
+                try: S.mav_cmd("fence", {"points": S.snapshot()["fence"]})   # push to ArduPilot fence
+                except Exception as e: msg += f" [mav: {e}]"
+            self._send(200 if ok else 409, json.dumps({"ok": ok, "msg": msg})); return
 
         self._send(404, json.dumps({"ok": False, "msg": "not found"}))
 

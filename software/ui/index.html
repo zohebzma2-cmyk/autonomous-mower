@@ -161,7 +161,9 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
     <div class="maptag">live position</div>
     <div class="mapctl" id="mapctl">
       <button id="drawBtn" onclick="toggleDraw()">✏︎ Draw zone</button>
+      <button id="fenceBtn" onclick="toggleFence()">⛨ Fence</button>
       <button id="planBtn" class="go" onclick="planZone()" style="display:none">Plan coverage</button>
+      <button id="setFenceBtn" class="go" onclick="setFence()" style="display:none">Set fence</button>
       <button id="clearBtn" class="warn" onclick="clearDraw()" style="display:none">✕</button>
     </div>
     <div class="hint" id="hint">tap the map to add boundary points</div>
@@ -213,28 +215,59 @@ function initMap(lat,lon){
   loadRoutes();
 }
 
-// ---- zone drawing + coverage ----
-let drawing=false, bPts=[], bMarkers=[], bPoly=null, planLayer=null;
+// ---- zone / fence drawing + coverage ----
+let drawing=false, fencing=false, bPts=[], bMarkers=[], bPoly=null, planLayer=null, fenceLayer=null;
 function toggleDraw(){
+  if(fencing) toggleFence();
   drawing=!drawing;
   document.getElementById('drawBtn').textContent = drawing?'Drawing…':'✏︎ Draw zone';
   document.getElementById('drawBtn').classList.toggle('go',drawing);
   document.getElementById('planBtn').style.display = drawing?'block':'none';
-  document.getElementById('clearBtn').style.display = drawing?'block':'none';
+  document.getElementById('clearBtn').style.display = (drawing||fencing)?'block':'none';
   document.getElementById('hint').style.display = drawing?'block':'none';
   if(!drawing) clearDraw(true);
 }
+function toggleFence(){
+  if(drawing) toggleDraw();
+  fencing=!fencing;
+  document.getElementById('fenceBtn').textContent = fencing?'Fencing…':'⛨ Fence';
+  document.getElementById('fenceBtn').classList.toggle('go',fencing);
+  document.getElementById('setFenceBtn').style.display = fencing?'block':'none';
+  document.getElementById('clearBtn').style.display = (drawing||fencing)?'block':'none';
+  const h=document.getElementById('hint');
+  h.style.display = fencing?'block':'none';
+  h.textContent = fencing?'tap the boundary the machine must stay inside — Set with 0 points clears it'
+                         :'tap the map to add boundary points';
+  if(!fencing) clearDraw(true);
+}
 function onMapClick(e){
-  if(!drawing) return;
+  if(!drawing && !fencing) return;
+  const col = fencing ? '#2ecd8a' : '#3e6ae1';
   bPts.push(e.latlng);
-  bMarkers.push(L.circleMarker(e.latlng,{radius:5,color:'#3e6ae1',fillColor:'#3e6ae1',fillOpacity:1}).addTo(map));
+  bMarkers.push(L.circleMarker(e.latlng,{radius:5,color:col,fillColor:col,fillOpacity:1}).addTo(map));
   if(bPoly) bPoly.remove();
-  bPoly=L.polygon(bPts,{color:'#3e6ae1',weight:2,dashArray:'5 5',fillOpacity:.08}).addTo(map);
+  bPoly=L.polygon(bPts,{color:col,weight:2,dashArray:'5 5',fillOpacity:.08}).addTo(map);
 }
 function clearDraw(keepMode){
   bMarkers.forEach(m=>m.remove()); bMarkers=[]; bPts=[];
   if(bPoly){bPoly.remove();bPoly=null;}
-  if(!keepMode && drawing) toggleDraw();
+  if(!keepMode){ if(drawing) toggleDraw(); if(fencing) toggleFence(); }
+}
+async function setFence(){
+  const polygon=bPts.map(ll=>[ll.lat,ll.lng]);           // empty = clear the fence
+  const r=await fetch('/api/fence',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({polygon})});
+  const j=await r.json();
+  document.getElementById('sub').textContent=(j.ok?'':'⚠ ')+j.msg;
+  if(j.ok){ clearDraw(true); toggleFence(); }
+}
+function renderFence(s){
+  const poly=s.fence||[];
+  const key=JSON.stringify(poly);
+  if(renderFence._key===key) return; renderFence._key=key;
+  if(fenceLayer){fenceLayer.remove();fenceLayer=null;}
+  if(poly.length>=3 && s.fence_enabled)
+    fenceLayer=L.polygon(poly,{color:'#2ecd8a',weight:2.5,fillOpacity:.03,interactive:false}).addTo(map);
 }
 async function planZone(){
   if(bPts.length<3){ document.getElementById('sub').textContent='⚠ tap at least 3 boundary points'; return; }
@@ -290,6 +323,7 @@ async function loadPlan(id){
 }
 function updateMap(s){
   if(!mapReady){ initMap(s.lat,s.lon); }
+  renderFence(s);
   if(s.route_id!==shownRouteId){                    // new run (or cleared) → reset overlays
     shownRouteId=s.route_id; pts=[]; path.setLatLngs([]);
     if(s.route_id) loadPlan(s.route_id);
@@ -313,6 +347,7 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>cmd('mode',{mo
 
 function verbFor(s){
   if(s.estop) return ['EMERGENCY STOP','bad'];
+  if(s.fence_breach) return ['OUTSIDE FENCE','bad'];
   if(s.mission==='running'){
     if((s.slope||0)>15) return ['TOO STEEP','bad'];
     if((s.overhead_m??9)<1.6) return ['LOW BRANCH','warn'];

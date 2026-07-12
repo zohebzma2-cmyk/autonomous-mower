@@ -192,6 +192,47 @@ def test_mission_items_encoding():
 def test_mission_items_empty():
     assert mav.to_mission_items([]) == []
 
+# ---------------------------------------------------------------- geofence
+FENCE = SQUARE  # reuse the ~44m x 41m square
+
+def test_point_in_polygon():
+    assert safety.point_in_polygon(42.8062, -71.36725, FENCE), "centre point should be inside"
+    assert not safety.point_in_polygon(42.8070, -71.36725, FENCE), "north of the square is outside"
+    assert not safety.point_in_polygon(42.8062, -71.3660, FENCE), "east of the square is outside"
+    assert not safety.point_in_polygon(42.8062, -71.36725, []), "no polygon = never inside"
+
+def test_fence_breach_blocks_movement():
+    inside = dict(lat=42.8062, lon=-71.36725, fence=FENCE, fence_enabled=True)
+    outside = dict(lat=42.8070, lon=-71.36725, fence=FENCE, fence_enabled=True)
+    ok, _ = safety.evaluate({**inside, "roll": 0, "pitch": 0, "overhead_m": 5})
+    assert ok, "inside the fence must be allowed to move"
+    ok, why = safety.evaluate({**outside, "roll": 0, "pitch": 0, "overhead_m": 5})
+    assert not ok and "geofence" in why, f"outside must hold, got {why!r}"
+
+def test_fence_disabled_is_ignored():
+    outside = dict(lat=42.8070, lon=-71.36725, fence=FENCE, fence_enabled=False,
+                   roll=0, pitch=0, overhead_m=5)
+    ok, _ = safety.evaluate(outside)
+    assert ok, "a disabled fence must not block movement"
+
+def test_estop_outranks_fence():
+    s = dict(estop=True, lat=42.8070, lon=-71.36725, fence=FENCE, fence_enabled=True)
+    ok, why = safety.evaluate(s)
+    assert not ok and why == "E-STOP", "e-stop is always the first reason reported"
+
+def test_set_fence_validates_and_persists():
+    reset()
+    ok, _ = app.set_fence([[42.0, -71.0], [42.1, -71.0]])       # 2 points
+    assert not ok, "a 2-point fence must be rejected"
+    ok, _ = app.set_fence(FENCE)
+    assert ok
+    d = app.S.snapshot()
+    assert d["fence_enabled"] and len(d["fence"]) == 4
+    app.S = app.State()                                          # restart -> reload from disk
+    assert app.S.snapshot()["fence_enabled"], "fence must survive a companion restart"
+    ok, _ = app.set_fence([])                                    # clear
+    assert ok and not app.S.snapshot()["fence_enabled"]
+
 # ---------------------------------------------------------------- runner
 def main():
     tests = sorted(n for n in globals() if n.startswith("test_"))
