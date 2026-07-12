@@ -25,8 +25,12 @@ python3 app.py --port 8080
 # iPad:    http://<computer-LAN-ip>:8080/   (same WiFi)
 ```
 Pure Python stdlib — telemetry is pushed via Server-Sent Events, controls via JSON POST. The sim
-generates plausible telemetry and honors the real control logic (arm-before-start, AUTO-to-mow,
-blade gate, E-STOP → HOLD+disarm+blade-off, LiDAR obstacle hold).
+generates plausible telemetry and honors the real control logic (engine start/choke, arm-before-start,
+AUTO-to-mow, blade gate, geofence hold, no-rut K-turn planning, attachment interlocks — bagger dump,
+DeWalt trimmer, sprayer speed-dosing — and E-STOP → ignition+drive+blade+attachments killed).
+
+Extra flags: `--weather` (open-meteo rain-hold gate, fails open) · `--vision-hef model.hef`
+(real Hailo detection). Tests: `python3 tests/test_backend.py` — **45/45**.
 
 ## Run against ArduPilot SITL (realistic, still no hardware)
 A full simulated rover with real RTK nav, modes, and failsafes. See [`dev/SITL.md`](dev/SITL.md).
