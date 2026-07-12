@@ -8,6 +8,9 @@
 
 > **Most open-source mowers convert a toy robot-mower. This retrofits a 615 lb commercial gas zero-turn.**
 
+![Full assembly — every retrofit subsystem placed on the Gravely ZT X 52](cad/renders/assembly_iso.png)
+*Parametric CAD, spec-matched to the real machine (deck 1321 mm · tyres 508/279 mm · overall height 1039 mm) — [more renders](gallery.html) · [carrier PCB](hardware/pcb/)*
+
 Turn a seated zero-turn mower into a self-driving, iPad-controlled robot — **RTK GPS + LiDAR + cameras + on-device AI** — weatherproofed to live outdoors, and **reproducible on any ZTR** by re-measuring a handful of dimensions.
 
 > **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (25/25 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
