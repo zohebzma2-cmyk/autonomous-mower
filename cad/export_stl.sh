@@ -7,7 +7,7 @@ mkdir -p stl renders
 BED=145.0
 
 # component files (NOT mower.scad / assembly.scad / params / utils)
-FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad)
+FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad attachments_brackets.scad)
 
 echo "part,stl,bbox_x,bbox_y,bbox_z,fits_${BED%.*}" > stl/MANIFEST.csv
 

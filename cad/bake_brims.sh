@@ -6,7 +6,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 mkdir -p stl/brim renders/brim
-FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad)
+FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad attachments_brackets.scad)
 
 # per-part brim width (mm). default 5; tall/warp-prone 8; structural 6; thin plates 4.
 brim_w(){ case "$1" in
@@ -15,6 +15,7 @@ brim_w(){ case "$1" in
   PRINT_lapbar_yoke_bottom|PRINT_lapbar_yoke_top|PRINT_rail_anchor_bottom|PRINT_rail_anchor_top|\
   PRINT_gps_clamp_a|PRINT_gps_clamp_b|PRINT_lidar_base_a|PRINT_lidar_base_b) echo 6;;
   PRINT_estop_face|PRINT_relay_lid) echo 4;;
+  PRINT_duct_adapter) echo 3;;   # 136mm part: keep brim clear of the 150mm bed edge
   *) echo 5;; esac; }
 
 minz_of(){ python3 - "$1" <<'PY'

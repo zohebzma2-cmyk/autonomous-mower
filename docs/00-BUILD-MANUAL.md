@@ -56,7 +56,7 @@ First-timers add learning-curve time; the safety-gated commissioning should **no
 |------|---------:|---------|-------|
 | 0 · Measure machine | ~0.5 h | — | gates the **actuator-bracket** print; do first |
 | Parts procurement | — | **1–2 wk** | Amazon ~2 days; **ArduSimple (EU/customs) is the long pole** |
-| Print 24 parts | ~1 h setup | **~1 wk** printer | ~50 h printer time, ~250–300 g ASA/PETG — mostly unattended; overlaps procurement |
+| Print 24 core parts (+8 Phase-3 attachment brackets) | ~1 h setup | **~1 wk** printer | ~50 h printer time, ~250–300 g ASA/PETG — mostly unattended; overlaps procurement |
 | 3 · Bench brain box + **kill chain** | 6–10 h | | wire power, e-stop FIRST, test FC/RTK/RC with **no actuators** |
 | 4 · Flash + configure | 3–5 h | | ArduPilot Rover + ESP32 firmware + companion bring-up |
 | 5 · Mechanical + harness + calibrate | 10–16 h | | actuators/yokes + through-pin, masts, sensors, run the harness, fail-to-neutral test |
@@ -68,7 +68,7 @@ parts-waiting are mostly passive; the variable is **Phase 6 commissioning** (RTK
 calibration, and safety validation take as long as they take — that's a feature, not a delay).
 
 ## Current status
-Design ✅ (exact-spec, 24 printable parts incl. badge, all fit the 150 mm bed) · Parts ✅ (Amazon cart
+Design ✅ (exact-spec, 32 printable parts incl. badge + Phase-3 attachment brackets, all fit the 150 mm bed) · Parts ✅ (Amazon cart
 loaded; vendor orders queued) · Firmware ✅ (ESP32 controller + ArduPilot params) · Software ✅
 (companion + Tesla UI, teach/coverage, safety: incline/overhead/obstacle, cameras — **18/18 tests**) ·
 Wiring ✅ (full pinouts + kill chain + diagram). **Not yet physically built** — Phases 0–6 above.

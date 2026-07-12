@@ -23,3 +23,11 @@ PRINT_relay_box,stl/PRINT_relay_box.stl,76.0,56.0,45.0,YES
 PRINT_relay_lid,stl/PRINT_relay_lid.stl,76.0,56.0,6.0,YES
 PRINT_throttle_servo_bracket,stl/PRINT_throttle_servo_bracket.stl,56.9,44.0,42.0,YES
 PRINT_badge,stl/PRINT_badge.stl,114.0,34.0,4.0,YES
+PRINT_blower_cradle_bottom,stl/PRINT_blower_cradle_bottom.stl,86.0,69.0,16.0,YES
+PRINT_blower_cradle_top,stl/PRINT_blower_cradle_top.stl,86.0,50.0,16.0,YES
+PRINT_boom_base_plate,stl/PRINT_boom_base_plate.stl,110.0,110.0,8.0,YES
+PRINT_duct_adapter,stl/PRINT_duct_adapter.stl,136.0,112.0,64.0,YES
+PRINT_dump_clevis,stl/PRINT_dump_clevis.stl,64.0,44.0,34.0,YES
+PRINT_sprayer_ctrl_mount,stl/PRINT_sprayer_ctrl_mount.stl,84.0,64.0,11.0,YES
+PRINT_tpms_cradle,stl/PRINT_tpms_cradle.stl,66.0,34.0,14.0,YES
+PRINT_trimmer_motor_plate,stl/PRINT_trimmer_motor_plate.stl,92.0,92.0,8.0,YES

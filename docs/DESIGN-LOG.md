@@ -56,6 +56,7 @@ of logging it.
 | FIMCO tow sprayer | 12 V pump duty follows ground speed; pauses above 25°/s yaw | constant L/m² is the whole point of speed control; headland double-dosing burns stripes |
 | No-rut turns | planner emits U-turns (wide rows) or 3-point K-turns (tight rows) with headland insets; never pivots | the ZTR pivot shears the root mat under 615 lb — physics section in ATTACHMENTS.md |
 | Test suite 30 → 45 | every interlock and control law above has a test | policy without tests is a wish |
+| Printable mounting hardware | 8 new PRINT_ parts (boom base, blower cradle ×2, trimmer plate, duct adapter, dump clevis, TPMS cradle, sprayer-PWM mount) — bed-gated + brim-baked like the original 24 | "properly CADded down to the brim": attachments aren't real until their brackets print |
 
 ## Constraints A–Z (every one of these actually bit)
 

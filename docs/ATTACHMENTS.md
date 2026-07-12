@@ -101,6 +101,27 @@ The result on the map: teardrop row-ends instead of black semicircles of dead tu
 
 ---
 
+## Printable mounting hardware (8 parts — bed-gated + brim-baked like the core 24)
+
+All in [`cad/attachments_brackets.scad`](../cad/attachments_brackets.scad); STLs in `cad/stl/`,
+brim-baked print files in `cad/stl/brim/`, renders in the [gallery](../gallery.html).
+Dims are real STL bounding boxes from `cad/stl/MANIFEST.csv`.
+
+| Part | Mounts | Dims (mm) | Notes |
+|---|---|---|---|
+| `PRINT_boom_base_plate` | slew-ring turntable → frame nose | 110 × 110 × 8 | Ø62 slew bore, 4× M5 bolt circle, M6 frame slots |
+| `PRINT_blower_cradle_top` | blower volute → Ø40 boom tube | 86 × 50 × 16 | two-piece saddle clamp, M4 ears |
+| `PRINT_blower_cradle_bottom` | (lower half + band seat) | 86 × 69 × 16 | carries the blower strap |
+| `PRINT_trimmer_motor_plate` | trimmer motor → boom tip | 92 × 92 × 8 | Ø26 shaft bore, slotted M4 motor bolts, tube U-seat |
+| `PRINT_duct_adapter` | deck discharge → Ø100 bagger hose | 136 × 112 × 64 | rect flange → round collar transition + clamp lip |
+| `PRINT_dump_clevis` (×2) | dump actuator ↔ bagger frame/bin arm | 64 × 44 × 34 | ¼″ (6.5 mm) clevis pin bore, M5 base bolts — print 2; metal replacements when loads are known |
+| `PRINT_tpms_cradle` | TPMS USB receiver → inside brain box | 66 × 34 × 14 | snap walls + zip-tie slots |
+| `PRINT_sprayer_ctrl_mount` | PWM relay module → sprayer frame | 84 × 64 × 11 | 4× M3 heat-set bosses, M5 panel bolts, harness slots |
+
+Print settings per [`docs/PRINT_GUIDE.md`](PRINT_GUIDE.md) (ASA/PETG outdoors). The
+`dump_clevis` sees real load — treat the printed pair as fit-check prototypes and move to
+aluminium (see `docs/SOURCING-AND-FABRICATION.md`) once the geometry is proven on the rack.
+
 ## Sourcing (search terms — verify live listings, per the ASIN-rot rule)
 
 | Item | Search | ~$ class |

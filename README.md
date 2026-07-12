@@ -74,11 +74,11 @@ autonomous-mower/
 │   ├── WIRING.md            ← power distribution, kill-chain, per-module pinouts
 │   ├── PRINT_GUIDE.md       ← per-part orientation, brim, supports, plate batching
 │   └── wiring-diagram.svg
-├── cad/                     ← parametric OpenSCAD — 24 print-ready parts
+├── cad/                     ← parametric OpenSCAD — 32 print-ready parts
 │   ├── params.scad          ← ★ MASTER PARAMETERS — edit SECTION 1 to fit any ZTR
 │   ├── assembly.scad        ← whole machine; SHOW=all|body|black|retro for multi-material export
 │   ├── mower.scad           ← parametric mower mock (context)
-│   ├── {enclosure,actuator_brackets,gps_mast,lidar_mount,camera_mount,controls_bracket,badge}.scad
+│   ├── {enclosure,actuator_brackets,gps_mast,lidar_mount,camera_mount,controls_bracket,badge,attachments_brackets}.scad
 │   ├── export_stl.sh        ← export every PRINT_* part + bed-fit gate (rejects > 145 mm)
 │   ├── bake_brims.sh        ← welds a bed-adhesion brim onto every part
 │   └── stl/ · renders/ · vendor/

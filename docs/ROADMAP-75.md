@@ -62,7 +62,7 @@ Brainstormed 2026-07-12. Grouped A→G. Items marked ⚡ are high-impact/low-eff
 46. ⚡ ORDER-SHEET.csv (machine-readable BOM) — done, keep it the single source of truth.
 47. 1-click "copy Amazon cart" — idea-list URL or cart-share link maintained per revision.
 48. Vendor bundle notes — "order these 3 together from PiShop, these 2 from ArduSimple" (shipping optimization) — partially in ORDER.md, make it a table.
-49. Print queue file — ordered list of the 24 parts with per-part filament grams + hours (from slicer estimates).
+49. Print queue file — ordered list of the 32 parts with per-part filament grams + hours (from slicer estimates).
 50. Filament calculator — total grams ASA vs PETG, cost at $/kg.
 51. Tool checklist — every tool the build manual assumes, with "you probably have it" flags.
 52. QR labels — printable QR stickers for each harness connector pointing at its WIRING.md anchor.

@@ -22,3 +22,12 @@ PRINT_estop_pedestal_b             5     92.8    102.8       480  YES
 PRINT_relay_box                    5     76.0     86.0       992  YES
 PRINT_relay_lid                    4     76.0     77.2      1008  YES
 PRINT_throttle_servo_bracket       5     56.9     66.9      1076  YES
+PRINT_badge                        5    114.0    124.0       984  YES
+PRINT_blower_cradle_bottom         5     86.0     96.0      2180  YES
+PRINT_blower_cradle_top            5     86.0     96.0      1812  YES
+PRINT_boom_base_plate              5    110.0    120.0      1440  YES
+PRINT_duct_adapter                 5    136.0    146.0      1472  YES
+PRINT_dump_clevis                  5     64.0     74.0       976  YES
+PRINT_sprayer_ctrl_mount           5     84.0     94.0      1088  YES
+PRINT_tpms_cradle                  5     66.0     76.0      1944  YES
+PRINT_trimmer_motor_plate          5     92.0    102.0      1816  YES
