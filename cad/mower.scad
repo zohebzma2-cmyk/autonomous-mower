@@ -377,16 +377,30 @@ module mower_bagger_frame() mower_mat() {                     // red rack + dump
     translate([BAG_X1+40, 0, 440]) rotate([90,0,0]) cylinder(d=40, h=460, center=true); // dump torque tube
     translate([BAG_X0-10, 0, 440]) rotate([90,0,0]) cylinder(d=34, h=430, center=true); // front cross
 }
-module mower_bagger_bins() attach_blk() {                     // twin bins + lids + intake duct
-    for (yy=[-180,180]) translate([(BAG_X0+BAG_X1)/2, yy, 460]) {
-        rbox_full([400, 330, 520], 42);                                        // bin
-        translate([0, 0, 280]) rotate([0,-8,0]) rbox_full([410, 340, 60], 24); // sloped lid
+module mower_bagger_bins() attach_blk() {   // Gravely Power Bagger pattern, done properly
+    // deck-driven blower volute at the discharge corner (the kit belts it off the deck)
+    translate([430, 770, 230]) {
+        rotate([0,90,0]) cylinder(d=200, h=95, center=true);            // volute case
+        translate([0, -10, 90]) rotate([14,0,0]) cylinder(d=110, h=150); // tangential outlet
     }
-    // intake duct: deck discharge -> over the fender -> right bin lid
-    bent_tube([[M_DECK_X, 690, 220], [180, 640, 620], [-380, 430, 880], [-820, 200, 940]], 105);
-    translate([-880, 180, 900]) rotate([0,25,0]) cylinder(d=120, h=110);       // bin inlet elbow
-    // dump actuator (electric, like the lap-bar units)
-    translate([BAG_X0-20, -250, 300]) rotate([0,-38,0]) cylinder(d=40, h=300);
+    // duct: volute -> over the right fender -> rear plenum
+    bent_tube([[430, 760, 380], [120, 620, 720], [-420, 380, 960], [-800, 60, 1000]], 105);
+    // inlet plenum between the bins, one short outlet down into each lid
+    translate([-880, 0, 990]) rbox_full([190, 280, 130], 34);
+    for (yy=[-1,1]) translate([-895, yy*118, 930]) rotate([yy*-24,0,0]) cylinder(d=95, h=85);
+    // twin HOPPER bins: tapered bodies, domed lids, handles, rear vent louvres
+    for (yy=[-180,180]) translate([(BAG_X0+BAG_X1)/2, yy, 700]) {
+        hull() {                                                        // tapered hopper
+            translate([0,0,-195]) rbox_full([320, 250, 90], 30);        // narrow base (sits on the rack)
+            translate([10,0,80])  rbox_full([400, 330, 200], 36);       // full-width body
+        }
+        translate([6, 0, 215]) rotate([0,-5,0]) rbox_full([400, 330, 70], 40);  // domed lid
+        translate([-150, 0, 258]) rotate([90,0,0]) cylinder(d=22, h=150, center=true); // lid handle
+        for (k=[-1,0,1]) translate([202, k*82, -60]) rbox([10, 52, 110], 4);    // vent louvres
+    }
+    // dump actuator: rack anchor up to the bin cross-arm (tips bins over the torque tube)
+    translate([BAG_X0-30, -250, 330]) rotate([0,-42,0]) cylinder(d=40, h=310);
+    translate([BAG_X1+40, -250, 452]) rotate([90,0,0]) cylinder(d=26, h=60, center=true);  // arm boss
 }
 
 // ---- blower + trimmer boom (front-left, rotates for edging passes) ---------
@@ -400,34 +414,54 @@ module mower_boom() attach_gray() {
         // blower volute mid-arm, nozzle angled at the ground
         translate([0,-260,248]) rotate([0,90,0]) cylinder(d=170, h=120, center=true);
         translate([30,-260,160]) rotate([18,0,0]) rbox([80, 70, 150], 18);
-        // trimmer head at the tip: motor, string disc, guard
+        // DeWalt 60V FLEXVOLT trimmer head — brushless can, gearhead, FIXED-LINE
+        // spool (no bump-feed: the machine can't bump, so none is needed) + guard
         translate([0,-520,248]) {
-            cylinder(d=80, h=100, center=true);
-            translate([0,0,-115]) cylinder(d=260, h=8);
-            translate([0,0,-100]) rotate_extrude(angle=200, $fn=48)
+            cylinder(d=86, h=104, center=true);                        // brushless motor can
+            translate([0,0,-92]) cylinder(d1=120, d2=86, h=42);        // gearhead cone
+            translate([0,0,-110]) cylinder(d=112, h=16);               // fixed-line head
+            for (a=[0,180]) rotate([0,0,a]) translate([56,0,-102])
+                rotate([0,90,0]) cylinder(d=4, h=120);                 // line stubs (cut circle Ø ~380)
+            translate([0,0,-96]) rotate_extrude(angle=200, $fn=48)     // debris guard
                 translate([150,0]) square([8,26], center=true);
         }
+        // FLEXVOLT 60V pack rides the boom post (weatherproof boot on the real build)
+        translate([70, 0, 300]) rbox_full([180, 84, 112], 14);
     }
 }
 
 // ---- FIMCO 30-gal tow-behind sprayer (12V pump, speed-proportional) --------
 SPR_AXLE_X = -1780;
-module mower_sprayer_frame() attach_blk() {
-    bent_tube([[-660, 0, 300], [-1250, 0, 300]], 38);                     // drawbar
+module mower_sprayer_frame() attach_blk() {   // FIMCO 30-gal tow — proper trailer
+    // drawbar with clevis hitch plate + pin at the mower's guard hoop
+    bent_tube([[-660, 0, 300], [-1250, 0, 300]], 38);
+    translate([-690, 0, 300]) rbox_full([70, 70, 26], 8);                 // hitch plate
+    translate([-676, 0, 268]) cylinder(d=14, h=72);                       // clevis pin
     for (y=[-1,1]) bent_tube([[-1250, 0, 300], [SPR_AXLE_X, y*300, 320]], 34);  // A-frame
-    for (y=[-330,330]) translate([SPR_AXLE_X, y, 165]) rotate([90,0,0]) { // wheels
-        cylinder(d=330, h=100, center=true);
-        cylinder(d=140, h=110, center=true);
+    for (y=[-330,330]) translate([SPR_AXLE_X, y, 165]) {                  // treaded trailer wheels
+        rotate([90,0,0]) tire(330, 100, lugs=14);
+        rotate([90,0,0]) cylinder(d=130, h=106, center=true);             // hub
     }
     translate([SPR_AXLE_X, 0, 330]) rotate([90,0,0]) cylinder(d=44, h=640, center=true);  // axle
-    translate([SPR_AXLE_X-230, 0, 380]) rotate([90,0,0]) cylinder(d=36, h=1100, center=true); // spray boom
-    for (y=[-520,0,520]) translate([SPR_AXLE_X-230, y, 340])              // nozzles
-        cylinder(d1=14, d2=44, h=46);
-    translate([SPR_AXLE_X+120, 220, 420]) rbox_full([120, 90, 100], 14);  // 12V pump + controller box
+    // rear boom on drop legs, three flat-fan nozzles pointing DOWN
+    translate([SPR_AXLE_X-230, 0, 430]) rotate([90,0,0]) cylinder(d=36, h=1100, center=true);
+    for (y=[-380,380]) bent_tube([[SPR_AXLE_X-120, y, 380], [SPR_AXLE_X-230, y, 430]], 26); // drop legs
+    for (y=[-520,0,520]) translate([SPR_AXLE_X-230, y, 384])
+        cylinder(d1=44, d2=14, h=46);                                     // nozzle bodies (tip down)
+    // FIMCO 12V pump on the frame + REAL plumbing: sump -> pump -> boom feed
+    translate([SPR_AXLE_X+150, 200, 400]) rbox_full([130, 95, 105], 16);  // pump
+    bent_tube([[SPR_AXLE_X-40, 60, 345], [SPR_AXLE_X+120, 190, 380]], 18);    // suction: tank sump -> pump
+    bent_tube([[SPR_AXLE_X+180, 200, 430], [SPR_AXLE_X-180, 260, 470], [SPR_AXLE_X-230, 180, 440]], 16); // pressure -> boom
+    // 12V controller on the drawbar, harness forward to the machine
+    translate([-1150, 60, 330]) rbox_full([100, 70, 60], 12);
+    bent_tube([[-1190, 60, 330], [-700, 40, 320]], 9);
 }
-module mower_sprayer_tank() attach_tank() {
-    translate([SPR_AXLE_X-40, 0, 560]) rbox_full([520, 620, 470], 130);   // 30-gal poly tank
-    translate([SPR_AXLE_X-40, 0, 800]) cylinder(d=140, h=36);             // filler lid
+module mower_sprayer_tank() attach_tank() {   // FIMCO yellow poly tank, molded features
+    translate([SPR_AXLE_X-40, 0, 570]) rbox_full([520, 620, 440], 130);   // main body
+    translate([SPR_AXLE_X-40, 0, 400]) rbox_full([220, 220, 110], 36);    // molded SUMP (drain low point)
+    translate([SPR_AXLE_X-60, 0, 790]) rbox_full([300, 380, 100], 44);    // molded top step
+    translate([SPR_AXLE_X-60, 0, 850]) cylinder(d=150, h=34);             // 5" vented filler lid
+    translate([SPR_AXLE_X-60, 0, 884]) cylinder(d=44, h=14);              // vent
 }
 
 // ---- TPMS valve-cap sensors on all four wheels  [accent] --------------------

@@ -53,6 +53,11 @@ RETRO_SUBS = {
     "retro_estop":     ( 0.00, 0.18, -0.35),   # out over the right side
 }
 BLADE_EXPLODE = (0.0, -0.30, 0.0)                    # blades drop out of the deck
+# bagger bins pivot about the dump torque tube (mower.scad: BAG_X1+40, z=440);
+# the bins mesh is re-centred on this point so a rotation channel = a real dump
+BIN_PIVOT_MM = np.array([-1110.0, 0.0, 440.0])
+DUMP_ANGLE_DEG = 52.0
+DUMP_TIMES = [0.0, 3.0, 5.0, 8.0]                    # raise 3s, hold 2s, lower 3s
 # blade_pos() from mower.scad: [M_DECK_X, i*M_DECK_W*0.3, 112] for i in -1/0/1 (mm)
 BLADE_POS_MM = [np.array([620.0, i * 1321 * 0.3, 112.0]) for i in (-1, 0, 1)]
 SPIN_PERIOD = 0.6                                    # seconds per revolution
@@ -105,6 +110,15 @@ class AnimBuf:
 def inject_animations(path, blade_names, blade_bases):
     glb = pygltflib.GLTF2().load(path)
     node_idx = {n.name: i for i, n in enumerate(glb.nodes)}
+    # glTF forbids animating nodes that carry `matrix`; trimesh writes matrices.
+    # Ours are pure translations — convert every animated node to TRS.
+    animated = set(blade_names) | set(RETRO_SUBS) | set(ATTACH_GROUPS)
+    for n in glb.nodes:
+        if n.name in animated and n.matrix:
+            m = n.matrix
+            assert m[:12] == [1.0,0.0,0.0,0.0, 0.0,1.0,0.0,0.0, 0.0,0.0,1.0,0.0], f"{n.name}: non-translation matrix"
+            n.translation = [m[12], m[13], m[14]]
+            n.matrix = None
     buf = AnimBuf(glb)
 
     # ---- blade-spin: shared rotation sampler, one channel per blade node ----
@@ -129,10 +143,21 @@ def inject_animations(path, blade_names, blade_bases):
     for name, off in RETRO_SUBS.items():
         add(name, [0.0, 0.0, 0.0], off)
     for name, (_, off) in ATTACH_GROUPS.items():
-        add(name, [0.0, 0.0, 0.0], off)
+        base = list(world_to_glb(BIN_PIVOT_MM)) if name == "bagger_bins" else [0.0, 0.0, 0.0]
+        add(name, base, off)
     for n, base in zip(blade_names, blade_bases):
         add(n, list(base), BLADE_EXPLODE)
     glb.animations.append(pygltflib.Animation(name="explode", samplers=samplers, channels=channels))
+
+    # ---- dump: bagger bins tip over the torque tube (raise/hold/lower) ------
+    t_dump = buf.accessor(np.array(DUMP_TIMES), pygltflib.SCALAR)
+    a = np.radians(DUMP_ANGLE_DEG)
+    q0, q1 = [0, 0, 0, 1], [0, 0, float(np.sin(a/2)), float(np.cos(a/2))]
+    q_dump = buf.accessor(np.array([q0, q1, q1, q0]), pygltflib.VEC4)
+    glb.animations.append(pygltflib.Animation(name="dump",
+        samplers=[pygltflib.AnimationSampler(input=t_dump, output=q_dump, interpolation="LINEAR")],
+        channels=[pygltflib.AnimationChannel(sampler=0,
+                  target=pygltflib.AnimationChannelTarget(node=node_idx["bagger_bins"], path="rotation"))]))
 
     buf.finish()
     glb.save(path)
@@ -148,6 +173,17 @@ def main(stl_dir, out_path):
         mesh.visual = pbr(*RETRO_MAT, "mower_retro")
         scene.add_geometry(mesh, node_name=name, geom_name=name)
     for name, (mat, _) in ATTACH_GROUPS.items():
+        if name == "bagger_bins":                    # pivot-centred for the dump animation
+            mesh = trimesh.load(f"{stl_dir}/assembly_{name}.stl")
+            if len(mesh.faces) > 60_000:
+                mesh = mesh.simplify_quadric_decimation(face_count=60_000)
+            mesh.apply_translation(-BIN_PIVOT_MM)
+            mesh.apply_transform(ROT)
+            mesh.apply_scale(0.001)
+            mesh.visual = pbr(*mat, f"att_{name}")
+            T = np.eye(4); T[:3, 3] = world_to_glb(BIN_PIVOT_MM)
+            scene.add_geometry(mesh, node_name=name, geom_name=name, transform=T)
+            continue
         mesh = load_group(stl_dir, name, 60_000)
         mesh.visual = pbr(*mat, f"att_{name}")
         scene.add_geometry(mesh, node_name=name, geom_name=name)

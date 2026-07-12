@@ -54,13 +54,19 @@ the dump pivot** (same 12 V actuator family as the lap-bar units).
 
 ## 4 · Blower + string-trimmer boom (edging on the same routes)
 
-A rotating boom on the front corner carries a 12/24 V blower volute and a string-trimmer
+A rotating boom on the front corner carries a 12/24 V blower volute and the trimmer
 head. The slew ring (servo-driven) points the payload: trimmer down for edging passes
 along the geofence line, blower aimed at the driveway for the cleanup lap.
 
+- **Trimmer = the owned DeWalt 60V FLEXVOLT** — its brushless head mounts to the boom
+  tip, powered by its own FLEXVOLT pack riding the boom post (weatherproof boot). The
+  trigger is actuated by a relay in the attachment bank. **Fixed-line spool, no
+  bump-feed** — the machine can't bump the head, so a fixed-line conversion (or the
+  DeWalt QuickLoad spool pre-wound) is the right setup; line checks join the blade
+  service counter.
 - Boom angle clamped 0–270°.
 - **Trimmer gates like a blade** (tested): armed only, and ≤ 1.0 m/s — edging is a
-  slow-roll operation. E-stop drops both payload relays.
+  slow-roll operation. E-stop drops both payload relays (and the trigger relay).
 
 ## 5 · FIMCO 30-gal tow sprayer (speed-perfect application)
 
@@ -131,7 +137,7 @@ aluminium (see `docs/SOURCING-AND-FABRICATION.md`) once the geometry is proven o
 | Choke servo | "25 kg waterproof metal gear servo" (spare of the throttle unit) | $18 |
 | Dump actuator | Progressive Automations PA-14 family, 8″ stroke class | ~$130 |
 | Blower | "12V 24V brushless blower fan high CFM" or repurposed EGO/leaf-blower head + ESC | $40–90 |
-| Trimmer head | "12V string trimmer head motor" or brushless outrunner + universal head | $30–60 |
+| Trimmer | **owned DeWalt 60V FLEXVOLT** + trigger relay + fixed-line spool | $15 (relay + spool) |
 | Boom slew | "25 kg servo continuous slew ring" or worm-gear turntable kit | $25–50 |
 | Sprayer | FIMCO 30-gal tow (owned) + PWM relay module for the 12 V pump | $10 (relay) |
 | Bagger | Gravely Power Bagger kit for the ZT X deck (dealer) — rack + bins donor | dealer |

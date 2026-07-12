@@ -40,7 +40,7 @@ attachments,TPMS external valve-cap sensors (4) + USB/BLE receiver,search: motor
 attachments,Choke servo (manual-choke variants only; Smart-Choke needs none),search: 25kg waterproof metal gear servo,Amazon,1,18.00,phase-3; same family as throttle servo
 attachments,Bagger dump actuator 8in stroke,search: Progressive Automations PA-14 8 inch,vendor,1,130.00,phase-3; dump pivot
 attachments,12/24V high-CFM blower motor,search: 24V brushless blower high CFM,Amazon,1,60.00,phase-3; boom payload
-attachments,12V string trimmer head + motor,search: 12V string trimmer head motor,Amazon,1,45.00,phase-3; gated like a blade
+attachments,DeWalt 60V FLEXVOLT trimmer (OWNED) + trigger relay + fixed-line spool,search: 40A relay + DeWalt QuickLoad spool,Amazon,1,15.00,phase-3; no bump-feed — machine can't bump; gated like a blade
 attachments,Boom slew drive (worm-gear turntable + servo),search: worm gear turntable kit servo,Amazon,1,40.00,phase-3
 attachments,PWM relay module for FIMCO 12V pump,search: 12V PWM motor speed controller relay,Amazon,1,12.00,phase-3; sprayer owned already
 attachments,Gravely Power Bagger kit (rack + bins donor),dealer,Gravely dealer,1,,phase-3; dealer-priced
