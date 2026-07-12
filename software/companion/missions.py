@@ -119,3 +119,86 @@ def step_towards(lat, lon, target, dist_m):
         return target[0], target[1], hdg, True
     f = dist_m / d
     return round(lat + dy * f / mlat, 7), round(lon + dx * f / mlon, 7), round(hdg, 1), False
+
+
+def cross_track_m(pos, a, b):
+    """Perpendicular distance (m) from pos to the segment a->b (all [lat,lon]).
+    Clamped to the segment ends — this is the live RTK tracking-quality number."""
+    mlat, mlon = _frame(a[0])
+    px, py = (pos[1] - a[1]) * mlon, (pos[0] - a[0]) * mlat
+    bx, by = (b[1] - a[1]) * mlon, (b[0] - a[0]) * mlat
+    L2 = bx * bx + by * by
+    if L2 == 0:
+        return round(math.hypot(px, py), 3)
+    t = max(0.0, min(1.0, (px * bx + py * by) / L2))
+    return round(math.hypot(px - t * bx, py - t * by), 3)
+
+
+# ---------------------------------------------------------------- no-rut turns
+# A zero-turn PIVOT spins one wheel forward and one backward in place: all of
+# the machine's yaw moment goes through two small contact patches as SHEAR on
+# the turf, and 615 lb of scrub tears it — that's the classic ZTR rut/divot.
+# Keeping BOTH wheels rolling forward (or backward) turns shear into rolling
+# friction. So row ends use:
+#   spacing >= 2r : smooth U — arc 90°, straight, arc 90° (never stops rolling)
+#   spacing <  2r : 3-point K — forward arc 90°, REVERSE straight 2r-spacing,
+#                   forward arc 90° onto the next row (the tractor headland turn)
+# r is the gentlest arc the hydros hold accurately; rows are inset by r
+# (a headland) so the turn never leaves the boundary.
+TURN_RADIUS_M = 1.2
+
+def _arc(cx, cy, r, a0, a1, steps=3):
+    """Sample an arc (local xy, radians) — endpoints included."""
+    return [(cx + r * math.sin(a0 + (a1 - a0) * i / steps),
+             cy - r * math.cos(a0 + (a1 - a0) * i / steps)) for i in range(1, steps + 1)]
+
+def turn_points(x_end, y, y_next, direction, r=TURN_RADIUS_M):
+    """Local-frame waypoints for a no-rut row turn.
+    direction: +1 = the finished row ran +x, -1 = ran -x.  Returns [(x,y)...]
+    from just after the row end to just before the next row start."""
+    s_gap = abs(y_next - y)
+    up = 1 if y_next > y else -1
+    pts = []
+    if s_gap >= 2 * r:                       # smooth U: arc, straight, arc
+        pts += _arc(x_end, y + up * r, r, math.pi, math.pi / 2)[::-1] if False else                [(x_end + direction * r * math.sin(t * math.pi / 6), y + up * r * (1 - math.cos(t * math.pi / 6)))
+                for t in (1, 2, 3)]
+        pts += [(x_end + direction * r, y + up * (s_gap - r))]
+        pts += [(x_end + direction * r * math.cos(t * math.pi / 6), y_next - up * r * (1 - math.sin(t * math.pi / 6)))
+                for t in (1, 2, 3)]
+    else:                                    # 3-point K: fwd arc, reverse, fwd arc
+        b = 2 * r - s_gap                    # reverse length
+        pts += [(x_end + direction * r * math.sin(t * math.pi / 6), y + up * r * (1 - math.cos(t * math.pi / 6)))
+                for t in (1, 2, 3)]          # fwd 90° arc, ends heading across rows
+        pts += [(x_end + direction * r, y + up * (r - b / 2)),
+                (x_end + direction * r, y + up * (r - b))]     # reverse straight (tail swing)
+        pts += [(x_end + direction * r * math.cos(t * math.pi / 6),
+                 (y + up * (r - b)) + up * r * math.sin(t * math.pi / 6)) for t in (1, 2, 3)]
+    return pts
+
+def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M):
+    """Coverage rows + no-rut row turns (U or 3-point K), rows inset by the
+    turn radius (headland) so every turn stays inside the boundary."""
+    if len(polygon) < 3:
+        raise ValueError("need >= 3 boundary points")
+    poly_xy, ref = _to_xy(polygon)
+    ys = [pt[1] for pt in poly_xy]
+    ymin, ymax = min(ys) + spacing / 2, max(ys) - spacing / 2
+    rows, flip = [], False
+    y = ymin
+    while y <= ymax:
+        for (xa, xb) in _row_spans(poly_xy, y):
+            xa, xb = xa + r, xb - r                    # headland inset
+            if xb - xa < spacing:
+                continue
+            rows.append(((xb, y), (xa, y)) if flip else ((xa, y), (xb, y)))
+            flip = not flip
+        y += spacing
+    wpts = []
+    for i, (a, b) in enumerate(rows):
+        wpts += [a, b]
+        if i + 1 < len(rows):
+            direction = 1 if b[0] > a[0] else -1
+            wpts += turn_points(b[0], b[1], rows[i + 1][0][1], direction, r)
+    pts_ll = [_to_ll(pt, ref) for pt in wpts]
+    rid = _add({"name": name or "Zone (no-rut turns)", "type": "coverage", "points": pts_ll})
+    return rid, pts_ll

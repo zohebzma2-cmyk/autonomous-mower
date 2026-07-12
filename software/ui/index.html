@@ -189,6 +189,14 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
     <button class="btn teach" id="teachBtn" onclick="toggleTeach()">Teach path</button>
     <button class="btn blade" id="bladeBtn" onclick="toggleBlade()">Blade off</button>
   </div>
+  <div class="row">
+    <button class="btn" id="engineBtn" onclick="toggleEngine()">Engine</button>
+    <button class="btn" id="dumpBtn" onclick="cmd('bagger_dump')">Dump bags</button>
+    <button class="btn" id="blowerBtn" onclick="toggleBlower()">Blower</button>
+    <button class="btn" id="trimBtn" onclick="toggleTrimmer()">Trimmer</button>
+    <button class="btn" id="sprayBtn" onclick="toggleSprayer()">Sprayer</button>
+  </div>
+  <div class="foot" id="svcline" style="text-align:left"></div>
 
   <button class="estop" id="estopBtn" onclick="estop()">EMERGENCY STOP</button>
   <div class="foot">The on-screen E-STOP commands HOLD · disarm · blade-off. The physical e-stop &amp; RC kill are the real safety chain.</div>
@@ -273,7 +281,7 @@ async function planZone(){
   if(bPts.length<3){ document.getElementById('sub').textContent='⚠ tap at least 3 boundary points'; return; }
   const polygon=bPts.map(ll=>[ll.lat,ll.lng]);
   const r=await fetch('/api/zones/plan',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name:'Zone '+new Date().toLocaleTimeString().slice(0,5),polygon})});
+    body:JSON.stringify({name:'Zone '+new Date().toLocaleTimeString().slice(0,5),polygon,turns:'smooth'})});
   const j=await r.json();
   if(j.ok){
     if(planLayer) planLayer.remove();
@@ -343,6 +351,13 @@ function toggleArm(){cmd(st.armed?'disarm':'arm');}
 function toggleBlade(){cmd('blade',{on:!st.blade});}
 function toggleTeach(){cmd(st.mission==='teaching'?'teach_stop':'teach_start');}
 function estop(){st.estop?cmd('clear_estop'):cmd('estop');}
+function toggleEngine(){cmd(st.engine==='run'?'engine_stop':'engine_start');}
+function toggleBlower(){cmd('boom',{blower:!(st.boom&&st.boom.blower)});}
+function toggleTrimmer(){cmd('boom',{trimmer:!(st.boom&&st.boom.trimmer)});}
+function toggleSprayer(){
+  if(!(st.sprayer&&st.sprayer.attached)){ cmd('sprayer',{attached:true}); return; }
+  cmd('sprayer',{spraying:!(st.sprayer&&st.sprayer.spraying)});
+}
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>cmd('mode',{mode:b.dataset.mode}));
 
 function verbFor(s){
@@ -373,6 +388,35 @@ function render(s){
   document.getElementById('verb').textContent=verb;
   document.getElementById('status').className='status '+cls;
   document.getElementById('stage').className='stage '+cls;
+  // attachments + service strip
+  const eB=document.getElementById('engineBtn');
+  if(eB){ eB.textContent = s.engine==='run'?'Engine ■':(s.engine==='crank'?'Cranking…':'Engine ▶');
+          eB.classList.toggle('armed', s.engine==='run'); }
+  const dB=document.getElementById('dumpBtn');
+  if(dB){ const bg=s.bagger||{}; dB.textContent = bg.state && bg.state!=='idle' ? ('Dump: '+bg.state)
+            : ('Dump '+Math.round(bg.fill_pct||0)+'%');
+          dB.disabled = !(bg.attached); }
+  const blB=document.getElementById('blowerBtn');
+  if(blB) blB.classList.toggle('armed', !!(s.boom&&s.boom.blower));
+  const tB=document.getElementById('trimBtn');
+  if(tB) tB.classList.toggle('armed', !!(s.boom&&s.boom.trimmer));
+  const spB=document.getElementById('sprayBtn');
+  if(spB){ const sp=s.sprayer||{};
+    spB.textContent = !sp.attached ? 'Hitch sprayer' :
+      (sp.spraying ? 'Spray '+Math.round(sp.tank_pct)+'% · d'+(sp.pump_duty||0) : 'Sprayer '+Math.round(sp.tank_pct)+'%');
+    spB.classList.toggle('armed', !!sp.spraying); }
+  const svc=document.getElementById('svcline');
+  if(svc){
+    const bits=[];
+    if(s.xte_m!=null) bits.push('XTE '+(s.xte_m<0.005?'0.00':s.xte_m.toFixed(2))+' m');
+    if(s.engine_hours!=null) bits.push('engine '+(+s.engine_hours).toFixed(1)+' h');
+    if(s.oil_due_h!=null) bits.push('oil in '+s.oil_due_h+' h');
+    if(s.blade_due_h!=null) bits.push('blades in '+s.blade_due_h+' h');
+    if(s.weather&&s.weather.precip_prob!=null) bits.push('rain '+s.weather.precip_prob+'%');
+    if(s.tire_warnings&&s.tire_warnings.length) bits.push('⚠ '+s.tire_warnings.join(' · '));
+    else bits.push('tyres ✓');
+    svc.textContent=bits.join('  ·  ');
+  }
   let sub = s.mode+' · '+(s.speed??0).toFixed(1)+' m/s';
   if(s.mission==='running' && s.route_id!=null) sub += ' · '+(s.progress||0)+'% mowed';
   if(s.mission==='teaching') sub='recording · '+s.taught_points+' pts';

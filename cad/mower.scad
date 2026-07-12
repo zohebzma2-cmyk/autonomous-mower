@@ -355,6 +355,102 @@ function lapbar_clamp_pos(side) = [
     (M_SEAT_Z - 60) + LAP_BAR_CLAMP_HEIGHT*0.75
 ];
 
+
+// ============================================================================
+//  ATTACHMENTS (Phase 3 — additive; see docs/DESIGN-LOG.md + docs/ATTACHMENTS.md)
+//  Proxy-fidelity like the base machine: accurate envelopes + placements so
+//  clearances and reach are honest. The base-machine envelope echo above is
+//  UNCHANGED — attachments extend the machine and are echoed separately.
+// ============================================================================
+module attach_blk() color([0.10,0.10,0.11]) children();      // attachment steel/plastic
+module attach_gray() color([0.35,0.37,0.40]) children();     // boom hardware
+module attach_tank() color([0.93,0.76,0.13]) children();     // FIMCO poly tank (yellow)
+
+// ---- power bagger (Gravely/Exmark dump-from-seat pattern) -------------------
+BAG_X0 = -700;            // rack starts behind the guard hoop
+BAG_X1 = -1150;           // rack rear extreme
+module mower_bagger_frame() mower_mat() {                     // red rack + dump pivot
+    for (y=[-200,200]) {
+        bent_tube([[-560, y, M_REAR_WHEEL_D/2+20], [BAG_X0, y, 440], [BAG_X1+40, y, 440]], 36);
+        bent_tube([[BAG_X1+60, y, 440], [BAG_X1+150, y, M_REAR_WHEEL_D/2+10]], 30);  // rear struts
+    }
+    translate([BAG_X1+40, 0, 440]) rotate([90,0,0]) cylinder(d=40, h=460, center=true); // dump torque tube
+    translate([BAG_X0-10, 0, 440]) rotate([90,0,0]) cylinder(d=34, h=430, center=true); // front cross
+}
+module mower_bagger_bins() attach_blk() {                     // twin bins + lids + intake duct
+    for (yy=[-180,180]) translate([(BAG_X0+BAG_X1)/2, yy, 460]) {
+        rbox_full([400, 330, 520], 42);                                        // bin
+        translate([0, 0, 280]) rotate([0,-8,0]) rbox_full([410, 340, 60], 24); // sloped lid
+    }
+    // intake duct: deck discharge -> over the fender -> right bin lid
+    bent_tube([[M_DECK_X, 690, 220], [180, 640, 620], [-380, 430, 880], [-820, 200, 940]], 105);
+    translate([-880, 180, 900]) rotate([0,25,0]) cylinder(d=120, h=110);       // bin inlet elbow
+    // dump actuator (electric, like the lap-bar units)
+    translate([BAG_X0-20, -250, 300]) rotate([0,-38,0]) cylinder(d=40, h=300);
+}
+
+// ---- blower + trimmer boom (front-left, rotates for edging passes) ---------
+BOOM_BASE = [0, 0, 0];  // computed inline
+module mower_boom() attach_gray() {
+    bx = M_WHEELBASE-70; by = -(M_FRAME_W/2-40); bz = M_FRONT_CASTER_D/2+150;
+    translate([bx, by, bz]) {
+        cylinder(d=46, h=230);                                 // swivel post
+        translate([0,0,230]) cylinder(d=72, h=36);             // slew ring
+        translate([0,0,248]) rotate([90,0,0]) cylinder(d=40, h=520);   // boom arm (out over the left edge)
+        // blower volute mid-arm, nozzle angled at the ground
+        translate([0,-260,248]) rotate([0,90,0]) cylinder(d=170, h=120, center=true);
+        translate([30,-260,160]) rotate([18,0,0]) rbox([80, 70, 150], 18);
+        // trimmer head at the tip: motor, string disc, guard
+        translate([0,-520,248]) {
+            cylinder(d=80, h=100, center=true);
+            translate([0,0,-115]) cylinder(d=260, h=8);
+            translate([0,0,-100]) rotate_extrude(angle=200, $fn=48)
+                translate([150,0]) square([8,26], center=true);
+        }
+    }
+}
+
+// ---- FIMCO 30-gal tow-behind sprayer (12V pump, speed-proportional) --------
+SPR_AXLE_X = -1780;
+module mower_sprayer_frame() attach_blk() {
+    bent_tube([[-660, 0, 300], [-1250, 0, 300]], 38);                     // drawbar
+    for (y=[-1,1]) bent_tube([[-1250, 0, 300], [SPR_AXLE_X, y*300, 320]], 34);  // A-frame
+    for (y=[-330,330]) translate([SPR_AXLE_X, y, 165]) rotate([90,0,0]) { // wheels
+        cylinder(d=330, h=100, center=true);
+        cylinder(d=140, h=110, center=true);
+    }
+    translate([SPR_AXLE_X, 0, 330]) rotate([90,0,0]) cylinder(d=44, h=640, center=true);  // axle
+    translate([SPR_AXLE_X-230, 0, 380]) rotate([90,0,0]) cylinder(d=36, h=1100, center=true); // spray boom
+    for (y=[-520,0,520]) translate([SPR_AXLE_X-230, y, 340])              // nozzles
+        cylinder(d1=14, d2=44, h=46);
+    translate([SPR_AXLE_X+120, 220, 420]) rbox_full([120, 90, 100], 14);  // 12V pump + controller box
+}
+module mower_sprayer_tank() attach_tank() {
+    translate([SPR_AXLE_X-40, 0, 560]) rbox_full([520, 620, 470], 130);   // 30-gal poly tank
+    translate([SPR_AXLE_X-40, 0, 800]) cylinder(d=140, h=36);             // filler lid
+}
+
+// ---- TPMS valve-cap sensors on all four wheels  [accent] --------------------
+module mower_tpms_accent() color([0.93,0.76,0.13]) mower_tpms();
+module mower_tpms() {
+    for (y=[-(M_FRAME_W/2+M_REAR_WHEEL_W/2+30), (M_FRAME_W/2+M_REAR_WHEEL_W/2+30)])
+        translate([72, y>0?y+82:y-82, M_REAR_WHEEL_D/2+72]) rotate([90,0,0]) cylinder(d=15, h=20, center=true);
+    for (y=[-(M_FRAME_W/2-40), (M_FRAME_W/2-40)])
+        translate([M_WHEELBASE+34, y>0?y+58:y-58, M_FRONT_CASTER_D/2+34]) rotate([90,0,0]) cylinder(d=13, h=16, center=true);
+}
+
+ENV_L_ATT = (M_WHEELBASE + M_FRONT_CASTER_D/2) - (SPR_AXLE_X - 420);
+echo(str("WITH ATTACHMENTS  L≈", ENV_L_ATT, " (bagger rack to ", BAG_X1,
+         "; sprayer axle at ", SPR_AXLE_X, ") — attachments extend the base machine"));
+
+module mower_attachments() {
+    mower_bagger_frame();
+    mower_bagger_bins();
+    mower_boom();
+    mower_sprayer_frame();
+    mower_sprayer_tank();
+}
+
 module mower(lap_angle=0) {
     mower_frame();
     mower_rims();
@@ -376,6 +472,12 @@ module mower(lap_angle=0) {
     if (M_HAS_ROPS) mower_rops();
     mower_lapbar(side=+1, angle=lap_angle);
     mower_lapbar(side=-1, angle=lap_angle);
+}
+
+// full working rig: machine + retrofit-era accents + every attachment
+module mower_full(lap_angle=0) {
+    mower(lap_angle);
+    mower_attachments();
 }
 
 // preview when opened standalone (suppressed when included by assembly.scad)

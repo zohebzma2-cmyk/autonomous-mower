@@ -90,14 +90,14 @@ module retrofit() {
 // "blade" exports ONE blade centered at origin — build_glb.py instances it at
 // blade_pos(-1/0/1) as three nodes and bakes a spin animation on them.
 SHOW = is_undef(SHOW) ? "all" : SHOW;
-if (SHOW=="all")    { mower(lap_angle=6); retrofit(); }
+if (SHOW=="all")    { mower_full(lap_angle=6); mower_tpms_accent(); retrofit(); }
 if (SHOW=="body")   { mower_frame(); mower_deck(); mower_engine(); mower_footdeck(); mower_fenders();
                       mower_rims(); }
 if (SHOW=="black")  { mower_wheels(); mower_seat(); mower_lapbar(1,6); mower_lapbar(-1,6);
                       mower_casters(); mower_fueltanks(); mower_seatframe(); mower_dash();
                       mower_engine_detail(); mower_deck_details(); mower_branding(); }
 if (SHOW=="retro")  retrofit();
-if (SHOW=="accent") mower_accents();
+if (SHOW=="accent") { mower_accents(); mower_tpms_accent(); }
 if (SHOW=="blade")  mower_blade();
 // per-subsystem exports for the exploded-view GLB nodes
 if (SHOW=="retro_brain")     retro_brain();
@@ -106,3 +106,9 @@ if (SHOW=="retro_gps")       retro_gps();
 if (SHOW=="retro_lidar")     retro_lidar();
 if (SHOW=="retro_camera")    retro_camera();
 if (SHOW=="retro_estop")     retro_estop();
+// Phase-3 attachments — each a separate GLB node (exploded-view + future anims)
+if (SHOW=="bagger_frame")  mower_bagger_frame();
+if (SHOW=="bagger_bins")   mower_bagger_bins();
+if (SHOW=="boom_asm")      mower_boom();
+if (SHOW=="sprayer_frame") mower_sprayer_frame();
+if (SHOW=="sprayer_tank")  mower_sprayer_tank();

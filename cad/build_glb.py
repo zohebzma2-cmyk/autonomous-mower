@@ -33,6 +33,16 @@ STATIC_GROUPS = {
 RETRO_MAT = ([0.35, 0.37, 0.40, 1.0], 0.75, 0.35)    # brushed-metal retrofit
 BLADE_MAT = ([0.72, 0.73, 0.76, 1.0], 0.90, 0.40)    # bare steel
 
+# Phase-3 attachments: name -> (material, explode offset). Bagger pair shares an
+# offset (it explodes as one assembly); sprayer frame/tank separate vertically.
+ATTACH_GROUPS = {
+    "bagger_frame":  (([0.72, 0.11, 0.10, 1.0], 0.15, 0.34), (-0.40, 0.28, 0.00)),
+    "bagger_bins":   (([0.09, 0.09, 0.10, 1.0], 0.05, 0.75), (-0.40, 0.28, 0.00)),
+    "boom_asm":      (RETRO_MAT,                              ( 0.28, 0.22, 0.30)),
+    "sprayer_frame": (([0.09, 0.09, 0.10, 1.0], 0.05, 0.75), (-0.60, 0.05, 0.00)),
+    "sprayer_tank":  (([0.93, 0.76, 0.13, 1.0], 0.10, 0.55), (-0.60, 0.35, 0.00)),
+}
+
 # subsystem -> explode offset in GLB metres (X fwd, Y up, Z = world -Y/right)
 RETRO_SUBS = {
     "retro_brain":     ( 0.00, 0.55,  0.00),
@@ -118,6 +128,8 @@ def inject_animations(path, blade_names, blade_bases):
             target=pygltflib.AnimationChannelTarget(node=node_idx[node_name], path="translation")))
     for name, off in RETRO_SUBS.items():
         add(name, [0.0, 0.0, 0.0], off)
+    for name, (_, off) in ATTACH_GROUPS.items():
+        add(name, [0.0, 0.0, 0.0], off)
     for n, base in zip(blade_names, blade_bases):
         add(n, list(base), BLADE_EXPLODE)
     glb.animations.append(pygltflib.Animation(name="explode", samplers=samplers, channels=channels))
@@ -134,6 +146,10 @@ def main(stl_dir, out_path):
     for name in RETRO_SUBS:
         mesh = load_group(stl_dir, name, 40_000)
         mesh.visual = pbr(*RETRO_MAT, "mower_retro")
+        scene.add_geometry(mesh, node_name=name, geom_name=name)
+    for name, (mat, _) in ATTACH_GROUPS.items():
+        mesh = load_group(stl_dir, name, 60_000)
+        mesh.visual = pbr(*mat, f"att_{name}")
         scene.add_geometry(mesh, node_name=name, geom_name=name)
     # one blade mesh (already origin-centred in the CAD), three animatable nodes
     blade = trimesh.load(f"{stl_dir}/assembly_blade.stl")

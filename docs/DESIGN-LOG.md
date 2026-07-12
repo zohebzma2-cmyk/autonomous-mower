@@ -41,6 +41,22 @@ of logging it.
 | Blade-spin GLB animation | one blade mesh, three glTF nodes, baked `blade-spin` rotation | model-viewer can't animate arbitrary nodes from JS; a baked glTF animation plays on hover |
 | Kohler externals | dipstick (yellow ring, accent colour group), oil filter, oil-fill cap, intake elbow, pull start | "down to the dipstick" — the service touch-points a Kohler owner actually grabs |
 
+
+## Phase 3 — attachments & agronomy (2026-07-12, same-day continuation)
+
+| Iteration | What happened | What forced it |
+|---|---|---|
+| Cross-track telemetry | live XTE published while following a row (+1.5 cm simulated RTK noise so numbers are honest) | "how straight is it actually mowing" needed a number, not a feeling |
+| Maintenance counters | engine-hour meter persisted across restarts; oil/blade service countdowns + reset API | the dipstick got modeled — the hour meter is what makes it mean something |
+| Weather gate | open-meteo rain probability holds mission start (fails OPEN when offline) | wet-grass mowing is a traction call the operator kept making manually |
+| Ignition + choke | starter-relay crank with interlocks + temperature-scheduled choke; e-stop grounds the magneto | the machine can navigate but couldn't START itself — the last manual step |
+| TPMS | four valve-stem sensors; ±25% warnings in telemetry | low tyre = un-level deck = wavy cut, invisible until too late |
+| Power bagger | twin-bin rack + duct in CAD; electric dump pivot; fill estimation + dump-cycle interlocks | fall cleanups: the Gravely/Exmark dump-from-seat pattern, minus the seat |
+| Blower/trimmer boom | rotating front boom, trimmer gated like a blade (armed + ≤1 m/s) | edging and blowing are the same RTK routes with a different payload |
+| FIMCO tow sprayer | 12 V pump duty follows ground speed; pauses above 25°/s yaw | constant L/m² is the whole point of speed control; headland double-dosing burns stripes |
+| No-rut turns | planner emits U-turns (wide rows) or 3-point K-turns (tight rows) with headland insets; never pivots | the ZTR pivot shears the root mat under 615 lb — physics section in ATTACHMENTS.md |
+| Test suite 30 → 45 | every interlock and control law above has a test | policy without tests is a wish |
+
 ## Constraints A–Z (every one of these actually bit)
 
 - **A**SIN rot — agent-sourced Amazon links 404 within days; only live-verified links count.

@@ -16,7 +16,7 @@ _tmp = tempfile.mkdtemp()
 missions.DATA = _tmp
 missions.FILE = os.path.join(_tmp, "missions.json")
 
-import app, safety, vision, mav
+import app, safety, vision, mav, attachments
 
 SQUARE = [[42.8060, -71.3675], [42.8060, -71.3670],
           [42.8064, -71.3670], [42.8064, -71.3675]]   # ~44m x 41m
@@ -232,6 +232,109 @@ def test_set_fence_validates_and_persists():
     assert app.S.snapshot()["fence_enabled"], "fence must survive a companion restart"
     ok, _ = app.set_fence([])                                    # clear
     assert ok and not app.S.snapshot()["fence_enabled"]
+
+
+# ---------------------------------------------------------------- cross-track
+def test_cross_track_zero_on_line_and_offset():
+    a, b = [42.8060, -71.3675], [42.8060, -71.3665]
+    mid = [42.8060, -71.3670]
+    assert missions.cross_track_m(mid, a, b) < 0.01, "point on the line must read ~0"
+    off = [42.8060 + 1.0/111320.0, -71.3670]           # 1 m north of the row
+    assert abs(missions.cross_track_m(off, a, b) - 1.0) < 0.02, "1 m offset must read ~1 m"
+
+# ---------------------------------------------------------------- no-rut turns
+def test_kturn_stays_within_headland():
+    pts = missions.turn_points(10.0, 0.0, 1.0, +1, r=1.2)     # gap < 2r -> K-turn
+    assert max(x for x, _ in pts) <= 10.0 + 1.2 + 1e-6, "K-turn must not exceed the headland radius"
+    assert any(abs(y - 1.0) < 0.05 for _, y in pts[-1:]), "K-turn must end on the next row"
+
+def test_uturn_for_wide_gap():
+    pts = missions.turn_points(10.0, 0.0, 3.0, +1, r=1.2)     # gap >= 2r -> smooth U
+    assert max(x for x, _ in pts) <= 10.0 + 1.2 + 1e-6
+    assert abs(pts[-1][1] - 3.0) < 0.25, "U-turn must arrive at the next row height"
+
+def test_plan_coverage_turns_within_boundary():
+    rid, pts = missions.plan_coverage_turns("t", SQUARE, spacing=1.5)
+    lats = [q[0] for q in pts]; lons = [q[1] for q in pts]
+    assert min(lats) >= 42.8060 - 2e-5 and max(lats) <= 42.8064 + 2e-5, "turns must stay inside (lat)"
+    assert min(lons) >= -71.3675 - 2e-5 and max(lons) <= -71.3670 + 2e-5, "turns must stay inside (lon)"
+    missions.delete_route(rid)
+
+# ---------------------------------------------------------------- ignition + choke
+def test_choke_schedule():
+    assert attachments.choke_for(2) == 1.0 and attachments.choke_for(15) == 0.5
+    assert attachments.choke_for(25) == 0.0 and attachments.choke_for(None) == 1.0
+
+def test_crank_interlocks():
+    ok, why = attachments.can_crank({"estop": True}); assert not ok and "E-STOP" in why
+    ok, why = attachments.can_crank({"engine": "run"}); assert not ok
+    ok, why = attachments.can_crank({"engine": "off", "blade": True}); assert not ok and "PTO" in why
+    ok, _ = attachments.can_crank({"engine": "off", "blade": False, "mission": "idle"}); assert ok
+
+def test_arm_requires_engine_running():
+    reset(); app.S.update(gps_fix="rtk_fixed", engine="off")
+    ok, why = app.handle_command("arm")
+    assert not ok and "engine" in why, "arming a dead engine must be refused"
+
+def test_estop_kills_ignition_and_attachments():
+    reset(); app.S.update(engine="run", boom={"angle": 90, "blower": True, "trimmer": True},
+                          sprayer={"attached": True, "tank_pct": 50, "pump_duty": 0.4, "spraying": True, "applied_l": 0},
+                          bagger={"attached": True, "fill_pct": 20, "state": "raising"})
+    app.handle_command("estop")
+    d = app.S.snapshot()
+    assert d["engine"] == "off" and not d["boom"]["blower"] and not d["boom"]["trimmer"]
+    assert not d["sprayer"]["spraying"] and d["bagger"]["state"] == "idle"
+
+# ---------------------------------------------------------------- TPMS
+def test_tpms_warnings():
+    assert attachments.tpms_warnings({"rl": 12.0, "fl": 20.0}) == []
+    w = attachments.tpms_warnings({"rl": 8.0})
+    assert w and "rear-left" in w[0] and "low" in w[0]
+    w = attachments.tpms_warnings({"fl": 27.0})
+    assert w and "high" in w[0]
+
+# ---------------------------------------------------------------- bagger
+def test_bagger_fill_and_dump_gates():
+    f = attachments.bagger_fill_step(0.0, True, 100, 60)
+    assert 5 < f < 7, f"1 min heavy cut should be ~5.6%: {f}"
+    assert attachments.bagger_fill_step(50, False, 100, 60) == 50, "no fill with blade off"
+    ok, why = attachments.can_dump({"speed": 1.0}); assert not ok and "stop" in why
+    ok, why = attachments.can_dump({"speed": 0, "blade": True}); assert not ok
+    ok, _ = attachments.can_dump({"speed": 0, "blade": False, "bagger": {"state": "idle"}}); assert ok
+
+# ---------------------------------------------------------------- boom
+def test_trimmer_gates_like_a_blade():
+    ok, why = attachments.can_run_trimmer({"armed": False}); assert not ok and "arm" in why
+    ok, why = attachments.can_run_trimmer({"armed": True, "speed": 2.0}); assert not ok and "fast" in why
+    ok, _ = attachments.can_run_trimmer({"armed": True, "speed": 0.5}); assert ok
+    assert attachments.clamp_boom(400) == 270.0 and attachments.clamp_boom(-5) == 0.0
+
+# ---------------------------------------------------------------- sprayer
+def test_sprayer_duty_follows_speed_and_pauses_in_turns():
+    assert attachments.sprayer_duty(0.0) == 0.0, "no flow while stopped"
+    d1, d2 = attachments.sprayer_duty(1.0), attachments.sprayer_duty(2.0)
+    assert d2 > d1 > 0, "duty must rise with ground speed"
+    assert abs(d2 - min(1.0, 2*d1)) < 0.01, "application is speed-proportional"
+    assert attachments.sprayer_duty(2.0, turn_rate_dps=40) == 0.0, "pause in sharp turns (no double dose)"
+
+def test_sprayer_command_gates():
+    reset()
+    ok, why = app.handle_command("sprayer", {"spraying": True})
+    assert not ok and "attached" in why, "cannot spray without the sprayer hitched"
+
+# ---------------------------------------------------------------- weather + service
+def test_weather_gate_fails_open():
+    assert not app.weather_gate(None)
+    assert not app.weather_gate({"precip_prob": None})
+    assert app.weather_gate({"precip_prob": 70})
+    assert not app.weather_gate({"precip_prob": 30})
+
+def test_service_reset_restarts_counter():
+    reset(); app.S.update(**app._service_fields(40.0, 0.0, 0.0))
+    ok, _ = app.reset_service("oil"); assert ok
+    d = app.S.snapshot()
+    assert abs(d["oil_due_h"] - app.OIL_INTERVAL_H) < 0.2, "oil counter must restart from now"
+    assert abs(d["blade_due_h"] - (app.BLADE_INTERVAL_H - 40.0)) < 0.2, "blade counter untouched"
 
 # ---------------------------------------------------------------- runner
 def main():

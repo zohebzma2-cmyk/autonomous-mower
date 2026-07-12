@@ -1,0 +1,37 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  software-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: companion test suite (stdlib, no deps)
+        run: python3 software/tests/test_backend.py
+
+  cad-parses:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install OpenSCAD
+        run: sudo apt-get update -q && sudo apt-get install -y -q openscad
+      - name: every model file must parse + evaluate (CSG export)
+        run: |
+          set -e
+          cd cad
+          for f in mower.scad assembly.scad enclosure.scad actuator_brackets.scad \
+                   gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad; do
+            echo "== $f"
+            openscad -o /tmp/out.csg "$f"
+          done
+      - name: envelope self-check matches the published spec
+        run: |
+          cd cad
+          openscad -o /tmp/e.csg assembly.scad 2>&1 | grep "ENVELOPE" | tee /tmp/env.txt
+          grep -q "W=1610" /tmp/env.txt && grep -q "H=1039" /tmp/env.txt && grep -q "L=1968" /tmp/env.txt

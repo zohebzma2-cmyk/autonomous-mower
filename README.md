@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-3fb950.svg)](LICENSE)
 [![Status: active build](https://img.shields.io/badge/status-active%20build-f0883e.svg)](#status--honest-limitations)
-[![Tests](https://img.shields.io/badge/tests-25%2F25-3fb950.svg)](software/tests)
+[![Tests](https://img.shields.io/badge/tests-45%2F45-3fb950.svg)](software/tests)
 [![Autopilot: ArduPilot Rover](https://img.shields.io/badge/autopilot-ArduPilot%20Rover-5ab0ff.svg)](https://ardupilot.org/rover)
 [![Discussions](https://img.shields.io/badge/community-Discussions-3fb950.svg)](https://github.com/zohebzma2-cmyk/autonomous-mower/discussions)
 
@@ -13,11 +13,13 @@
 
 Turn a seated zero-turn mower into a self-driving, iPad-controlled robot — **RTK GPS + LiDAR + cameras + on-device AI** — weatherproofed to live outdoors, and **reproducible on any ZTR** by re-measuring a handful of dimensions.
 
-> **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (25/25 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
+> **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (45/45 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
 
 **Confirmed reference machine:** Gravely **ZT X 52** · ~2021 · **Kohler 7000** (24 hp, 725 cc) · electric PTO clutch.
 
 > 🏁 **New here? Start with [`docs/00-BUILD-MANUAL.md`](docs/00-BUILD-MANUAL.md)** — the end-to-end build sequence.
+>
+> 🚜 **Phase 3 — the whole rig:** [`docs/ATTACHMENTS.md`](docs/ATTACHMENTS.md) — self-dumping power bagger, rotating blower/trimmer boom, FIMCO tow sprayer with speed-proportional dosing, TPMS, self-start ignition + choke, and the no-rut 3-point turn planner (physics inside).
 >
 > 📓 **How it evolved:** [`docs/DESIGN-LOG.md`](docs/DESIGN-LOG.md) — every iteration, every wrong turn, constraints A–Z.
 > **What's next:** [`docs/ROADMAP-75.md`](docs/ROADMAP-75.md) — 75 planned upgrades.
@@ -83,7 +85,7 @@ autonomous-mower/
 ├── software/
 │   ├── companion/           ← Python: app.py (HTTP+SSE), safety.py, vision.py, missions.py, mav.py
 │   ├── ui/                  ← the control UI (iPad + on-unit kiosk)
-│   ├── tests/               ← 25 stdlib tests (safety, coverage, vision, mission encoding)
+│   ├── tests/               ← 45 stdlib tests (safety, geofence, attachments, turns, coverage, vision, mission encoding)
 │   └── deploy/              ← systemd service + Chromium kiosk autostart
 ├── firmware/
 │   ├── lapbar_controller/   ← ESP32: FC-PWM → pot → BTS7960 position loop, fail-to-neutral
@@ -112,7 +114,7 @@ openscad assembly.scad          # see the whole machine
 ```bash
 python3 software/companion/app.py --sim --port 8080
 # open http://localhost:8080 — arm, draw a zone, run a coverage mission in simulation
-python3 -m pytest software/tests -q         # 25/25
+python3 software/tests/test_backend.py       # 45/45
 ```
 
 ### Firmware
@@ -174,7 +176,7 @@ Open [`cad/params.scad`](cad/params.scad) → **SECTION 1**, re-measure the lap 
 
 ## Status & honest limitations
 
-Design + CAD + firmware + control software + docs are complete and verified (25/25 tests). The build is **in progress in person**. Remaining work is hardware-gated: SITL/on-FC validation of the MAVLink handshake, training the Hailo `.hef` model, and the future fleet/RaaS layer. See [`docs/BUILD.md §12`](docs/BUILD.md).
+Design + CAD + firmware + control software + docs are complete and verified (45/45 tests). The build is **in progress in person**. Remaining work is hardware-gated: SITL/on-FC validation of the MAVLink handshake, training the Hailo `.hef` model, and the future fleet/RaaS layer. See [`docs/BUILD.md §12`](docs/BUILD.md).
 
 ## Related open-source mowers & rovers
 

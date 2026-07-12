@@ -16,9 +16,9 @@ hardware kill chain (e-stop, RC kill, ArduPilot failsafes) per docs/BUILD.md §0
 The web E-STOP here is a convenience that commands HOLD + disarm + blade-off; it is
 NOT a substitute for the physical e-stop.
 """
-import argparse, json, os, threading, time, math, queue
+import argparse, json, os, threading, time, math, queue, random, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import missions, safety, vision
+import missions, safety, vision, attachments
 
 UI_DIR = os.path.join(os.path.dirname(__file__), "..", "ui")
 
@@ -45,9 +45,18 @@ class State:
             mode_options=["MANUAL", "HOLD", "AUTO"],
             taught_points=0, route_id=None, progress=0,   # active route id + % complete
             fence=[], fence_enabled=False, fence_breach=False,   # geofence polygon [[lat,lon],..]
+            xte_m=None,                                          # live cross-track error (m)
+            engine_hours=0.0, oil_due_h=None, blade_due_h=None,  # maintenance counters
+            weather=None,                                        # {temp_c, precip_prob} when --weather
+            engine="run", engine_rpm=2800, choke=0.0,            # ignition state machine (off|crank|run)
+            tires={"rl": 12.1, "rr": 11.9, "fl": 20.2, "fr": 19.8}, tire_warnings=[],   # TPMS (psi)
+            bagger={"attached": True, "fill_pct": 0.0, "state": "idle"},                # power bagger
+            boom={"angle": 0.0, "blower": False, "trimmer": False},                     # blower/trimmer boom
+            sprayer={"attached": False, "tank_pct": 100.0, "pump_duty": 0.0, "spraying": False, "applied_l": 0.0},
             msg="sim: ready",
         )
         self.d.update(_load_fence())               # restore a persisted fence
+        self.d.update(_load_service())             # restore engine-hours / service history
 
     def snapshot(self):
         with self.lock:
@@ -106,6 +115,80 @@ def set_fence(polygon):
              msg=(f"geofence set ({len(poly)} points)" if enabled else "geofence cleared"))
     return True, ("set" if enabled else "cleared")
 
+# ---------------------------------------------------------------- maintenance
+# Service intervals (hours). Defaults follow the Kohler 7000 / mower-shop norms:
+# oil every 100 h (25 h first break-in), blades inspected/sharpened ~25 mowing h.
+# Confirm against YOUR engine manual; history lives in data/service.json.
+OIL_INTERVAL_H   = 100.0
+BLADE_INTERVAL_H = 25.0
+
+def _service_path():
+    return os.path.join(missions.DATA, "service.json")
+
+def _service_fields(hours, last_oil, last_blade):
+    return dict(engine_hours=round(hours, 2),
+                oil_due_h=round(last_oil + OIL_INTERVAL_H - hours, 1),
+                blade_due_h=round(last_blade + BLADE_INTERVAL_H - hours, 1),
+                _last_oil_h=last_oil, _last_blade_h=last_blade)
+
+def _load_service():
+    try:
+        with open(_service_path()) as f:
+            j = json.load(f)
+        return _service_fields(float(j.get("engine_hours", 0.0)),
+                               float(j.get("last_oil_h", 0.0)),
+                               float(j.get("last_blade_h", 0.0)))
+    except (FileNotFoundError, json.JSONDecodeError, OSError, ValueError):
+        return _service_fields(0.0, 0.0, 0.0)
+
+def _save_service(d):
+    try:
+        os.makedirs(missions.DATA, exist_ok=True)
+        with open(_service_path(), "w") as f:
+            json.dump({"engine_hours": d["engine_hours"],
+                       "last_oil_h": d.get("_last_oil_h", 0.0),
+                       "last_blade_h": d.get("_last_blade_h", 0.0)}, f)
+    except OSError:
+        pass
+
+def reset_service(item):
+    """Operator serviced the machine: restart that counter from now."""
+    d = S.snapshot()
+    if item == "oil":
+        S.update(**_service_fields(d["engine_hours"], d["engine_hours"], d.get("_last_blade_h", 0.0)))
+    elif item == "blade":
+        S.update(**_service_fields(d["engine_hours"], d.get("_last_oil_h", 0.0), d["engine_hours"]))
+    else:
+        return False, "unknown service item " + str(item)
+    _save_service(S.snapshot())
+    return True, item + " service logged at %.1f h" % d["engine_hours"]
+
+# ---------------------------------------------------------------- weather gate
+WEATHER_HOLD_PROB = 60      # refuse to start when rain probability (next 2 h) >= this
+
+def weather_gate(weather, threshold=WEATHER_HOLD_PROB):
+    """True = hold (rain likely). Fails OPEN when weather is unknown."""
+    if not weather or weather.get("precip_prob") is None:
+        return False
+    return weather["precip_prob"] >= threshold
+
+def weather_loop():
+    """Poll open-meteo (no API key) every 15 min for rain probability at the
+    machine's position. Best-effort: failures leave weather=None (gate opens)."""
+    while True:
+        d = S.snapshot()
+        url = ("https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f"
+               "&current=temperature_2m&hourly=precipitation_probability&forecast_hours=2"
+               % (d["lat"], d["lon"]))
+        try:
+            with urllib.request.urlopen(url, timeout=10) as r:
+                j = json.load(r)
+            prob = max(j["hourly"]["precipitation_probability"] or [0])
+            S.update(weather={"temp_c": j["current"]["temperature_2m"], "precip_prob": prob})
+        except Exception:
+            S.update(weather=None)
+        time.sleep(900)
+
 S = State()
 
 # ---------------------------------------------------------------- command handling
@@ -114,15 +197,68 @@ def handle_command(cmd, args=None):
     d = S.snapshot()
     if cmd == "estop":
         S.active_route = []
+        boom = {**d["boom"], "blower": False, "trimmer": False}
+        spr = {**d["sprayer"], "pump_duty": 0.0, "spraying": False}
+        bag = {**d["bagger"], "state": "idle"}
         S.update(estop=True, blade=False, armed=False, mode="HOLD", mission="idle",
-                 speed=0.0, route_id=None, progress=0, msg="E-STOP — drive + blade killed")
+                 speed=0.0, route_id=None, progress=0,
+                 engine="off", engine_rpm=0,                    # kill chain grounds the magneto
+                 boom=boom, sprayer=spr, bagger=bag,
+                 msg="E-STOP — ignition, drive, blade + attachments killed")
         return True, "E-STOP engaged"
     if d["estop"] and cmd != "clear_estop":
         return False, "E-STOP is engaged — clear it first"
     if cmd == "clear_estop":
         S.update(estop=False, msg="e-stop cleared (still disarmed)")
         return True, "cleared"
+    if cmd == "engine_start":
+        ok, why = attachments.can_crank(d)
+        if not ok:
+            return False, why
+        temp = (d.get("weather") or {}).get("temp_c")
+        S.update(engine="crank", engine_rpm=350, choke=attachments.choke_for(temp),
+                 msg="cranking (choke %.0f%%)" % (attachments.choke_for(temp) * 100))
+        return True, "cranking"
+    if cmd == "engine_stop":
+        S.update(engine="off", engine_rpm=0, blade=False, armed=False, mission="idle",
+                 speed=0.0, msg="engine stopped")
+        return True, "engine off"
+    if cmd == "bagger_dump":
+        ok, why = attachments.can_dump(d)
+        if not ok:
+            return False, why
+        S.update(bagger={**d["bagger"], "state": "raising", "t": 0.0}, msg="bagger: raising bins")
+        return True, "dumping"
+    if cmd == "boom":
+        b = dict(d["boom"])
+        if "angle" in (args or {}):
+            b["angle"] = attachments.clamp_boom(args["angle"])
+        if "blower" in (args or {}):
+            b["blower"] = bool(args["blower"]) and not d["estop"]
+        if "trimmer" in (args or {}):
+            if args["trimmer"]:
+                ok, why = attachments.can_run_trimmer(d)
+                if not ok:
+                    return False, why
+            b["trimmer"] = bool(args["trimmer"])
+        S.update(boom=b, msg="boom @ %.0f° · blower %s · trimmer %s" %
+                 (b["angle"], "on" if b["blower"] else "off", "on" if b["trimmer"] else "off"))
+        return True, "boom"
+    if cmd == "sprayer":
+        spr = dict(d["sprayer"])
+        if "attached" in (args or {}):
+            spr["attached"] = bool(args["attached"])
+        if "spraying" in (args or {}):
+            if args["spraying"]:
+                ok, why = attachments.can_spray({**d, "sprayer": spr})
+                if not ok:
+                    return False, why
+            spr["spraying"] = bool(args["spraying"])
+        S.update(sprayer=spr, msg="sprayer %s" % ("ON — rate follows ground speed" if spr["spraying"] else "off"))
+        return True, "sprayer"
     if cmd == "arm":
+        if d.get("engine") != "run":
+            return False, "engine not running — start it first"
         if d["gps_fix"] not in ("rtk_fixed", "rtk_float", "3d"):
             return False, "no GPS fix — refusing to arm"
         ok, why = safety.can_arm(d)          # refuse to arm on a dangerous slope
@@ -153,6 +289,9 @@ def handle_command(cmd, args=None):
             return False, "arm first"
         if d["mode"] != "AUTO":
             return False, "set mode AUTO to run a mission"
+        if weather_gate(d.get("weather")) and not (args or {}).get("override_weather"):
+            return False, ("rain likely (%s%% next 2h) - weather hold (override to force)"
+                           % d["weather"]["precip_prob"])
         S.update(mission="running", msg="mission running")
         return True, "running"
     if cmd == "pause":
@@ -201,6 +340,45 @@ def sim_loop():
         upd.update(roll=roll, pitch=pitch, slope=safety.slope_of(roll, pitch),
                    overhead_m=round(overhead, 2))                   # obstacle now comes from vision.py
         upd["fence_breach"] = safety.fence_breach(d)                # live geofence status for the UI
+        # --- powertrain + attachment dynamics ---
+        if d["engine"] == "crank":
+            upd.update(engine="run", engine_rpm=2800, choke=max(0.0, d["choke"] - 0.5),
+                       msg="engine running")
+        tires = {k: round(v + random.gauss(0, 0.02), 2) for k, v in d["tires"].items()}
+        upd["tires"] = tires
+        upd["tire_warnings"] = attachments.tpms_warnings(tires)
+        bag = dict(d["bagger"])
+        if bag.get("attached"):
+            if bag.get("state") in ("raising", "dumping", "lowering"):
+                bag["t"] = bag.get("t", 0.0) + 0.2
+                if bag["state"] == "raising" and bag["t"] >= attachments.DUMP_RAISE_S:
+                    bag.update(state="dumping", t=0.0)
+                elif bag["state"] == "dumping" and bag["t"] >= attachments.DUMP_HOLD_S:
+                    bag.update(state="lowering", t=0.0, fill_pct=0.0)
+                elif bag["state"] == "lowering" and bag["t"] >= attachments.DUMP_LOWER_S:
+                    bag.update(state="idle", t=0.0)
+                    upd["msg"] = "bagger: bins emptied ✓"
+            else:
+                bag["fill_pct"] = attachments.bagger_fill_step(
+                    bag.get("fill_pct", 0.0), d["blade"], d.get("grass_pct"), 0.2)
+            upd["bagger"] = bag
+        spr = dict(d["sprayer"])
+        if spr.get("attached") and spr.get("spraying"):
+            turn_rate = abs(d["heading"] - getattr(sim_loop, "_last_hdg", d["heading"])) / 0.2
+            if turn_rate > 180 / 0.2: turn_rate = 0                    # wrap
+            duty = attachments.sprayer_duty(d["speed"], turn_rate)
+            spr["pump_duty"] = duty
+            used = duty * attachments.PUMP_MAX_LPM * (0.2 / 60.0)
+            spr["applied_l"] = round(spr.get("applied_l", 0.0) + used, 3)
+            spr["tank_pct"] = max(0.0, round(spr["tank_pct"] - used / 113.6 * 100, 3))  # 30 gal = 113.6 L
+            upd["sprayer"] = spr
+        sim_loop._last_hdg = d["heading"]
+
+        if d["mission"] == "running":                                # engine-hour meter (sim: runs while mowing)
+            upd["engine_hours"] = round(d["engine_hours"] + 0.2/3600.0, 4)
+            upd.update(oil_due_h=round(d.get("_last_oil_h",0.0)+OIL_INTERVAL_H-upd["engine_hours"],1),
+                       blade_due_h=round(d.get("_last_blade_h",0.0)+BLADE_INTERVAL_H-upd["engine_hours"],1))
+            if int(t*5) % 150 == 0: _save_service({**d, **upd})
 
         if d["mission"] == "running":
             allow, reason = safety.evaluate({**d, **upd})            # incline/overhead/obstacle/estop
@@ -209,7 +387,12 @@ def sim_loop():
             elif S.active_route and S.route_idx < len(S.active_route):
                 tgt = S.active_route[S.route_idx]
                 lat, lon, hdg, reached = missions.step_towards(d["lat"], d["lon"], tgt, STEP)
+                # model RTK fix noise (~1.5 cm sigma) so tracking numbers are honest
+                lat = round(lat + random.gauss(0, 0.015)/111320.0, 8)
+                lon = round(lon + random.gauss(0, 0.015)/(111320.0*math.cos(math.radians(lat))), 8)
+                prev = S.active_route[S.route_idx-1] if S.route_idx > 0 else [d["lat"], d["lon"]]
                 upd.update(lat=lat, lon=lon, heading=hdg, speed=SPD,
+                           xte_m=missions.cross_track_m([lat, lon], prev, tgt),
                            progress=round(S.route_idx / len(S.active_route) * 100))
                 if reached:
                     S.route_idx += 1
@@ -355,8 +538,9 @@ class H(BaseHTTPRequestHandler):
 
         if self.path == "/api/zones/plan":
             try:
-                rid, pts = missions.plan_coverage(p.get("name"), p.get("polygon", []),
-                                                  float(p.get("spacing") or missions.DEFAULT_SPACING))
+                planner = missions.plan_coverage_turns if p.get("turns") == "smooth" else missions.plan_coverage
+                rid, pts = planner(p.get("name"), p.get("polygon", []),
+                                   float(p.get("spacing") or missions.DEFAULT_SPACING))
                 self._send(200, json.dumps({"ok": True, "id": rid, "points": pts,
                                             "msg": f"planned {len(pts)} waypoints"}))
             except Exception as e:
@@ -366,6 +550,10 @@ class H(BaseHTTPRequestHandler):
         if self.path == "/api/missions/delete":
             missions.delete_route(p.get("id", ""))
             self._send(200, json.dumps({"ok": True, "msg": "deleted"})); return
+
+        if self.path == "/api/service/reset":
+            ok, msg = reset_service(p.get("item", ""))
+            self._send(200 if ok else 409, json.dumps({"ok": ok, "msg": msg})); return
 
         if self.path == "/api/fence":
             ok, msg = set_fence(p.get("polygon", []))
@@ -383,6 +571,7 @@ def main():
     ap.add_argument("--sim", action="store_true", default=True)
     ap.add_argument("--mav", help="MAVLink endpoint, e.g. udp:127.0.0.1:14550 (needs pymavlink)")
     ap.add_argument("--vision-hef", help="Hailo .hef model for real camera detection (else sim)")
+    ap.add_argument("--weather", action="store_true", help="rain-hold gate via open-meteo (needs internet)")
     args = ap.parse_args()
 
     if args.mav:
@@ -398,6 +587,10 @@ def main():
     else:
         threading.Thread(target=sim_loop, daemon=True).start()
         print("[companion] SIM mode (no hardware)")
+
+    if args.weather:
+        threading.Thread(target=weather_loop, daemon=True).start()
+        print("[companion] weather gate armed (open-meteo)")
 
     # camera-AI vision loop (sim detector unless a Hailo .hef is supplied)
     threading.Thread(target=vision.run_vision,
