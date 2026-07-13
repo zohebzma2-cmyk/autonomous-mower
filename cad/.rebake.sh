@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 cd ~/autonomous-mower/cad
 for mod in PRINT_equipment_plate PRINT_upper_shelf; do
   MZ=$(python3 -c "

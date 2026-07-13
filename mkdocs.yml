@@ -1,0 +1,22 @@
+site_name: Autonomous Zero-Turn Retrofit
+site_url: https://zohebalvi.com/projects/autonomous-mower.html
+repo_url: https://github.com/zohebzma2-cmyk/autonomous-mower
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: green
+nav:
+  - Start: docs/00-BUILD-MANUAL.md
+  - Measure your machine: docs/MEASURE.md
+  - Build & safety: docs/BUILD.md
+  - Wiring: docs/WIRING.md
+  - Print queue: docs/PRINT-QUEUE.md
+  - Tools: docs/TOOLS.md
+  - Substitutions: docs/SUBSTITUTIONS.md
+  - Attachments (Phase 3): docs/ATTACHMENTS.md
+  - Design log: docs/DESIGN-LOG.md
+  - Roadmap: docs/ROADMAP-75.md
+  - Changelog: docs/CHANGELOG.md
+# serve locally: pip install mkdocs-material && mkdocs serve
+# (hosted docs need CI/Pages — blocked on this account; local serve works today)

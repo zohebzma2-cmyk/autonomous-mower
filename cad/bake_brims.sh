@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # Bake a bed-adhesion brim into every printable part. For each PRINT_* module:
 #   1) read the part's true min-z from its plain STL,
 #   2) drop it to z=0 and weld a single-layer brim of a per-part width,

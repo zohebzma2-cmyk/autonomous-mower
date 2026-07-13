@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  BRAIN ENCLOSURE — internal equipment plate + seat mounting feet
 //  We DO NOT print a waterproof box (FDM layer lines leak). We print an

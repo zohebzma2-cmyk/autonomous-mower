@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # Local CI — the same gates the hosted workflow would run (GitHub Actions is
 # unavailable on this account per the zero-budget policy; run this before push).
 #   ./scripts/check.sh

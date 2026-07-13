@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Build the site's multi-material assembly.glb from the colour-group STLs.
 
 Pipeline:  openscad -D SHOW='"<group>"' -o assembly_<group>.stl assembly.scad

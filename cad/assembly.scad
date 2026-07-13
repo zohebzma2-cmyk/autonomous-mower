@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  MASTER ASSEMBLY — every retrofit subsystem placed on the mower mock.
 //  Uses dimensionally-accurate PROXY volumes (real part dims from params) so

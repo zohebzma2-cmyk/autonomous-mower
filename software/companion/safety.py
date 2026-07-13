@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """
 Safety policy — incline, overhead clearance, and obstacle checks.
 

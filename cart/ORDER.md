@@ -121,3 +121,19 @@ Pixhawk 6C from Holybro and both ArduSimple items together to save on shipping; 
 2. **Read the model/serial plate** under the seat; **measure** lap-bar OD/travel → set `cad/params.scad` SECTION 1 → re-slice the actuator brackets.
 3. **Bench-build** the brain box; verify FC + RTK fix + RC + e-stop with **no actuators**.
 4. Follow `docs/BUILD.md §11` go/no-go sequence: jack stands → blades OFF → open-area teach-and-repeat → blades last.
+
+## One-click Amazon cart
+
+[**Add all 20 ASIN-verified items to your Amazon cart**](https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=B0BHQ6JQS4&Quantity.1=1&ASIN.2=B0BGR92TCD&Quantity.2=1&ASIN.3=B0744DPPL8&Quantity.3=1&ASIN.4=B08BHR2RM7&Quantity.4=1&ASIN.5=B07GK1G5FV&Quantity.5=1&ASIN.6=B0DQL5HFQP&Quantity.6=1&ASIN.7=B07MKQXNWG&Quantity.7=1&ASIN.8=B07TJW5SXF&Quantity.8=1&ASIN.9=B0C5TKF5CN&Quantity.9=1&ASIN.10=B00MI5I98K&Quantity.10=1&ASIN.11=B00MI59JD4&Quantity.11=1&ASIN.12=B0CMLGS4YG&Quantity.12=1&ASIN.13=B008O9YGQI&Quantity.13=1&ASIN.14=B000AL8VD2&Quantity.14=1&ASIN.15=B0GYZ6M37R&Quantity.15=1&ASIN.16=B0CL7MLY6T&Quantity.16=1&ASIN.17=B0CP7NLFVD&Quantity.17=1&ASIN.18=B0D5V3TZLB&Quantity.18=1&ASIN.19=B09FNX7BRX&Quantity.19=1&ASIN.20=B07JR7727L&Quantity.20=1)
+(search-sourced + vendor-direct lines aren't ASIN-addressable — those stay manual; verify each
+item's live page before checkout per the ASIN-rot rule.)
+
+## Vendor bundles (ship-together to save)
+
+| Bundle | Items | One checkout |
+|---|---|---|
+| **Amazon** | everything in §A + §A4 | one cart (see the add-all link in `shopping.html`) |
+| **PiShop** | Pi 5 · AI HAT+ · 2× Camera 3 · Touch Display 2 | one order, one ship |
+| **Holybro** | Pixhawk 6C **+PM02 variant** (skips a separate PM02 line) | one order |
+| **ArduSimple** (EU) | simpleRTK2B + ANN-MB-00 (+ the ★heading pair if going dual) | ONE order — duties/shipping are per-shipment |
+| **Gravely dealer** | Power Bagger kit (Phase 3) | local pickup |

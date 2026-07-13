@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 # Generate amazon_cart.html and ebay_cart.html from one verified product model.
 # Data sourced 2026-06-26 by research agents (see cart/research/*.md). Prices:
 #   v=verified off live page; e=estimate (listing real, price not rendered to fetch).

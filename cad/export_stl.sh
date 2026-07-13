@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # Export every PRINT_* module across all component .scad files to STL,
 # render a PNG of each, and check each part fits the 150mm bed.
 set -euo pipefail

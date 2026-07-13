@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  MACHINE PROFILE — generic 60" commercial ZTR (starting point, NOT verified)
 //  Typical commercial-class values (Scag/Exmark/Bad Boy 60" class). EVERY value

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  PHASE-3 ATTACHMENT MOUNTING HARDWARE — printable brackets (7 parts)
 //  Same rules as the original kit: every part fits the 150 mm bed (gated by

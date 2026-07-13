@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """
 Autonomous ZTR — companion control server.
 
@@ -188,6 +189,30 @@ def weather_loop():
         except Exception:
             S.update(weather=None)
         time.sleep(900)
+
+# ---------------------------------------------------------------- obstacle memory
+def _obstacles_path():
+    return os.path.join(missions.DATA, "obstacles.json")
+
+def obstacle_log(prev_obstacle, d):
+    """On a rising obstacle edge, remember where — repeated hits at one spot
+    suggest a permanent geofence cut. Returns the (possibly grown) list."""
+    if not d.get("obstacle") or prev_obstacle:
+        return None
+    try:
+        with open(_obstacles_path()) as f:
+            hits = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        hits = []
+    hits.append({"lat": d["lat"], "lon": d["lon"], "range_m": d.get("obstacle_range")})
+    hits = hits[-200:]
+    try:
+        os.makedirs(missions.DATA, exist_ok=True)
+        with open(_obstacles_path(), "w") as f:
+            json.dump(hits, f)
+    except OSError:
+        pass
+    return hits
 
 S = State()
 
@@ -413,8 +438,26 @@ def sim_loop():
                 S.recording.append([lat, lon]); upd["taught_points"] = len(S.recording)
         else:
             upd.update(speed=0.0)                 # vision.py owns obstacle/obstacle_range
+        obstacle_log(d.get("obstacle"), {**d, **upd})
         S.update(**upd)
+        if RECORD:
+            try: RECORD.write(json.dumps(S.snapshot()) + "\n"); RECORD.flush()
+            except OSError: pass
         time.sleep(0.2)
+
+RECORD = None          # --record FILE: JSONL of every sim tick (deterministic replay)
+
+def replay_loop(path):
+    """--replay FILE: feed recorded snapshots instead of the sim (loops)."""
+    while True:
+        try:
+            with open(path) as f:
+                for line in f:
+                    try: S.update(**json.loads(line))
+                    except (json.JSONDecodeError, TypeError): continue
+                    time.sleep(0.2)
+        except OSError:
+            time.sleep(1)
 
 # ---------------------------------------------------------------- camera feeds
 def _camera_svg(name, s):
@@ -491,6 +534,18 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(S.snapshot())); return
         if self.path == "/api/missions":
             self._send(200, json.dumps(missions.list_routes())); return
+        if self.path == "/api/obstacles":
+            try:
+                with open(_obstacles_path()) as f: hits = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError, OSError): hits = []
+            self._send(200, json.dumps(hits)); return
+        if self.path.startswith("/api/route.plan"):
+            from urllib.parse import urlparse, parse_qs
+            rid = parse_qs(urlparse(self.path).query).get("id", [""])[0]
+            r = missions.get_route(rid)
+            if not r: self._send(404, json.dumps({"error": "not found"})); return
+            self._send(200, json.dumps(missions.to_qgc_plan(r["points"])),
+                       "application/json"); return
         if self.path.startswith("/api/route"):
             from urllib.parse import urlparse, parse_qs
             rid = parse_qs(urlparse(self.path).query).get("id", [""])[0]
@@ -555,6 +610,13 @@ class H(BaseHTTPRequestHandler):
             ok, msg = reset_service(p.get("item", ""))
             self._send(200 if ok else 409, json.dumps({"ok": ok, "msg": msg})); return
 
+        if self.path == "/api/missions/import-plan":
+            pts = missions.from_qgc_plan(p.get("plan") or p)
+            if len(pts) < 2:
+                self._send(409, json.dumps({"ok": False, "msg": "no waypoints in plan"})); return
+            rid = missions.add_taught(p.get("name") or "Imported .plan", pts)
+            self._send(200, json.dumps({"ok": True, "id": rid, "msg": f"imported {len(pts)} wpts"})); return
+
         if self.path == "/api/fence":
             ok, msg = set_fence(p.get("polygon", []))
             if S.mav_cmd and ok:
@@ -572,9 +634,18 @@ def main():
     ap.add_argument("--mav", help="MAVLink endpoint, e.g. udp:127.0.0.1:14550 (needs pymavlink)")
     ap.add_argument("--vision-hef", help="Hailo .hef model for real camera detection (else sim)")
     ap.add_argument("--weather", action="store_true", help="rain-hold gate via open-meteo (needs internet)")
+    ap.add_argument("--record", help="write every sim tick to FILE (JSONL) for deterministic replay")
+    ap.add_argument("--replay", help="feed recorded JSONL instead of the sim")
     args = ap.parse_args()
 
-    if args.mav:
+    global RECORD
+    if args.record:
+        RECORD = open(args.record, "a")
+        print(f"[companion] recording ticks -> {args.record}")
+    if args.replay:
+        threading.Thread(target=replay_loop, args=(args.replay,), daemon=True).start()
+        print(f"[companion] REPLAY mode <- {args.replay}")
+    elif args.mav:
         # Real / SITL path lives in mav.py — kept optional so --sim runs dependency-free.
         try:
             from mav import run_mavlink

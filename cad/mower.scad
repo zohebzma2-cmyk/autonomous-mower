@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  MOWER MOCK-UP  —  parametric zero-turn body (reference: Gravely ZT X 52)
 //  VISUALIZATION CONTEXT ONLY — not printed. Lets us place every retrofit

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  MACHINE PROFILE — Gravely ZT X 52 (the reference build, serial 915256-class)
 //  Copy the block below over SECTION 1 of params.scad, or keep profiles per

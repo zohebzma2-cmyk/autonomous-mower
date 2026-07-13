@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Generate dimensioned drawing-sheet PDFs for the flat/laser-cut parts.
 Reads the OpenSCAD 2D outline SVGs (run export_dxf.sh first, which also leaves
 drawings/*.svg) + stl/MANIFEST.csv, and writes drawings/<part>_drawing.pdf.

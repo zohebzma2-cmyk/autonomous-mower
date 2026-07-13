@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """
 Missions: saved routes (teach-and-repeat) + coverage planning (boundary → rows).
 
@@ -202,3 +203,26 @@ def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M)
     pts_ll = [_to_ll(pt, ref) for pt in wpts]
     rid = _add({"name": name or "Zone (no-rut turns)", "type": "coverage", "points": pts_ll})
     return rid, pts_ll
+
+
+# ---------------------------------------------------------------- QGC .plan
+def to_qgc_plan(points):
+    """Waypoints -> QGroundControl/Mission Planner .plan JSON (dict)."""
+    items = [{"autoContinue": True, "command": 16, "doJumpId": i + 1,
+              "frame": 3, "params": [0, 0, 0, None, p[0], p[1], 0],
+              "type": "SimpleItem"} for i, p in enumerate(points)]
+    return {"fileType": "Plan", "version": 1, "groundStation": "autonomous-mower",
+            "geoFence": {"circles": [], "polygons": [], "version": 2},
+            "rallyPoints": {"points": [], "version": 2},
+            "mission": {"cruiseSpeed": 1.4, "firmwareType": 10, "hoverSpeed": 1,
+                        "vehicleType": 10, "version": 2,
+                        "plannedHomePosition": list(points[0]) + [0] if points else [0, 0, 0],
+                        "items": items}}
+
+def from_qgc_plan(plan):
+    """QGC .plan dict -> [[lat,lon],...] (NAV_WAYPOINT items only)."""
+    out = []
+    for it in (plan.get("mission") or {}).get("items", []):
+        if it.get("command") == 16 and it.get("params") and len(it["params"]) >= 6:
+            out.append([it["params"][4], it["params"][5]])
+    return out

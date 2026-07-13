@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  AUTONOMOUS ZERO-TURN RETROFIT  —  MASTER PARAMETER FILE
 //  Everything is driven from here. To adapt this kit from the reference

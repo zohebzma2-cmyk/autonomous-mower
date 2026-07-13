@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # Regenerate the whole-machine gallery renders (cad/renders/assembly_*.png +
 # mower_mock.png) from the current CAD. Preview-mode export keeps the per-part
 # colour() groups (Gravely-red body, black wheels/seat, graphite retrofit).

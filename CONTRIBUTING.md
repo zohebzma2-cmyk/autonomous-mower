@@ -37,3 +37,13 @@ test or a bench-test description.
 - **Issues** — bugs and scoped tasks (look for `good first issue` / `help wanted`).
 
 By contributing you agree your work is licensed under the repo's [MIT License](LICENSE).
+
+## The 10-minute first contribution
+
+1. `git clone` → `cd cad` → open `params.scad`
+2. Change ONE number in SECTION 1 (say, `LAP_BAR_TUBE_OD = 28.6` for a 1-1/8" bar)
+3. `./export_stl.sh` — watch the clamp bores re-fit and the bed gate re-check all 32 parts
+4. `python3 ../software/tests/test_backend.py` — 45/45 still green
+5. PR titled `profile: <your mower>` adding `cad/profiles/<your-mower>.scad`
+
+That's a real contribution — every profile makes the kit fit one more machine.

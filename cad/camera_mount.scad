@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  FORWARD-FACING CAMERA MOUNT  —  Raspberry Pi Camera Module 3
 //  Tilt-adjustable cradle for the autonomous zero-turn mower's vision camera.

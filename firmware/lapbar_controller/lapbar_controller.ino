@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /* =============================================================================
  * LAP-BAR ACTUATOR CONTROLLER  —  ESP32  (autonomous ZT X 52 retrofit)
  *

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  RPLidar A1M8 FRONT MAST MOUNT  —  autonomous zero-turn mower retrofit
 //  ----------------------------------------------------------------------------

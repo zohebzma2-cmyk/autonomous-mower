@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  PRODUCT NAMEPLATE / LOGO BADGE  —  mounts on the brain box (the brand mark).
 //  Set PRODUCT_NAME below. Print the plate in dark filament, the logo + text in a

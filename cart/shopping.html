@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order tracker — autonomous mower</title><style>
+body{margin:0;background:#0d1117;color:#e8edf2;font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:20px 24px;border-bottom:1px solid #263041}h1{margin:0;font-size:18px}
+.sub{color:#8b949e;font-size:12.5px;margin-top:4px}
+.wrap{max-width:760px;margin:0 auto;padding:18px}
+.it{display:flex;gap:10px;align-items:center;padding:9px 10px;border-bottom:1px solid #1c2430;cursor:pointer}
+.it input{accent-color:#3fb950;width:17px;height:17px}
+.it .s{font:10px ui-monospace,monospace;color:#8b949e;background:#161d29;border-radius:12px;padding:2px 8px;flex:none}
+.it .n{flex:1} .it .p{font-family:ui-monospace,monospace;color:#8b949e}
+.it.done .n{color:#4a5563;text-decoration:line-through}
+#bar{position:sticky;top:0;background:#0d1117ee;padding:12px 0;border-bottom:1px solid #263041;font-family:ui-monospace,monospace;font-size:13px;color:#3fb950}
+</style></head><body>
+<header><h1>Order tracker</h1><div class="sub">checks persist in this browser (localStorage) · source of truth: cart/ORDER-SHEET.csv</div></header>
+<div class="wrap"><div id="bar">0 / 45 ordered</div>
+<label class="it" data-k="i0"><input type="checkbox"><span class="s">amazon</span><span class="n">Progressive Automations 12V linear actuator 4in 100mm 169lbs potentiometer feedback IP65</span><span class="p">$310.78</span></label>
+<label class="it" data-k="i1"><input type="checkbox"><span class="s">amazon</span><span class="n">dstfuy E-stop 22mm IP65 1NC</span><span class="p">$9.96</span></label>
+<label class="it" data-k="i2"><input type="checkbox"><span class="s">amazon</span><span class="n">BTS7960 (IBT-2) 43A dual H-bridge 2-pack</span><span class="p">$13.37</span></label>
+<label class="it" data-k="i3"><input type="checkbox"><span class="s">amazon</span><span class="n">FlySky FS-i6X + iA6B receiver</span><span class="p">$59.99</span></label>
+<label class="it" data-k="i4"><input type="checkbox"><span class="s">amazon</span><span class="n">Recoil 40A 5-pin SPDT relays + sockets + fuse holders 2-pack</span><span class="p">$13.99</span></label>
+<label class="it" data-k="i5"><input type="checkbox"><span class="s">amazon</span><span class="n">ANNIMOS 25kg metal-gear waterproof servo</span><span class="p">$17.99</span></label>
+<label class="it" data-k="i6"><input type="checkbox"><span class="s">amazon</span><span class="n">DC-DC buck 12to5V 5A 2-pack</span><span class="p">$16.59</span></label>
+<label class="it" data-k="i7"><input type="checkbox"><span class="s">amazon</span><span class="n">Maxmoral LM2596 adjustable buck 2-pack</span><span class="p">$7.99</span></label>
+<label class="it" data-k="i8"><input type="checkbox"><span class="s">amazon</span><span class="n">Slamtec RPLidar A1M8 360deg 2D</span><span class="p">$99.00</span></label>
+<label class="it" data-k="i9"><input type="checkbox"><span class="s">amazon</span><span class="n">XINYIELE IP67 enclosure 221x170x114mm incl glands + plate</span><span class="p">$19.88</span></label>
+<label class="it" data-k="i10"><input type="checkbox"><span class="s">amazon</span><span class="n">10/2 AWG tinned marine duplex 50ft</span><span class="p">$65.95</span></label>
+<label class="it" data-k="i11"><input type="checkbox"><span class="s">amazon</span><span class="n">14/2 AWG tinned marine duplex 50ft</span><span class="p">$32.95</span></label>
+<label class="it" data-k="i12"><input type="checkbox"><span class="s">amazon</span><span class="n">NAOEVO 22AWG 6-color silicone 60ft each</span><span class="p">$24.48</span></label>
+<label class="it" data-k="i13"><input type="checkbox"><span class="s">amazon</span><span class="n">MG Chemicals 422B silicone conformal coating</span><span class="p">$49.99</span></label>
+<label class="it" data-k="i14"><input type="checkbox"><span class="s">amazon</span><span class="n">Permatex 22058 dielectric grease</span><span class="p">$10.49</span></label>
+<label class="it" data-k="i15"><input type="checkbox"><span class="s">amazon</span><span class="n">XT60 connectors 20 pairs + 80pc heat-shrink</span><span class="p">$9.99</span></label>
+<label class="it" data-k="i16"><input type="checkbox"><span class="s">amazon</span><span class="n">Anyongora waterproof inline fuse holders + 40 fuses</span><span class="p">$7.99</span></label>
+<label class="it" data-k="i17"><input type="checkbox"><span class="s">amazon</span><span class="n">304 SS socket-head kit M3/M4/M5/M6 1220pc</span><span class="p">$21.99</span></label>
+<label class="it" data-k="i18"><input type="checkbox"><span class="s">amazon</span><span class="n">Snlazp 12-circuit fuse block w/ negative bus waterproof</span><span class="p">$29.95</span></label>
+<label class="it" data-k="i19"><input type="checkbox"><span class="s">amazon</span><span class="n">Kadrick 520pc M2-M5 brass heat-set inserts</span><span class="p">$13.59</span></label>
+<label class="it" data-k="i20"><input type="checkbox"><span class="s">amazon</span><span class="n">uxcell 20mm OD aluminium tube 4x200mm</span><span class="p">$17.19</span></label>
+<label class="it" data-k="i21"><input type="checkbox"><span class="s">amazon</span><span class="n">BEST CONNECTIONS split wire loom 3-pack</span><span class="p">$19.95</span></label>
+<label class="it" data-k="i22"><input type="checkbox"><span class="s">amazon</span><span class="n">SanDisk Extreme 64GB microSDXC A2 V30</span><span class="p">$34.85</span></label>
+<label class="it" data-k="i23"><input type="checkbox"><span class="s">amazon_a4</span><span class="n">ESP32 DevKit</span><span class="p">$8.00</span></label>
+<label class="it" data-k="i24"><input type="checkbox"><span class="s">amazon_a4</span><span class="n">JSN-SR04T waterproof ultrasonic</span><span class="p">$10.00</span></label>
+<label class="it" data-k="i25"><input type="checkbox"><span class="s">amazon_a4</span><span class="n">40A SPDT relay (+1 DRIVE-RELAY for kill chain)</span><span class="p">$7.00</span></label>
+<label class="it" data-k="i26"><input type="checkbox"><span class="s">vendor</span><span class="n">Pixhawk 6C flight controller (genuine)</span><span class="p">$165.99</span></label>
+<label class="it" data-k="i27"><input type="checkbox"><span class="s">vendor</span><span class="n">Holybro PM02 power module</span><span class="p">$25.00</span></label>
+<label class="it" data-k="i28"><input type="checkbox"><span class="s">vendor</span><span class="n">simpleRTK2B Budget (u-blox ZED-F9P)</span><span class="p">$186.00</span></label>
+<label class="it" data-k="i29"><input type="checkbox"><span class="s">vendor</span><span class="n">ANN-MB-00 multiband GNSS antenna IP67</span><span class="p">$58.00</span></label>
+<label class="it" data-k="i30"><input type="checkbox"><span class="s">vendor_upgrade</span><span class="n">simpleRTK2Blite (2nd RTK board — moving-baseline heading)</span><span class="p">$110.00</span></label>
+<label class="it" data-k="i31"><input type="checkbox"><span class="s">vendor_upgrade</span><span class="n">ANN-MB-00 (2nd antenna for heading baseline &gt;=50cm)</span><span class="p">$58.00</span></label>
+<label class="it" data-k="i32"><input type="checkbox"><span class="s">vendor</span><span class="n">Raspberry Pi AI HAT+ (Hailo-8L 13 TOPS)</span><span class="p">$76.95</span></label>
+<label class="it" data-k="i33"><input type="checkbox"><span class="s">vendor</span><span class="n">Raspberry Pi 5 8GB</span><span class="p">$80.00</span></label>
+<label class="it" data-k="i34"><input type="checkbox"><span class="s">vendor</span><span class="n">Pi Camera Module 3 (front — obstacle + vision)</span><span class="p">$29.25</span></label>
+<label class="it" data-k="i35"><input type="checkbox"><span class="s">vendor</span><span class="n">Pi Camera Module 3 (rear feed)</span><span class="p">$29.25</span></label>
+<label class="it" data-k="i36"><input type="checkbox"><span class="s">vendor</span><span class="n">Raspberry Pi Touch Display 2 (7in DSI on-unit screen)</span><span class="p">$60.00</span></label>
+<label class="it" data-k="i37"><input type="checkbox"><span class="s">attachments</span><span class="n">TPMS external valve-cap sensors (4) + USB/BLE receiver</span><span class="p">$35.00</span></label>
+<label class="it" data-k="i38"><input type="checkbox"><span class="s">attachments</span><span class="n">Choke servo (manual-choke variants only; Smart-Choke needs none)</span><span class="p">$18.00</span></label>
+<label class="it" data-k="i39"><input type="checkbox"><span class="s">attachments</span><span class="n">Bagger dump actuator 8in stroke</span><span class="p">$130.00</span></label>
+<label class="it" data-k="i40"><input type="checkbox"><span class="s">attachments</span><span class="n">12/24V high-CFM blower motor</span><span class="p">$60.00</span></label>
+<label class="it" data-k="i41"><input type="checkbox"><span class="s">attachments</span><span class="n">DeWalt 60V FLEXVOLT trimmer (OWNED) + trigger relay + fixed-line spool</span><span class="p">$15.00</span></label>
+<label class="it" data-k="i42"><input type="checkbox"><span class="s">attachments</span><span class="n">Boom slew drive (worm-gear turntable + servo)</span><span class="p">$40.00</span></label>
+<label class="it" data-k="i43"><input type="checkbox"><span class="s">attachments</span><span class="n">PWM relay module for FIMCO 12V pump</span><span class="p">$12.00</span></label>
+<label class="it" data-k="i44"><input type="checkbox"><span class="s">attachments</span><span class="n">Gravely Power Bagger kit (rack + bins donor)</span><span class="p">$—</span></label>
+</div>
+<script>
+const K='mower-shop-v1', st=JSON.parse(localStorage.getItem(K)||'{}');
+const its=[...document.querySelectorAll('.it')];
+function upd(){ const n=its.filter(e=>e.querySelector('input').checked).length;
+  document.getElementById('bar').textContent=n+' / '+its.length+' ordered'; }
+its.forEach(e=>{ const c=e.querySelector('input'), k=e.dataset.k;
+  c.checked=!!st[k]; e.classList.toggle('done',c.checked);
+  c.addEventListener('change',()=>{ st[k]=c.checked; localStorage.setItem(K,JSON.stringify(st));
+    e.classList.toggle('done',c.checked); upd(); }); });
+upd();
+</script></body></html>

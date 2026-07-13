@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  SHARED UTILITY MODULES  —  used by every component file
 //  include <params.scad> before using these.

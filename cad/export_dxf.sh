@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # Export flat/sheet-metal parts as DXF outlines for laser-cut quoting (SendCutSend, OSH Cut...).
 # 3D parts need STEP instead (re-model in FreeCAD/CadQuery) — see docs/SOURCING-AND-FABRICATION.md.
 set -u

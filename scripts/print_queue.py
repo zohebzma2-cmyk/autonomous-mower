@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Generate docs/PRINT-QUEUE.md from cad/stl/ — per-part solid volume, filament
 estimate, and a sensible print order. Pure stdlib.
 

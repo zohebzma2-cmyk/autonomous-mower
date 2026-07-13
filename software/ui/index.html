@@ -107,6 +107,7 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
   <header>
     <div class="brand"><div class="mark"></div><b>Mower</b><span>Gravely ZT 52"</span></div>
     <div class="batt"><b id="bpct">—</b><span id="bv" style="color:var(--mut)"></span>
+      <svg id="bspark" width="52" height="16" viewBox="0 0 52 16" style="opacity:.8"><polyline id="bline" fill="none" stroke="#2ecd8a" stroke-width="1.5" points=""/></svg>
       <div class="cell"><i id="bfill" style="width:0"></i></div></div>
   </header>
 
@@ -205,7 +206,7 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
 
 <script src="/vendor/leaflet/leaflet.js"></script>
 <script>
-let st={}, map, marker, path, pts=[], mapReady=false, planRoute=null, shownRouteId=null;
+let st={}, map, marker, path, pts=[], mapReady=false, planRoute=null, shownRouteId=null, ghost=null, obsLayer=null;
 
 function initMap(lat,lon){
   map=L.map('map',{zoomControl:false,attributionControl:false}).setView([lat,lon],18);
@@ -219,8 +220,36 @@ function initMap(lat,lon){
     iconSize:[34,34],iconAnchor:[17,17]});
   marker=L.marker([lat,lon],{icon}).addTo(map);
   map.on('click', onMapClick);
+  ghost=L.circleMarker([lat,lon],{radius:7,color:'#8fd0ff',fillOpacity:0,weight:2,dashArray:'3 3',interactive:false}).addTo(map);
+  obsLayer=L.layerGroup().addTo(map);
+  loadObstacles();
   mapReady=true;
   loadRoutes();
+}
+// 63: remembered obstacle hits — repeated marks suggest a permanent fence cut
+async function loadObstacles(){
+  try{
+    const hits=await (await fetch('/api/obstacles')).json();
+    obsLayer.clearLayers();
+    hits.forEach(h=>L.circleMarker([h.lat,h.lon],{radius:6,color:'#e5504a',fillColor:'#e5504a',
+      fillOpacity:.25,weight:1,interactive:false}).addTo(obsLayer));
+  }catch(e){}
+}
+setInterval(loadObstacles, 30000);
+// 61: ghost mower — where the plan says it SHOULD be (nearest point on the plan)
+function updateGhost(s){
+  if(!ghost||!planRoute) return;
+  const lls=planRoute.getLatLngs(); if(!lls||lls.length<2) return;
+  let best=null,bd=1e18;
+  for(let i=0;i<lls.length-1;i++){
+    const a=lls[i],b=lls[i+1];
+    const t=Math.max(0,Math.min(1,((s.lat-a.lat)*(b.lat-a.lat)+(s.lon-a.lng)*(b.lng-a.lng))/
+      (((b.lat-a.lat)**2+(b.lng-a.lng)**2)||1e-12)));
+    const q=[a.lat+t*(b.lat-a.lat), a.lng+t*(b.lng-a.lng)];
+    const d=(s.lat-q[0])**2+(s.lon-q[1])**2;
+    if(d<bd){bd=d;best=q;}
+  }
+  if(best) ghost.setLatLng(best);
 }
 
 // ---- zone / fence drawing + coverage ----
@@ -332,6 +361,7 @@ async function loadPlan(id){
 function updateMap(s){
   if(!mapReady){ initMap(s.lat,s.lon); }
   renderFence(s);
+  updateGhost(s);
   if(s.route_id!==shownRouteId){                    // new run (or cleared) → reset overlays
     shownRouteId=s.route_id; pts=[]; path.setLatLngs([]);
     if(s.route_id) loadPlan(s.route_id);
@@ -382,6 +412,11 @@ function render(s){
   document.getElementById('bpct').textContent=s.battery_pct+'%';
   document.getElementById('bv').textContent=' '+s.battery_v+'V';
   const f=document.getElementById('bfill'); f.style.width=s.battery_pct+'%';
+  // sparkline (60): last 60 voltage samples
+  (render._bh=render._bh||[]).push(s.battery_v); if(render._bh.length>60) render._bh.shift();
+  const bl=document.getElementById('bline');
+  if(bl){ const h=render._bh, mn=Math.min(...h), mx=Math.max(...h), sp=(mx-mn)||0.1;
+    bl.setAttribute('points', h.map((v,i)=>(i*52/59).toFixed(1)+','+(14-(v-mn)/sp*12).toFixed(1)).join(' ')); }
   f.style.background = s.battery_pct>40?'var(--ok)':(s.battery_pct>20?'var(--warn)':'var(--bad)');
   // status verb
   const [verb,cls]=verbFor(s);

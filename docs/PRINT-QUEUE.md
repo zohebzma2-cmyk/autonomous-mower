@@ -58,3 +58,5 @@ factor) — **the slicer's number wins**. Print the brim-baked files in
 | sprayer_ctrl_mount | 1 | 84.0 × 64.0 × 11.0 | 15 g | 0.8 h |
 
 **Totals: ≈ 1230 g (~1.2 kg spool budget) · ≈ 68 printer-hours** (mostly unattended; batch small parts per plate).
+
+**Filament calculator:** PETG ≈ 1230 g ≈ $25 @ $20/kg · ASA equivalent ≈ 1061 g ≈ $30 @ $28/kg. Buy 2 kg — brims, failed first layers, and re-measured re-prints are real.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """
 MAVLink bridge — connects the companion UI to ArduPilot Rover (SITL or real Pixhawk).
 Kept separate from app.py so `--sim` runs dependency-free. Enable with:

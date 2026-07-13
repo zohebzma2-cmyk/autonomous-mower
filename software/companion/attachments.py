@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """
 Attachment & powertrain policy — TPMS, ignition/choke, power bagger,
 blower/trimmer boom, tow-behind sprayer.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
 # On-unit touchscreen: wait for the companion server, then open the control UI
 # full-screen in Chromium (kiosk). Autostart this on the Pi desktop session.
 set -u

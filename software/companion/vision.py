@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """
 Camera-AI vision — front-camera obstacle/grass detection feeding the safety layer.
 

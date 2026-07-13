@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Convert the 3D (CNC) part STLs -> solid STEP for machining quotes.
 STEP from a mesh is FACETED (curves become polygons) — a valid machinable solid
 that instant CNC quoters accept, but a clean parametric re-model is better for

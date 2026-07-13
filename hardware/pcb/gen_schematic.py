@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Generate the MowerCarrier board interconnect schematic (SVG).
 
 A block/net-level schematic of the power-distribution + safety-kill-chain + ESP32

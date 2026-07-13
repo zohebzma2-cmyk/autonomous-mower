@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  GPS ANTENNA MAST MOUNT  —  autonomous zero-turn mower retrofit
 //  Clamps to a vertical SQUARE post and carries a tall aluminium mast so the

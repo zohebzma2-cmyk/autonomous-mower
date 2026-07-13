@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Generate the MowerCarrier board placement / outline drawing (SVG, top view).
 
 Dimensioned component-placement drawing for a 120 x 100 mm 2-layer board:

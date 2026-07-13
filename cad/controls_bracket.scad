@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // ============================================================================
 //  CONTROLS / SAFETY BRACKETS  —  autonomous zero-turn mower retrofit
 //  Three independent 3D-printable parts (all fit the 150mm FlashForge bed):

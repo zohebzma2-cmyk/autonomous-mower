@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """
 Backend test suite — pure stdlib (no pytest), matches the companion's zero-dep design.
 Run:  python3 tests/test_backend.py      (from software/, or anywhere)
@@ -335,6 +336,49 @@ def test_service_reset_restarts_counter():
     d = app.S.snapshot()
     assert abs(d["oil_due_h"] - app.OIL_INTERVAL_H) < 0.2, "oil counter must restart from now"
     assert abs(d["blade_due_h"] - (app.BLADE_INTERVAL_H - 40.0)) < 0.2, "blade counter untouched"
+
+
+# ---------------------------------------------------------------- scenario fixtures (41)
+SCENARIOS = [
+    # (state-overrides, allow, reason-substr)
+    ({}, True, None),
+    ({"estop": True}, False, "E-STOP"),
+    ({"roll": 16}, False, "steep"),
+    ({"overhead_m": 1.2}, False, "branch"),
+    ({"obstacle": True}, False, "obstacle"),
+    ({"estop": True, "roll": 20, "obstacle": True}, False, "E-STOP"),          # priority
+    ({"roll": 20, "overhead_m": 1.0}, False, "steep"),                          # slope > overhead
+    ({"overhead_m": 1.0, "obstacle": True}, False, "branch"),                   # overhead > obstacle
+    ({"fence": SQUARE, "fence_enabled": True, "lat": 42.9, "lon": -71.36725}, False, "geofence"),
+    ({"roll": 13}, True, None),                                                 # warn band still moves
+]
+def test_safety_scenario_table():
+    base = dict(estop=False, roll=0, pitch=0, overhead_m=5.0, obstacle=False,
+                lat=42.8062, lon=-71.36725, fence=[], fence_enabled=False)
+    for i, (over, allow, sub) in enumerate(SCENARIOS):
+        ok, why = safety.evaluate({**base, **over})
+        assert ok == allow, f"scenario {i}: expected allow={allow}, got {why!r}"
+        if sub: assert sub in (why or ""), f"scenario {i}: reason {why!r} missing {sub!r}"
+
+# ---------------------------------------------------------------- QGC .plan (58)
+def test_qgc_plan_roundtrip():
+    pts = [[42.8060, -71.3675], [42.8061, -71.3670], [42.8062, -71.3665]]
+    plan = missions.to_qgc_plan(pts)
+    assert plan["fileType"] == "Plan" and len(plan["mission"]["items"]) == 3
+    back = missions.from_qgc_plan(plan)
+    assert back == pts, "roundtrip must preserve waypoints"
+    assert missions.from_qgc_plan({"mission": {"items": []}}) == []
+
+# ---------------------------------------------------------------- obstacle memory (63)
+def test_obstacle_log_rising_edge_only():
+    import os
+    try: os.remove(app._obstacles_path())
+    except OSError: pass
+    d = {"obstacle": True, "lat": 1.0, "lon": 2.0, "obstacle_range": 1.5}
+    hits = app.obstacle_log(False, d)          # rising edge -> logged
+    assert hits and len(hits) == 1
+    assert app.obstacle_log(True, d) is None, "held obstacle must not re-log"
+    assert app.obstacle_log(False, {"obstacle": False}) is None
 
 # ---------------------------------------------------------------- runner
 def main():
