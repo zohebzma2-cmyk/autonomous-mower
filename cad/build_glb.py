@@ -77,7 +77,13 @@ def world_to_glb(p_mm):
     return np.array([q[0], q[2], -q[1]]) / 1000.0
 
 def load_group(stl_dir, name, max_faces=None):
-    mesh = trimesh.load(f"{stl_dir}/assembly_{name}.stl")
+    if name == "black":                       # exported as two halves (memory) — merge
+        import os
+        parts = [trimesh.load(f"{stl_dir}/assembly_black_{h}.stl")
+                 for h in ("a", "b") if os.path.exists(f"{stl_dir}/assembly_black_{h}.stl")]
+        mesh = trimesh.util.concatenate(parts) if parts else trimesh.load(f"{stl_dir}/assembly_black.stl")
+    else:
+        mesh = trimesh.load(f"{stl_dir}/assembly_{name}.stl")
     if max_faces and len(mesh.faces) > max_faces:
         n0 = len(mesh.faces)
         mesh = mesh.simplify_quadric_decimation(face_count=max_faces)

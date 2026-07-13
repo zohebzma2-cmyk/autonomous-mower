@@ -98,6 +98,12 @@ if (SHOW=="deck")   { mower_deck(); mower_deck_details(); }
 if (SHOW=="black")  { mower_wheels(); mower_seat(); mower_lapbar(1,6); mower_lapbar(-1,6);
                       mower_casters(); mower_fueltanks(); mower_seatframe(); mower_dash();
                       mower_engine_detail(); mower_branding(); }
+// black split for export memory (single-tree CGAL on all 4 treaded tyres OOMs):
+// build_glb.py loads black_a + black_b and concatenates them into one node.
+if (SHOW=="black_a") { mower_wheels(); mower_casters(); }
+if (SHOW=="black_b") { mower_seat(); mower_lapbar(1,6); mower_lapbar(-1,6);
+                       mower_fueltanks(); mower_seatframe(); mower_dash();
+                       mower_engine_detail(); mower_branding(); }
 if (SHOW=="retro")  retrofit();
 if (SHOW=="accent") { mower_accents(); mower_tpms_accent(); }
 if (SHOW=="blade")  mower_blade();
