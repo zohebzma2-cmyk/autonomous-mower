@@ -33,10 +33,10 @@ OBSTACLE_STOP_M = 2.0     # RPLidar stop-zone radius ahead
 # companion-side belt to the FC's suspenders.
 FENCE_MIN_POINTS = 3
 
-def point_in_polygon(lat: float, lon: float, poly: list) -> bool:
+def point_in_polygon(lat: float | None, lon: float | None, poly: list) -> bool:
     """Ray-casting point-in-polygon. poly = [[lat,lon], ...]; returns bool.
     Even-odd rule; points exactly on an edge count as inside (safe side)."""
-    if not poly or len(poly) < FENCE_MIN_POINTS:
+    if lat is None or lon is None or not poly or len(poly) < FENCE_MIN_POINTS:
         return False
     inside = False
     j = len(poly) - 1
