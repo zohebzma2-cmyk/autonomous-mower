@@ -104,7 +104,9 @@ autonomous-mower/
 ### CAD → STL
 ```bash
 cd cad
-# 1. Edit params.scad SECTION 1 to your machine (lap-bar OD, spacing, frame tube, seat)
+# 1. Edit params.scad SECTION 1 to your machine — start from a profile in cad/profiles/
+#    (zt-x-52.scad = the reference build; generic-60in.scad = commercial-class starting point)
+#    or generate your block interactively: zohebalvi.com/mower → "Adapt it to YOUR mower"
 openscad assembly.scad          # see the whole machine
 ./export_stl.sh                 # export all printable parts + bed-fit check
 ./bake_brims.sh                 # weld brims for adhesion

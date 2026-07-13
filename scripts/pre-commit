@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Fast pre-commit gate (~5 s) — the slow full gate is scripts/check.sh.
+# Install:  ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+echo "pre-commit: companion tests"
+TMPDIR="${TMPDIR:-/tmp}" python3 software/tests/test_backend.py >/dev/null || {
+  echo "FAIL: test suite"; exit 1; }
+
+echo "pre-commit: every manifest part fits the bed"
+python3 - <<'PY'
+import csv, sys
+rows = list(csv.DictReader(open("cad/stl/MANIFEST.csv")))
+assert rows, "MANIFEST.csv is empty"
+bad = [r["part"] for r in rows if not r[next(k for k in r if k.startswith("fits"))].startswith("YES")]
+if bad:
+    print("FAIL: parts exceed the bed:", ", ".join(bad)); sys.exit(1)
+print(f"  {len(rows)} parts, all fit")
+PY
+
+echo "pre-commit: OK"
