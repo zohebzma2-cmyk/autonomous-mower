@@ -21,4 +21,13 @@ done
 echo "== envelope self-check vs the published spec"
 openscad -o /tmp/check.csg assembly.scad 2>&1 | grep "ENVELOPE" | tee /tmp/env.txt
 grep -q "L=1968" /tmp/env.txt && grep -q "W=1610" /tmp/env.txt && grep -q "H=1039" /tmp/env.txt
+if [ "${1:-}" = "--full" ]; then
+  echo "== renders fresh vs CAD (--full)"
+  ./render_gallery.sh >/dev/null 2>&1
+  cd ..
+  if ! git diff --quiet -- cad/renders; then
+    echo "STALE RENDERS: cad/renders changed after re-render — commit the fresh ones"; exit 1
+  fi
+  cd cad
+fi
 echo "ALL CHECKS PASSED"

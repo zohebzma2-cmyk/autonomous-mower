@@ -33,7 +33,7 @@ OBSTACLE_STOP_M = 2.0     # RPLidar stop-zone radius ahead
 # companion-side belt to the FC's suspenders.
 FENCE_MIN_POINTS = 3
 
-def point_in_polygon(lat, lon, poly):
+def point_in_polygon(lat: float, lon: float, poly: list) -> bool:
     """Ray-casting point-in-polygon. poly = [[lat,lon], ...]; returns bool.
     Even-odd rule; points exactly on an edge count as inside (safe side)."""
     if not poly or len(poly) < FENCE_MIN_POINTS:
@@ -50,18 +50,18 @@ def point_in_polygon(lat, lon, poly):
         j = i
     return inside
 
-def fence_breach(s):
+def fence_breach(s: dict) -> bool:
     """True when a fence is set+enabled and the machine is outside it."""
     poly = s.get("fence") or []
     if not s.get("fence_enabled") or len(poly) < FENCE_MIN_POINTS:
         return False
     return not point_in_polygon(s.get("lat"), s.get("lon"), poly)
 
-def slope_of(roll, pitch):
+def slope_of(roll: float | None, pitch: float | None) -> float:
     """Worst-case tilt magnitude (deg) from roll & pitch."""
     return round(max(abs(roll or 0.0), abs(pitch or 0.0)), 1)
 
-def evaluate(s):
+def evaluate(s: dict) -> tuple:
     """Given a state dict, return (allow_move: bool, reason: str|None).
     Reason is the single most important blocker, checked in priority order."""
     if s.get("estop"):
@@ -78,14 +78,14 @@ def evaluate(s):
         return False, "obstacle ahead — holding"
     return True, None
 
-def can_arm(s):
+def can_arm(s: dict) -> tuple:
     """Refuse to arm while already on a dangerous slope."""
     slope = slope_of(s.get("roll"), s.get("pitch"))
     if slope > MAX_SLOPE_DEG:
         return False, f"on a {slope:.0f}° slope — too steep to arm"
     return True, None
 
-def slope_band(roll, pitch):
+def slope_band(roll: float | None, pitch: float | None) -> str:
     """UI helper: 'ok' | 'warn' | 'bad'."""
     slope = slope_of(roll, pitch)
     return "bad" if slope > MAX_SLOPE_DEG else ("warn" if slope >= WARN_SLOPE_DEG else "ok")

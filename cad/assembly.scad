@@ -92,11 +92,12 @@ module retrofit() {
 // blade_pos(-1/0/1) as three nodes and bakes a spin animation on them.
 SHOW = is_undef(SHOW) ? "all" : SHOW;
 if (SHOW=="all")    { mower_full(lap_angle=6); mower_tpms_accent(); retrofit(); }
-if (SHOW=="body")   { mower_frame(); mower_deck(); mower_engine(); mower_footdeck(); mower_fenders();
-                      mower_rims(); }
+if (SHOW=="body")   { mower_frame(); mower_engine(); mower_footdeck(); mower_fenders();
+                      mower_rims(); }              // deck exports separately (deck-height anim)
+if (SHOW=="deck")   { mower_deck(); mower_deck_details(); }
 if (SHOW=="black")  { mower_wheels(); mower_seat(); mower_lapbar(1,6); mower_lapbar(-1,6);
                       mower_casters(); mower_fueltanks(); mower_seatframe(); mower_dash();
-                      mower_engine_detail(); mower_deck_details(); mower_branding(); }
+                      mower_engine_detail(); mower_branding(); }
 if (SHOW=="retro")  retrofit();
 if (SHOW=="accent") { mower_accents(); mower_tpms_accent(); }
 if (SHOW=="blade")  mower_blade();

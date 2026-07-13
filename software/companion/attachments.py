@@ -20,7 +20,7 @@ TIRE_NOMINAL_PSI = {"rl": 12.0, "rr": 12.0, "fl": 20.0, "fr": 20.0}
 TIRE_WARN_FRAC = 0.25          # warn beyond ±25% of nominal
 TIRE_NAMES = {"rl": "rear-left", "rr": "rear-right", "fl": "front-left", "fr": "front-right"}
 
-def tpms_warnings(tires):
+def tpms_warnings(tires: dict | None) -> list:
     """tires: {'rl': psi, ...} -> list of human warnings (empty = all good).
     Low tyres change ride height and steering scrub; they also un-level the
     deck, so the cut goes wavy long before a flat is obvious."""
@@ -44,7 +44,7 @@ CRANK_REST_S = 10.0            # starter cool-down between attempts
 CHOKE_FULL_BELOW_C = 10.0      # cold start: full choke
 CHOKE_HALF_BELOW_C = 20.0      # cool start: half choke
 
-def choke_for(temp_c):
+def choke_for(temp_c: float | None) -> float:
     """Choke position 0..1 for a MANUAL-choke engine (Smart-Choke variants
     ignore this). Fully open (0) once warm."""
     if temp_c is None or temp_c < CHOKE_FULL_BELOW_C:
@@ -53,7 +53,7 @@ def choke_for(temp_c):
         return 0.5
     return 0.0
 
-def can_crank(d):
+def can_crank(d: dict) -> tuple:
     """Interlocks before the starter relay may close."""
     if d.get("estop"):
         return False, "E-STOP engaged"
@@ -74,14 +74,14 @@ def can_crank(d):
 BAGGER_FULL_MIN = 18.0         # minutes of heavy cut to fill the bins (tune on grass)
 DUMP_RAISE_S, DUMP_HOLD_S, DUMP_LOWER_S = 3.0, 2.0, 3.0
 
-def bagger_fill_step(fill_pct, blade_on, grass_pct, dt_s):
+def bagger_fill_step(fill_pct: float, blade_on: bool, grass_pct: float | None, dt_s: float) -> float:
     """Advance the fill estimate by dt_s of mowing."""
     if not blade_on:
         return fill_pct
     rate = (100.0 / (BAGGER_FULL_MIN * 60.0)) * max(0.2, (grass_pct or 0) / 100.0)
     return min(100.0, round(fill_pct + rate * dt_s, 2))
 
-def can_dump(d):
+def can_dump(d: dict) -> tuple:
     if d.get("estop"):
         return False, "E-STOP engaged"
     if (d.get("speed") or 0) > 0.05:
@@ -98,10 +98,10 @@ def can_dump(d):
 BOOM_MIN_DEG, BOOM_MAX_DEG = 0.0, 270.0
 TRIM_MAX_SPEED = 1.0           # m/s — edging is a slow-roll operation
 
-def clamp_boom(angle):
+def clamp_boom(angle: float) -> float:
     return max(BOOM_MIN_DEG, min(BOOM_MAX_DEG, float(angle)))
 
-def can_run_trimmer(d):
+def can_run_trimmer(d: dict) -> tuple:
     """String head is a cutting tool: same respect as the blades."""
     if d.get("estop"):
         return False, "E-STOP engaged"
@@ -121,7 +121,7 @@ SPRAY_RATE_L_PER_M2 = 0.012    # target application (~= 1.2 L / 100 m^2); calibr
 PUMP_MAX_LPM = 8.3             # ~2.2 GPM class 12V diaphragm pump
 TURN_PAUSE_DPS = 25.0          # pause application when yawing faster than this
 
-def sprayer_duty(speed_ms, turn_rate_dps=0.0):
+def sprayer_duty(speed_ms: float | None, turn_rate_dps: float = 0.0) -> float:
     """Pump duty 0..1 for constant area application at this ground speed.
     Returns 0 while stopped or in a sharp turn (no double-dose headlands)."""
     if speed_ms is None or speed_ms <= 0.05:
@@ -131,7 +131,7 @@ def sprayer_duty(speed_ms, turn_rate_dps=0.0):
     lpm = speed_ms * SPRAY_SWATH_M * SPRAY_RATE_L_PER_M2 * 60.0
     return round(min(1.0, lpm / PUMP_MAX_LPM), 3)
 
-def can_spray(d):
+def can_spray(d: dict) -> tuple:
     if d.get("estop"):
         return False, "E-STOP engaged"
     if not (d.get("sprayer") or {}).get("attached"):
