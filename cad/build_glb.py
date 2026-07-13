@@ -27,7 +27,8 @@ CENTROID = np.array([180.7, 9.7, 320.1])   # mm, FIXED (prototype-v1 datum)
 
 STATIC_GROUPS = {
     #  name     baseColorRGBA               metallic rough  max_faces (web budget)
-    "body":   ([0.72, 0.11, 0.10, 1.0],      0.15,   0.34,  180_000),  # glossy Gravely-red paint
+    "body":   ([0.72, 0.11, 0.10, 1.0],      0.15,   0.34,  150_000),  # glossy Gravely-red paint
+    "deck":   ([0.72, 0.11, 0.10, 1.0],      0.15,   0.34,   90_000),  # deck = own node (height anim)
     "black":  ([0.055, 0.055, 0.06, 1.0],    0.00,   0.88,  260_000),  # matte rubber / vinyl
     "accent": ([0.93, 0.76, 0.13, 1.0],      0.10,   0.55,   30_000),  # yellow service touch-points
 }
@@ -113,7 +114,7 @@ def inject_animations(path, blade_names, blade_bases):
     node_idx = {n.name: i for i, n in enumerate(glb.nodes)}
     # glTF forbids animating nodes that carry `matrix`; trimesh writes matrices.
     # Ours are pure translations — convert every animated node to TRS.
-    animated = set(blade_names) | set(RETRO_SUBS) | set(ATTACH_GROUPS)
+    animated = set(blade_names) | set(RETRO_SUBS) | set(ATTACH_GROUPS) | {"deck"}
     for n in glb.nodes:
         if n.name in animated and n.matrix:
             m = n.matrix
@@ -149,6 +150,42 @@ def inject_animations(path, blade_names, blade_bases):
     for n, base in zip(blade_names, blade_bases):
         add(n, list(base), BLADE_EXPLODE)
     glb.animations.append(pygltflib.Animation(name="explode", samplers=samplers, channels=channels))
+
+    # ---- deck-height (#13): scrub 0..1 = 1.5" .. 4.5" cut on the real adjuster
+    t_dh = buf.accessor(np.array([0.0, 1.0]), pygltflib.SCALAR)
+    # modeled clearance 90mm ~= 2.6" cut; 1.5" = -28mm, 4.5" = +48mm
+    v_dh = buf.accessor(np.array([[0, -0.028, 0], [0, 0.048, 0]]), pygltflib.VEC3)
+    dh_nodes = [node_idx["deck"]] + [node_idx[n] for n in blade_names]
+    dh_samp = [pygltflib.AnimationSampler(input=t_dh, output=v_dh, interpolation="LINEAR")]
+    dh_chan = [pygltflib.AnimationChannel(sampler=0,
+               target=pygltflib.AnimationChannelTarget(node=node_idx["deck"], path="translation"))]
+    for k, (n, base) in enumerate(zip(blade_names, blade_bases)):     # blades ride the deck
+        vb = buf.accessor(np.array([np.array(base) + [0, -0.028, 0], np.array(base) + [0, 0.048, 0]]), pygltflib.VEC3)
+        dh_samp.append(pygltflib.AnimationSampler(input=t_dh, output=vb, interpolation="LINEAR"))
+        dh_chan.append(pygltflib.AnimationChannel(sampler=len(dh_samp) - 1,
+                       target=pygltflib.AnimationChannelTarget(node=node_idx[n], path="translation")))
+    glb.animations.append(pygltflib.Animation(name="deck-height", samplers=dh_samp, channels=dh_chan))
+
+    # ---- assemble (#11): parts fly IN, staggered in build order, 8s ----------
+    order = ["retro_brain", "retro_actuators", "retro_gps", "retro_lidar", "retro_camera",
+             "retro_estop"] + list(blade_names) + ["bagger_frame", "bagger_bins", "boom_asm",
+             "sprayer_frame", "sprayer_tank"]
+    offs = dict(RETRO_SUBS); offs.update({n: BLADE_EXPLODE for n in blade_names})
+    offs.update({k: v[1] for k, v in ATTACH_GROUPS.items()})
+    bases = {n: [0.0, 0.0, 0.0] for n in order}
+    bases.update({n: list(b) for n, b in zip(blade_names, blade_bases)})
+    bases["bagger_bins"] = list(world_to_glb(BIN_PIVOT_MM))
+    a_samp, a_chan = [], []
+    TOTAL = 8.0
+    for i, n in enumerate(order):
+        start = i * (TOTAL - 1.2) / max(1, len(order) - 1)
+        base = np.array(bases[n]); off = base + np.array(offs[n])
+        t = buf.accessor(np.array([0.0, start, min(start + 1.0, TOTAL), TOTAL]), pygltflib.SCALAR)
+        v = buf.accessor(np.array([off, off, base, base]), pygltflib.VEC3)
+        a_samp.append(pygltflib.AnimationSampler(input=t, output=v, interpolation="LINEAR"))
+        a_chan.append(pygltflib.AnimationChannel(sampler=len(a_samp) - 1,
+                      target=pygltflib.AnimationChannelTarget(node=node_idx[n], path="translation")))
+    glb.animations.append(pygltflib.Animation(name="assemble", samplers=a_samp, channels=a_chan))
 
     # ---- dump: bagger bins tip over the torque tube (raise/hold/lower) ------
     t_dump = buf.accessor(np.array(DUMP_TIMES), pygltflib.SCALAR)
