@@ -31,6 +31,7 @@ vendor,simpleRTK2B Budget (u-blox ZED-F9P),https://www.ardusimple.com/product/si
 vendor,ANN-MB-00 multiband GNSS antenna IP67,https://www.ardusimple.com/product/ann-mb-00-ip67/,ArduSimple,1,58.00,EUR 53.80
 vendor_upgrade,simpleRTK2Blite (2nd RTK board — moving-baseline heading),https://www.ardusimple.com/product/simplertk2blite/,ArduSimple,1,110.00,recommended: ~0.4deg true heading
 vendor_upgrade,ANN-MB-00 (2nd antenna for heading baseline >=50cm),https://www.ardusimple.com/product/ann-mb-00-ip67/,ArduSimple,1,58.00,print 2x gps_mast
+vendor_upgrade,20mm OD aluminium tube >=660mm (dual-RTK crossbar),search: 20mm OD aluminium round tube 1000mm,Amazon,1,15.00,price est. — verify; cut to BASELINE_L+60 (cad/sensor_mounts.scad)
 vendor,Raspberry Pi AI HAT+ (Hailo-8L 13 TOPS),https://www.pishop.us/product/raspberry-pi-ai-hat-13-tops/,PiShop,1,76.95,camera AI
 vendor,Raspberry Pi 5 8GB,https://www.pishop.us/product/raspberry-pi-5-8gb/,PiShop,1,80.00,companion computer
 vendor,Pi Camera Module 3 (front — obstacle + vision),https://www.pishop.us/product/raspberry-pi-camera-module-3/,PiShop,1,29.25,

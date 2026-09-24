@@ -4,6 +4,14 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 [DESIGN-LOG.md](DESIGN-LOG.md).
 
 ## Unreleased
+- **8 new printable parts, 40 total** (`cad/sensor_mounts.scad`), all bed-gated and brim-baked:
+  overhead sonar collar with a raised probe cup (JSN-SR04T sits face-up above the antenna),
+  a split sun hood + braces + tilt yoke for the 7" Touch Display 2 on the brain-box lid, and
+  the dual-RTK crossbar tee + antenna plates (replaces "print 2x gps_mast")
+- Assembly shows the sonar and screen; `DUAL_ANTENNA=true` shows the crossbar. New gallery
+  renders: `assembly_dual_rtk`, `closeup_sonar_baseline`, `closeup_display`, `sensor_mounts`
+- GLB builder gains `retro_sonar` + `retro_display` nodes; viewer lists all 40 parts and loads a
+  fresh decimated full-machine STL (was a prototype-era model)
 - Adapting to RC / electric-drive mowers (tracked or wheeled): `docs/ADAPT-RC-MOWER.md` + `firmware/ardupilot/profiles/rc-tracked.parm`. The Pixhawk sits in front of the stock drive controller, so no actuators or ESP32 are needed
 - Companion runs on Python 3.9 again (`from __future__ import annotations`), so the test suite passes on stock macOS
 - Route ids no longer collide when two routes are saved in the same millisecond (was a flaky `test_teach_records_and_saves`; `get_route` could return the wrong route)

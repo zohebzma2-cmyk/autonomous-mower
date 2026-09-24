@@ -29,8 +29,9 @@ GPS_RATE_MS,100        # 10 Hz
 # GPS_TYPE,17          # GPS1 = moving-baseline BASE
 # GPS_TYPE2,18         # GPS2 = moving-baseline ROVER (the two F9P link via UART)
 # EK3_SRC1_YAW,2       # use GPS yaw in the EKF
-# GPS_POS1_Y,0.0       # antenna positions (m) → the baseline vector; MEASURE on your mount
-# GPS_POS2_Y,0.5       # e.g. 2nd antenna 0.5 m to one side. Set X/Y/Z for both.
+# GPS_POS1_Y,-0.30     # antenna positions (m) → the baseline vector; MEASURE on your mount.
+# GPS_POS2_Y,0.30      # Printed crossbar (cad/sensor_mounts.scad, BASELINE_L=600): antennas at
+#                      # +/-0.30 m across the machine. Set X/Z for both from the mast position.
 
 # ---- arming & safety ----
 ARMING_CHECK,1         # all pre-arm checks ON

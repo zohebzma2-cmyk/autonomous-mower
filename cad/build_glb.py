@@ -5,7 +5,7 @@
 Pipeline:  openscad -D SHOW='"<group>"' -o assembly_<group>.stl assembly.scad
            python3 build_glb.py <stl_dir> <out.glb>
 
-Groups: body, black, accent (static) + six retro_* subsystem nodes + one
+Groups: body, black, accent (static) + eight retro_* subsystem nodes + one
 origin-centred blade instanced three times. Two baked animations:
   - "blade-spin": each blade node rotates about its local vertical axis
     (played on hover on the site)
@@ -53,6 +53,8 @@ RETRO_SUBS = {
     "retro_lidar":     ( 0.22, 0.40,  0.00),
     "retro_camera":    ( 0.35, 0.15,  0.00),
     "retro_estop":     ( 0.00, 0.18, -0.35),   # out over the right side
+    "retro_sonar":     ( 0.10, 0.55,  0.18),   # up off the GPS mast
+    "retro_display":   ( 0.00, 0.40, -0.25),   # up + out toward the right (screen) side
 }
 BLADE_EXPLODE = (0.0, -0.30, 0.0)                    # blades drop out of the deck
 # bagger bins pivot about the dump torque tube (mower.scad: BAG_X1+40, z=440);
@@ -174,7 +176,7 @@ def inject_animations(path, blade_names, blade_bases):
 
     # ---- assemble (#11): parts fly IN, staggered in build order, 8s ----------
     order = ["retro_brain", "retro_actuators", "retro_gps", "retro_lidar", "retro_camera",
-             "retro_estop"] + list(blade_names) + ["bagger_frame", "bagger_bins", "boom_asm",
+             "retro_estop", "retro_sonar", "retro_display"] + list(blade_names) + ["bagger_frame", "bagger_bins", "boom_asm",
              "sprayer_frame", "sprayer_tank"]
     offs = dict(RETRO_SUBS); offs.update({n: BLADE_EXPLODE for n in blade_names})
     offs.update({k: v[1] for k, v in ATTACH_GROUPS.items()})

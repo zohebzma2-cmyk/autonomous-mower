@@ -57,6 +57,7 @@ of logging it.
 | No-rut turns | planner emits U-turns (wide rows) or 3-point K-turns (tight rows) with headland insets; never pivots | the ZTR pivot shears the root mat under 615 lb — physics section in ATTACHMENTS.md |
 | Test suite 30 → 45 | every interlock and control law above has a test | policy without tests is a wish |
 | Printable mounting hardware | 8 new PRINT_ parts (boom base, blower cradle ×2, trimmer plate, duct adapter, dump clevis, TPMS cradle, sprayer-PWM mount) — bed-gated + brim-baked like the original 24 | "properly CADded down to the brim": attachments aren't real until their brackets print |
+| Sensor + screen mounts | 8 new PRINT_ parts: sonar collar (probe face-up above the antenna), split Touch Display 2 hood + braces + tilt yoke, dual-RTK crossbar tee + antenna plates | three BOM items (JSN-SR04T, Touch Display 2, 2nd ANN-MB-00) had no printed home; a 189.5 mm screen on a 145 mm bed forced the split hood |
 
 ## Constraints A–Z (every one of these actually bit)
 

@@ -60,7 +60,7 @@ module retro_gps() {                                   // 3) GPS mast, antenna h
     rops_x = M_WHEELBASE*0.18 - SEAT_DEPTH/2 - 40 + 30;
     translate([rops_x, -M_FRAME_W/2, M_SEAT_Z+200]) {
         px_mast(560);
-        translate([0,0,560]) px_gps_ant();
+        if (!DUAL_ANTENNA) translate([0,0,560]) px_gps_ant();  // dual: antennas ride the crossbar
     }
 }
 
@@ -77,6 +77,48 @@ module retro_camera()                                  // 5) camera below the Li
 module retro_estop()                                   // 6) e-stop on the right rail
     translate([M_WHEELBASE*0.05, M_FRAME_W/2+30, M_REAR_WHEEL_D/2+M_RAIL]) px_estop();
 
+// 7) overhead sonar — probe face-up on an arm off the GPS mast, above the antenna
+module retro_sonar() {
+    rops_x = M_WHEELBASE*0.18 - SEAT_DEPTH/2 - 40 + 30;
+    // collar tucks under the top plate's cap socket (single) or the baseline tee (dual)
+    translate([rops_x, -M_FRAME_W/2, M_SEAT_Z+200+560 - (DUAL_ANTENNA ? 62 : 50)]) {
+        c_mast() difference() { cylinder(d=32, h=30); translate([0,0,-1]) cylinder(d=20.4, h=32); }
+        c_mast() translate([12,-8,0]) cube([68, 16, 18]);
+        c_mast() translate([80,0,0]) cylinder(d=31.5, h=80);
+        c_sensor() translate([80,0,80]) cylinder(d=JSN_FLANGE_D, h=2);
+    }
+}
+
+// 8) on-unit touchscreen in its sun hood, on the tilt yoke (display_yoke) bolted to the brain-box lid
+module px_display() {
+    c_brain() difference() {
+        translate([-(TD2_L+8.8)/2, -(TD2_W+8.8)/2, 0]) cube([TD2_L+8.8, TD2_W+8.8, 53.4]);
+        translate([-(TD2_L-12)/2, -(TD2_W-12)/2, 18.4]) cube([TD2_L-12, TD2_W-12, 40]);
+        translate([-(TD2_L)/2, -(TD2_W+8.8)/2-1, 18.4]) cube([TD2_L, 10, 40]);   // open visor bottom
+    }
+    color([0.05,0.07,0.10]) translate([-(TD2_L-12)/2, -(TD2_W-12)/2, 16]) cube([TD2_L-12, TD2_W-12, 1]);
+}
+module retro_display()                                 // on the brain-box lid, facing the right-side
+    translate([M_WHEELBASE*0.18 + 20, 0, M_SEAT_Z+25+52+52.5]) {   // (e-stop) side, tilted up 20 deg
+        c_brain() for (sx=[-1,1]) translate([sx*52, 0, 0]) translate([-3,-12,0]) cube([6, 24, 96]);
+        c_brain() translate([-55, -20, 0]) cube([110, 40, 6]);
+        translate([0, -10, 82]) rotate([-70,0,0]) translate([0,0,6]) px_display();
+    }
+
+// 9) dual-antenna moving baseline (upgrade): crossbar + two antennas on the GPS mast
+DUAL_ANTENNA = is_undef(DUAL_ANTENNA) ? false : DUAL_ANTENNA;
+module retro_baseline() {
+    rops_x = M_WHEELBASE*0.18 - SEAT_DEPTH/2 - 40 + 30;
+    translate([rops_x, -M_FRAME_W/2, M_SEAT_Z+200+560+10]) {
+        c_mast() translate([0,0,-10]) cube([36, 64, 62], center=true);
+        c_mast() rotate([90,0,0]) cylinder(d=20, h=BASELINE_L+60, center=true);
+        for (s=[-1,1]) translate([0, s*BASELINE_L/2, 15]) {
+            c_mast() cylinder(d=GPS_ANT_DIA, h=6);
+            translate([0,0,6]) px_gps_ant();
+        }
+    }
+}
+
 module retrofit() {
     retro_brain();
     retro_actuators();
@@ -84,6 +126,9 @@ module retrofit() {
     retro_lidar();
     retro_camera();
     retro_estop();
+    retro_sonar();
+    retro_display();
+    if (DUAL_ANTENNA) retro_baseline();
 }
 
 // SHOW selects a colour group for multi-material export (-D SHOW='"body"' etc.)
@@ -114,6 +159,9 @@ if (SHOW=="retro_gps")       retro_gps();
 if (SHOW=="retro_lidar")     retro_lidar();
 if (SHOW=="retro_camera")    retro_camera();
 if (SHOW=="retro_estop")     retro_estop();
+if (SHOW=="retro_sonar")     retro_sonar();
+if (SHOW=="retro_display")   retro_display();
+if (SHOW=="retro_baseline")  retro_baseline();
 // Phase-3 attachments — each a separate GLB node (exploded-view + future anims)
 if (SHOW=="bagger_frame")  mower_bagger_frame();
 if (SHOW=="bagger_bins")   mower_bagger_bins();

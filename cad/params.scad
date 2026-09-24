@@ -93,8 +93,8 @@ RTK_L = 68.58; RTK_W = 53.34; RTK_H = 12; // official PCB drawing (was rounded 6
 RTK_HOLE_D = 3.2;                         // 3x M3 on Arduino-Uno pattern; SMA + 2x microUSB on short edges
 
 // --- GPS antenna puck (survey/helical, center-bolt mount) [V] ---
-// ★ Dual-antenna moving-baseline heading: print 2x gps_mast and mount the two antennas on
-//   a baseline >= 0.5 m apart (e.g. front-centre + rear-centre), both clear of metal.
+// ★ Dual-antenna moving-baseline heading: print the baseline tee + 2 antenna plates
+//   (sensor_mounts.scad) — a BASELINE_L crossbar on the GPS mast, both antennas clear of metal.
 GPS_ANT_DIA = 60; GPS_ANT_H = 22; GPS_ANT_BOLT = 6.4;  // 1/4"-20 center stud
 
 // --- RPLidar A1M8 (2D 360 scanner) — EXACT from Slamtec LD108 datasheet (Fig 5-2) ---
@@ -114,6 +114,14 @@ LIDAR_DIA = 96.74; LIDAR_HOLE_N = 4;   // legacy aliases (plate sized to the lon
 CAM_L = 25; CAM_W = 24; CAM_H = 11.5;   // standard Z=11.5 (wide=12.4); lens barrel Ø5.75 std / 6.95 wide
 CAM_HOLE_DX = 21; CAM_HOLE_DY = 14.5; CAM_HOLE_D = 2.2;  // vert pitch 14.5 (the "12.5" is optical half-width)
 
+// --- Raspberry Pi Touch Display 2, 7" (on-unit screen) — official docs: 189.5 x 120 x 15 ---
+TD2_L = 189.5; TD2_W = 120; TD2_H = 15;
+TD2_BEZEL = 8;          // [V] black border outside the active area — the hood lip may overlap it
+// --- JSN-SR04T waterproof ultrasonic probe (overhead clearance) [DS] ---
+// Probe barrel fits an 18 mm hole; front flange Ø23.5; ~20 mm deep. Board 41x28.5 lives in the brain box (2.5 m lead).
+JSN_PROBE_D = 18; JSN_FLANGE_D = 23.5; JSN_PROBE_L = 20;
+// --- Moving-baseline crossbar (dual-antenna heading upgrade) ---
+BASELINE_L = 600;       // [BUY] antenna centre-to-centre (>= 500 for ~0.4 deg heading); cut the 20 mm tube to BASELINE_L + 60
 // --- DC-DC buck converter module (qty 2) [V] ---
 BUCK_L = 65; BUCK_W = 37; BUCK_H = 24; BUCK_HOLE_D = 3.2; BUCK_HOLE_INSET = 4;
 

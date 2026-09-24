@@ -68,7 +68,7 @@ parts-waiting are mostly passive; the variable is **Phase 6 commissioning** (RTK
 calibration, and safety validation take as long as they take — that's a feature, not a delay).
 
 ## Current status
-Design ✅ (exact-spec, 32 printable parts incl. badge + Phase-3 attachment brackets, all fit the 150 mm bed) · Parts ✅ (Amazon cart
+Design ✅ (exact-spec, 40 printable parts incl. badge, Phase-3 attachment brackets, sonar/touchscreen mounts and the dual-RTK crossbar, all fit the 150 mm bed) · Parts ✅ (Amazon cart
 loaded; vendor orders queued) · Firmware ✅ (ESP32 controller + ArduPilot params) · Software ✅
 (companion + Tesla UI, teach/coverage, safety: incline/overhead/obstacle, cameras — **18/18 tests**) ·
 Wiring ✅ (full pinouts + kill chain + diagram). **Not yet physically built** — Phases 0–6 above.

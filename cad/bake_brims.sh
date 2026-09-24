@@ -7,11 +7,11 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 mkdir -p stl/brim renders/brim
-FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad attachments_brackets.scad)
+FILES=(enclosure.scad actuator_brackets.scad gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad attachments_brackets.scad sensor_mounts.scad)
 
 # per-part brim width (mm). default 5; tall/warp-prone 8; structural 6; thin plates 4.
 brim_w(){ case "$1" in
-  PRINT_equipment_plate|PRINT_upper_shelf) echo 2;;   # big flat plates: huge bed contact, keep clear of 150mm edge
+  PRINT_equipment_plate|PRINT_upper_shelf|PRINT_display_hood_l|PRINT_display_hood_r|PRINT_display_brace) echo 2;;   # big flat plates: huge bed contact, keep clear of 150mm edge
   PRINT_lidar_mast_lower|PRINT_lidar_mast_upper|PRINT_estop_pedestal_a|PRINT_camera_base) echo 8;;
   PRINT_lapbar_yoke_bottom|PRINT_lapbar_yoke_top|PRINT_rail_anchor_bottom|PRINT_rail_anchor_top|\
   PRINT_gps_clamp_a|PRINT_gps_clamp_b|PRINT_lidar_base_a|PRINT_lidar_base_b) echo 6;;

@@ -1,7 +1,7 @@
 # Print Guide — every part, brim-ready
 
 Printer: **FlashForge Adventurer 3** (150×150×150 mm) · Slicer: **FlashPrint 5**
-All 23 parts fit the bed (see `cad/stl/MANIFEST.csv`). Two ways to get a brim on every part:
+All 40 parts fit the bed (see `cad/stl/MANIFEST.csv`). Two ways to get a brim on every part:
 
 - **Easiest — use the brim-baked STLs in `cad/stl/brim/`.** Each already has a one-layer brim welded on. Print these with **slicer brim OFF** (don't double up). Peel the brim off after printing.
 - **Or — print the plain STLs in `cad/stl/` and enable FlashPrint's brim:** Expert mode → *Additions* → **Brim** on, width = the value in the table below, **Raft off**.
@@ -48,6 +48,17 @@ All 23 parts fit the bed (see `cad/stl/MANIFEST.csv`). Two ways to get a brim on
 | relay_box | 1 | open-top up, base down | 5 | no | ASA | 3 / 30% |
 | relay_lid | 1 | flat (thin) | 4 | no | ASA | 3 / 30% |
 | throttle_servo_bracket | 1 | base down | 5 | light | ASA | 3 / 30% |
+| **Overhead sonar** (`sensor_mounts.scad`) |||||||
+| sonar_collar_a | 1 | collar end down, probe cup up | 5 | no (gusseted arm) | ASA | 4 / 40% |
+| sonar_collar_b | 1 | collar end down | 5 | no | ASA | 4 / 40% |
+| **Touchscreen hood** (Pi Touch Display 2) |||||||
+| display_hood_l | 1 | **back plane down, visor up** (144 mm — near the bed edge) | 2 | **touching build plate** — front lip | ASA | 3 / 25% |
+| display_hood_r | 1 | same as _l | 2 | touching build plate | ASA | 3 / 25% |
+| display_brace | 2 | bar flat, pivot ear up | 2 | no | ASA | 4 / 40% |
+| display_yoke | 1 | base down, uprights up | 5 | no (gusseted) | ASA | 4 / 40% |
+| **Dual-RTK baseline** (upgrade) |||||||
+| baseline_tee | 1 | mast socket down | 5 | no (teardrop crossbar bore) | ASA | 4 / 40% |
+| baseline_ant_plate | 2 | disc + tongue down, socket up | 5 | no | ASA | 3 / 30% |
 
 ## Batching (fit several per bed job)
 The Adventurer 3 bed is 150 mm, so you can gang small parts. Suggested plates (leave ~8 mm between parts; each part keeps its own brim):
@@ -56,6 +67,8 @@ The Adventurer 3 bed is 150 mm, so you can gang small parts. Suggested plates (l
 - **Plate C (ASA, tall — print alone or pairs):** lidar_mast_lower + lidar_mast_upper (both 112 mm; OK side by side).
 - **Plate D (ASA):** estop_pedestal_a (TALL — alone), then pedestal_b + face + relay_box + relay_lid + throttle_servo_bracket as a second job.
 - **Plate E (PETG):** equipment_plate, then upper_shelf, then box_foot ×4 + camera parts.
+- **Plate F (ASA):** sonar_collar_a + sonar_collar_b + display_yoke; the hood halves and braces print one per job (they span ~144 mm).
+- **Plate G (ASA, upgrade):** baseline_tee + baseline_ant_plate ×2.
 
 ## Print order (match the build phases)
 1. **Steering first** (Plate A) — you'll bench-test actuators before anything else.

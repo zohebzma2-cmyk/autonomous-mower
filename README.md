@@ -26,7 +26,7 @@ Turn a seated zero-turn mower into a self-driving, iPad-controlled robot — **R
 > 📓 **How it evolved:** [`docs/DESIGN-LOG.md`](docs/DESIGN-LOG.md) — every iteration, every wrong turn, constraints A–Z.
 > **What's next:** [`docs/ROADMAP-75.md`](docs/ROADMAP-75.md) — 75 planned upgrades.
 > **Ordering:** [`cart/ORDER.md`](cart/ORDER.md) + machine-readable [`cart/ORDER-SHEET.csv`](cart/ORDER-SHEET.csv).
-> **Building:** [`docs/MEASURE.md`](docs/MEASURE.md) (the 10-minute caliper session — do this first) · [`docs/PRINT-QUEUE.md`](docs/PRINT-QUEUE.md) (32 parts, grams + hours) · [`docs/TOOLS.md`](docs/TOOLS.md) · [`docs/SUBSTITUTIONS.md`](docs/SUBSTITUTIONS.md) · [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+> **Building:** [`docs/MEASURE.md`](docs/MEASURE.md) (the 10-minute caliper session — do this first) · [`docs/PRINT-QUEUE.md`](docs/PRINT-QUEUE.md) (40 parts, grams + hours) · [`docs/TOOLS.md`](docs/TOOLS.md) · [`docs/SUBSTITUTIONS.md`](docs/SUBSTITUTIONS.md) · [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
 >
 > 🌐 **Interactive writeup:** [zohebalvi.com/projects/autonomous-mower](https://zohebalvi.com/projects/autonomous-mower.html) — 3D model, live control-UI demo, architecture, and the full parts list with order links.
 
@@ -77,7 +77,7 @@ autonomous-mower/
 │   ├── WIRING.md            ← power distribution, kill-chain, per-module pinouts
 │   ├── PRINT_GUIDE.md       ← per-part orientation, brim, supports, plate batching
 │   └── wiring-diagram.svg
-├── cad/                     ← parametric OpenSCAD — 32 print-ready parts
+├── cad/                     ← parametric OpenSCAD — 40 print-ready parts
 │   ├── params.scad          ← ★ MASTER PARAMETERS — edit SECTION 1 to fit any ZTR
 │   ├── assembly.scad        ← whole machine; SHOW=all|body|black|retro for multi-material export
 │   ├── mower.scad           ← parametric mower mock (context)
