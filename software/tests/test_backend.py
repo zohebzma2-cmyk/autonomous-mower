@@ -121,6 +121,13 @@ def test_teach_records_and_saves():
     r = missions.get_route(rid); assert r and r["name"] == "Test path"
     missions.delete_route(rid)
 
+def test_route_ids_unique_within_same_ms():
+    a = missions.add_taught("a", [[42.8060, -71.3675], [42.8061, -71.3675]])
+    b = missions.add_taught("b", [[42.8060, -71.3675], [42.8061, -71.3675]])
+    assert a != b, "back-to-back saves must get distinct ids"
+    assert missions.get_route(b)["name"] == "b"
+    missions.delete_route(a); missions.delete_route(b)
+
 def test_run_route_requires_armed_and_valid_id():
     reset(); app.S.update(gps_fix="rtk_fixed")
     rid = missions.add_taught("r", [[42.8060, -71.3675], [42.8061, -71.3675]])

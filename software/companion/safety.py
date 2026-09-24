@@ -12,6 +12,8 @@ This is the *software* interlock layer; it sits ON TOP of the hardware kill chai
 (physical e-stop, RC kill, ArduPilot failsafes) — see docs/BUILD.md §0.
 """
 
+from __future__ import annotations
+
 # --- incline (rollover) ---
 MAX_SLOPE_DEG  = 15.0     # refuse to move above this — ZTR side-slope rating / rollover risk
 WARN_SLOPE_DEG = 12.0     # caution band (still moves, UI warns)

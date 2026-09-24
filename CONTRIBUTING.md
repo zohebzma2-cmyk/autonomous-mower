@@ -18,8 +18,8 @@ test or a bench-test description.
   profile for a different zero-turn (deck, lap-bar OD/spacing, frame tube, seat).
   Drop it in and open a PR — this is how the project becomes reproducible on any ZTR.
 - **Firmware / software** — improvements to the ESP32 lap-bar loop, `safety.py`,
-  coverage planning, vision, or the MAVLink bridge. Keep the 25/25 tests green
-  (`python3 -m pytest software/tests`) and add tests for new logic.
+  coverage planning, vision, or the MAVLink bridge. Keep the tests green
+  (`python3 software/tests/test_backend.py`, or `./scripts/check.sh` for every gate) and add tests for new logic.
 - **Hardware** — footprint fixes, Rev B ideas, or Gerbers for `hardware/pcb/`.
 - **Docs** — clarify the build manual, wiring, or translate a section.
 

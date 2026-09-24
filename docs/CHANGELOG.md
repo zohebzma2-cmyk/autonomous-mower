@@ -4,6 +4,9 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 [DESIGN-LOG.md](DESIGN-LOG.md).
 
 ## Unreleased
+- Adapting to RC / electric-drive mowers (tracked or wheeled): `docs/ADAPT-RC-MOWER.md` + `firmware/ardupilot/profiles/rc-tracked.parm`. The Pixhawk sits in front of the stock drive controller, so no actuators or ESP32 are needed
+- Companion runs on Python 3.9 again (`from __future__ import annotations`), so the test suite passes on stock macOS
+- Route ids no longer collide when two routes are saved in the same millisecond (was a flaky `test_teach_records_and_saves`; `get_route` could return the wrong route)
 - Print queue, tool checklist, substitution guide (this file's sibling docs)
 
 ## 2026-07-12 — Phase 3: the whole rig

@@ -13,6 +13,8 @@ Status: DESIGN + SIM. Interlocks and math are tested; hardware drivers land
 with the physical build (additive iteration — see docs/DESIGN-LOG.md).
 """
 
+from __future__ import annotations
+
 # ---------------------------------------------------------------- TPMS
 # External valve-stem BLE/RF sensors on all four tyres. Nominals are the
 # reference machine's cold pressures — SET TO YOUR SIDEWALL / MANUAL SPEC.

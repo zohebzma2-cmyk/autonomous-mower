@@ -15,6 +15,7 @@ nav:
   - Tools: docs/TOOLS.md
   - Substitutions: docs/SUBSTITUTIONS.md
   - Attachments (Phase 3): docs/ATTACHMENTS.md
+  - RC / tracked mowers: docs/ADAPT-RC-MOWER.md
   - Design log: docs/DESIGN-LOG.md
   - Roadmap: docs/ROADMAP-75.md
   - Changelog: docs/CHANGELOG.md
