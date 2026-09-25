@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MIT
 """Draw the coverage planner on example yards -> docs/coverage-plan.svg.
 
-    python3 scripts/plan_figure.py
+    python3 scripts/plan_figure.py           # light, for the README/docs
+    python3 scripts/plan_figure.py --dark    # docs/coverage-plan-dark.svg, for dark pages
 
 Three panels, all from the real planner in software/companion/missions.py:
   1. U-shaped yard, the old row-stitching (legs across the notch, red)
@@ -97,6 +98,8 @@ def fmt(st):
 
 
 def main():
+    dark = "--dark" in sys.argv
+    bg, ink, dim = ("#0d1117", "#e6edf3", "#8b949e") if dark else ("#ffffff", "#1f2328", "#57606a")
     old = old_stitch(U_YARD, SPACING)
     bad = crossing_legs(U_YARD, old)
     rid_u, new_u = missions.plan_coverage_turns("u", U_YARD, SPACING)
@@ -113,16 +116,16 @@ def main():
 <style>
 .yard{{fill:#2ecd8a14;stroke:#2ecd8a;stroke-width:2}}
 .ko{{fill:#e0525a33;stroke:#e0525a;stroke-width:1.5}}
-.route{{fill:none;stroke:#3e6ae1;stroke-width:1;stroke-linejoin:round}}
+.route{{fill:none;stroke:{"#5ab0ff" if dark else "#3e6ae1"};stroke-width:1;stroke-linejoin:round}}
 .bad{{fill:none;stroke:#e0525a;stroke-width:2.2}}
-.t{{font-size:13px;font-weight:600;fill:#1f2328}}
-.s{{font-size:11.5px;fill:#57606a}}
+.t{{font-size:13px;font-weight:600;fill:{ink}}}
+.s{{font-size:11.5px;fill:{dim}}}
 </style>
-<rect width="100%" height="100%" fill="#ffffff"/>
+<rect width="100%" height="100%" fill="{bg}"/>
 {body}
 </svg>
 '''
-    out = os.path.join(ROOT, "docs", "coverage-plan.svg")
+    out = os.path.join(ROOT, "docs", "coverage-plan-dark.svg" if dark else "coverage-plan.svg")
     with open(out, "w") as f:
         f.write(svg)
     print(out, f"(old: {len(bad)} bad legs; U: {st_u}; bed: {st_b})")
