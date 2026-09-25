@@ -127,19 +127,29 @@ def test_plan_stats_are_honest():
     st = missions.get_route(rid)["stats"]
     assert abs(st["lawn_m2"] - (1600 - 70)) <= 2, f"lawn = yard minus bed: {st}"
     assert st["path_m"] >= st["mow_m"] > 0 and st["cells"] >= 2, st
-    assert 85 <= st["coverage_pct"] <= 100, f"rows at 1.5 m should cover the lawn: {st}"
+    assert 80 <= st["coverage_pct"] <= 92, f"1.32 m deck on 1.5 m rows leaves strips (~88%): {st}"
     assert abs(st["minutes"] - st["path_m"] / missions.CRUISE_MPS / 60) < 0.1, st
     missions.delete_route(rid)
 
 def test_perimeter_laps_mow_the_headland():
-    for yard, ko in ((SQ40, [BED]), (U_YARD, [])):
+    diamond = [_ll(20, 0), _ll(40, 20), _ll(20, 40), _ll(0, 20)]
+    for yard, ko in ((SQ40, [BED]), (U_YARD, []), (diamond, [])):
         rid0, _ = missions.plan_coverage_turns("p0", yard, 1.15, keepouts=ko, perimeter=False)
         rid1, pts = missions.plan_coverage_turns("p1", yard, 1.15, keepouts=ko)
         before = missions.get_route(rid0)["stats"]["coverage_pct"]
         after = missions.get_route(rid1)["stats"]["coverage_pct"]
-        assert before < 92 and after >= 99, f"headland must be mowed: {before}% -> {after}%"
+        assert after >= 99.5 and after >= before, f"laps must finish the headland: {before}% -> {after}%"
         assert _bad_legs(yard, pts, ko) == 0, "perimeter laps must stay in the yard and out of keep-outs"
         missions.delete_route(rid0); missions.delete_route(rid1)
+    assert before < 95, f"a diamond's slanted headland is what the laps are for: {before}%"
+
+def test_coverage_is_measured_not_estimated():
+    # 1.32 m deck on rows 2.64 m apart cuts about half the lawn — the old
+    # estimate (rows x spacing) would have said 100%
+    rid, _ = missions.plan_coverage("half", SQ40, 2.64)
+    pct = missions.get_route(rid)["stats"]["coverage_pct"]
+    assert 45 <= pct <= 56, f"deck/spacing = 50%: measured {pct}%"
+    missions.delete_route(rid)
 
 def test_offset_moves_inward():
     sq = [(0, 0), (10, 0), (10, 10), (0, 10)]

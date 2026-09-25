@@ -281,6 +281,36 @@ def _area(poly):
     return abs(sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1]
                    for i in range(len(poly)))) / 2
 
+def _measured_coverage(wpts, poly, holes, deck=DECK_M, cell=0.1):
+    """% of the lawn (yard minus keep-outs) the deck actually passes over along
+    the whole driven path, on a `cell`-metre grid — measured, not estimated.
+    0.1 m: a coarser grid steps over the thin strips between rows (0.3 m read
+    97.7% on a plan that truly cuts 84.7%)."""
+    xs = [p[0] for p in poly]
+    ys = [p[1] for p in poly]
+    x0, y0 = min(xs), min(ys)
+    nx, ny = int((max(xs) - x0) / cell) + 1, int((max(ys) - y0) / cell) + 1
+    lawn = {(i, j) for i in range(nx) for j in range(ny)
+            if _inside((x0 + (i + .5) * cell, y0 + (j + .5) * cell), poly)
+            and not any(_inside((x0 + (i + .5) * cell, y0 + (j + .5) * cell), h) for h in holes)}
+    if not lawn:
+        return 0.0
+    half = deck / 2
+    cut = set()
+    for (ax, ay), (bx, by) in zip(wpts, wpts[1:]):
+        dx, dy = bx - ax, by - ay
+        L2 = dx * dx + dy * dy
+        for i in range(max(0, int((min(ax, bx) - half - x0) / cell)), min(nx, int((max(ax, bx) + half - x0) / cell) + 1)):
+            cx = x0 + (i + .5) * cell
+            for j in range(max(0, int((min(ay, by) - half - y0) / cell)), min(ny, int((max(ay, by) + half - y0) / cell) + 1)):
+                if (i, j) in cut:
+                    continue
+                cy = y0 + (j + .5) * cell
+                t = 0.0 if L2 == 0 else max(0.0, min(1.0, ((cx - ax) * dx + (cy - ay) * dy) / L2))
+                if math.hypot(cx - ax - t * dx, cy - ay - t * dy) <= half:
+                    cut.add((i, j))
+    return round(100 * len(cut & lawn) / len(lawn), 1)
+
 def _stats(order, wpts, poly, holes, spacing, laps=()):
     """What the plan will take: shown before the machine moves."""
     mow = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for rows in order for a, b in rows)
@@ -289,7 +319,7 @@ def _stats(order, wpts, poly, holes, spacing, laps=()):
     lawn = max(_area(poly) - sum(_area(h) for h in holes), 1e-9)
     return {"lawn_m2": round(lawn), "mow_m": round(mow), "path_m": round(path),
             "cells": len(order), "turns": sum(max(len(rows) - 1, 0) for rows in order),
-            "coverage_pct": round(min(100.0, 100 * mow * spacing / lawn), 1),
+            "coverage_pct": _measured_coverage(wpts, poly, holes),
             "minutes": round(path / CRUISE_MPS / 60, 1)}
 
 def plan_coverage(name, polygon, spacing=DEFAULT_SPACING, keepouts=None):
