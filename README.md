@@ -96,7 +96,7 @@ autonomous-mower/
 │   └── ardupilot/           ← rover_params.parm (skid-steer, RTK, geofence, moving-baseline)
 ├── hardware/pcb/            ← ★ MowerCarrier: power + kill-chain + ESP32 carrier board
 │   └── kicad/               ← generated KiCad 9 project (ERC/DRC clean) + Gerbers — read REVIEW.md before fab
-│   ├── schematic.svg · layout.svg   ← generated (gen_schematic.py / gen_layout.py)
+│   ├── schematic.svg · layout.svg · render-*.png   ← exported from the KiCad project
 │   └── README.md · netlist.md · BOM.md · FABRICATION.md
 └── cart/                    ← ORDER.md (real BOM + links), order.html
 ```

@@ -1,0 +1,22 @@
+(version 1)
+# Q1 clips INTO its SK104 heatsink (the TO-220 stands inside the heatsink's U): their
+# courtyards and silk outlines overlap by design. Scoped to that one pair.
+(rule "Q1 inside HS1: courtyard"
+  (condition "A.Reference == 'HS1' && B.Reference == 'Q1'")
+  (constraint courtyard_clearance (min -30mm)))
+(rule "Q1 inside HS1: silk"
+  (layer "F.SilkS")
+  (condition "A.memberOfFootprint('HS1') && B.memberOfFootprint('Q1')")
+  (constraint silk_clearance (min -30mm)))
+
+# Edge-mounted connectors: body outline + pin-1 marker legitimately reach (or just pass) the
+# board edge — wire entries / the XT60 mating face face outward; the fab clips silk at the
+# edge. Copper keeps the normal 0.5 mm edge clearance (this rule is silkscreen-only).
+(rule "edge connector silk"
+  (layer "F.SilkS")
+  (condition "A.memberOfFootprint('TB*') || A.memberOfFootprint('J1')")
+  (constraint edge_clearance (min -2mm)))
+(rule "edge connector silk vs board edge"
+  (layer "F.SilkS")
+  (condition "(A.memberOfFootprint('TB*') || A.memberOfFootprint('J1')) && B.Layer == 'Edge.Cuts'")
+  (constraint silk_clearance (min -2mm)))

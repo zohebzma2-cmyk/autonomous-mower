@@ -17,8 +17,9 @@ import uuid
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def _u():
-    return str(uuid.uuid4())
+def _u(_n=[0]):
+    _n[0] += 1                                   # deterministic, like gen_schematic._u
+    return str(uuid.uuid5(uuid.UUID("6f0e2b1c-6d2b-4b8e-9d39-6d6f77657221"), "fp-%d" % _n[0]))
 
 
 def relay_sla_form_a():

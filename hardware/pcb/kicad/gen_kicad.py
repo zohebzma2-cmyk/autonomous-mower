@@ -10,6 +10,8 @@ from design.py, so review design.py + this file, not the generated .kicad_* file
 """
 import json
 import os
+import shutil
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +51,43 @@ def main(stage="all"):
         return
     import gen_pcb                   # needs pcbnew (KiCad's Python)
     gen_pcb.build(HERE, PROJECT, root, placed, route=(stage != "place"))
+    if stage == "all":
+        export_fab()
+
+
+def _cli(*args):
+    subprocess.run(["kicad-cli", *args], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def export_fab():
+    """Everything downstream of the board, regenerated with it: fab package, drawings, renders."""
+    sch, pcb = (os.path.join(HERE, PROJECT + ext) for ext in (".kicad_sch", ".kicad_pcb"))
+    fab, up = os.path.join(HERE, "fab"), os.path.dirname(HERE)
+    ger = os.path.join(fab, "gerbers")
+    shutil.rmtree(fab, ignore_errors=True)
+    os.makedirs(ger)
+    _cli("pcb", "export", "gerbers", "--layers", "F.Cu,B.Cu,F.Paste,B.Paste,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts",
+         "--subtract-soldermask", "-o", ger + "/", pcb)
+    _cli("pcb", "export", "drill", "--format", "excellon", "--excellon-separate-th", "--generate-map",
+         "--map-format", "gerberx2", "-o", ger + "/", pcb)
+    shutil.make_archive(os.path.join(fab, PROJECT + "-gerbers"), "zip", ger)
+    _cli("pcb", "export", "pos", "--format", "csv", "--units", "mm", "--side", "both", "--exclude-dnp",
+         "-o", os.path.join(fab, PROJECT + "-pos.csv"), pcb)
+    _cli("sch", "export", "bom", "--fields", "Reference,Value,Footprint,LCSC/MPN,${QUANTITY}",
+         "--labels", "Designator,Value,Footprint,LCSC/MPN,Qty", "--group-by", "Value,Footprint,LCSC/MPN",
+         "--exclude-dnp", "-o", os.path.join(fab, PROJECT + "-bom.csv"), sch)
+    # drawings in hardware/pcb/ (replace the Rev A concept SVGs)
+    tmp = os.path.join(fab, ".svg")
+    _cli("sch", "export", "svg", "--exclude-drawing-sheet", "-o", tmp, sch)
+    shutil.move(os.path.join(tmp, PROJECT + ".svg"), os.path.join(up, "schematic.svg"))
+    shutil.rmtree(tmp)
+    _cli("pcb", "export", "svg", "--layers", "Edge.Cuts,F.Cu,B.Cu,F.Silkscreen", "--page-size-mode", "2",
+         "--exclude-drawing-sheet", "-o", os.path.join(up, "layout.svg"), pcb)
+    _cli("pcb", "render", "--side", "top", "--width", "1600", "--height", "1300", "--quality", "high",
+         "--background", "opaque", "-o", os.path.join(up, "render-top.png"), pcb)
+    _cli("pcb", "render", "--rotate", "-45,0,-25", "--zoom", "1.1", "--width", "1600", "--height", "1200",
+         "--quality", "high", "--background", "opaque", "-o", os.path.join(up, "render-iso.png"), pcb)
+    print("fab: gerbers zip, pos, bom -> fab/; schematic.svg, layout.svg, renders -> hardware/pcb/")
 
 
 if __name__ == "__main__":

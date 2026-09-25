@@ -52,7 +52,7 @@ FP_TB2 = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08
 FP_TB3S = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-3-3.5-H_1x03_P3.50mm_Horizontal"
 FP_TB5 = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-5-5.08_1x05_P5.08mm_Horizontal"
 FP_RELAY = "MowerCarrier:Relay_SPST_Songle_SLA-xxVDC-SL-A"
-HOLDER = "Littelfuse 178.6165 ATO holder (verify LCSC)"
+HOLDER = "Littelfuse 178.6165.0002 ATO holder (22.5 A cont.)"
 
 # Silk/ref names from netlist.md live in the value: TB7 = TB_ESTOP, TB8/9 = TB_POT_L/R,
 # J2 = J_FC, J3 = J_5V, J4/J5 = J_M1/J_M2 (KiCad annotation needs prefix+number).
@@ -67,7 +67,13 @@ PARTS = [
     ("R1", "Device:R", "10k", FP_R, "C17414", {"1": "Q1_G", "2": "GND"}),
     ("D5", "Device:D_Zener", "BZT52C15 (15V)", "Diode_SMD:D_SOD-123", "BZT52C15 (verify LCSC)",
      {"1": "+12V_RP", "2": "Q1_G"}),
-    ("F0", "Device:Fuse", "30A ATO", FP_FUSE, HOLDER, {"1": "+12V_RP", "2": "+12V_BUS"}),
+    # Littelfuse 178.6165.0002 holder: 22.5 A continuous / 30 A max -> 20 A main fuse
+    # (realistic peak ~17.5 A: Pi ~2, logic ~1, PM02 0.5, both actuators ~10, PTO clutch ~4)
+    ("F0", "Device:Fuse", "20A ATO (main)", FP_FUSE, HOLDER, {"1": "+12V_RP", "2": "+12V_BUS"}),
+    # Q1 heatsink: Fischer SK 104 50,8 STC = 9 K/W -> ~46 °C rise at 15 A (4.5 W), ~82 °C at 20 A.
+    # Q1 is mounted through a TO-220 insulating pad; the heatsink itself is tied to GND.
+    ("HS1", "Mechanical:Heatsink_Pad", "SK 104 50,8 STC 9K/W", "Heatsink:Heatsink_Fischer_SK104-STC-STIC_35x13mm_2xDrill2.5mm",
+     "Fischer SK 104 50,8 STC + TO-220 insulating pad", {"1": "GND"}),
     ("D1", "Device:D_Zener", "SMBJ16A TVS", "Diode_SMD:D_SMB", "C151254 SMBJ16A",
      {"1": "+12V_BUS", "2": "GND"}),
     ("C1", "Device:C_Polarized", "470u 25V", "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm",

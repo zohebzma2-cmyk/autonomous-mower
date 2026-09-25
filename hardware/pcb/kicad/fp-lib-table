@@ -7,6 +7,7 @@
 	(lib (name "Connector_PinSocket_2.54mm") (type "KiCad") (uri "${KICAD9_FOOTPRINT_DIR}/Connector_PinSocket_2.54mm.pretty") (options "") (descr ""))
 	(lib (name "Diode_SMD") (type "KiCad") (uri "${KICAD9_FOOTPRINT_DIR}/Diode_SMD.pretty") (options "") (descr ""))
 	(lib (name "Fuse") (type "KiCad") (uri "${KICAD9_FOOTPRINT_DIR}/Fuse.pretty") (options "") (descr ""))
+	(lib (name "Heatsink") (type "KiCad") (uri "${KICAD9_FOOTPRINT_DIR}/Heatsink.pretty") (options "") (descr ""))
 	(lib (name "LED_SMD") (type "KiCad") (uri "${KICAD9_FOOTPRINT_DIR}/LED_SMD.pretty") (options "") (descr ""))
 	(lib (name "MountingHole") (type "KiCad") (uri "${KICAD9_FOOTPRINT_DIR}/MountingHole.pretty") (options "") (descr ""))
 	(lib (name "Package_TO_SOT_SMD") (type "KiCad") (uri "${KICAD9_FOOTPRINT_DIR}/Package_TO_SOT_SMD.pretty") (options "") (descr ""))

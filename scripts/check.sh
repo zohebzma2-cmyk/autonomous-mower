@@ -40,7 +40,7 @@ if [ "$FULL" = 1 ]; then
   echo "== renders fresh vs CAD (--full)"
   ./render_gallery.sh >/dev/null 2>&1
   cd ..
-  if ! git diff --quiet -- cad/renders; then
+  if ! $PY scripts/renders_match.py cad/renders; then      # perceptual, not byte-exact (see script)
     echo "STALE RENDERS: cad/renders changed after re-render — commit the fresh ones"; exit 1
   fi
   cd cad
@@ -68,6 +68,13 @@ fi
 if [ -x ../.venv/bin/mkdocs ]; then
   echo "== docs site builds clean (mkdocs --strict)"
   (cd .. && NO_MKDOCS_2_WARNING=1 .venv/bin/mkdocs build --strict -q -d "$(mktemp -d)")
+fi
+if [ "$FULL" = 1 ] && [ -x ../hardware/pcb/kicad/gen_kicad.sh ] && command -v freerouting >/dev/null; then
+  echo "== MowerCarrier regenerates byte-identically from design.py (--full)"
+  ../hardware/pcb/kicad/gen_kicad.sh all >/dev/null 2>&1
+  if ! git -C .. diff --quiet -- hardware/pcb/kicad/*.kicad_sch hardware/pcb/kicad/*.kicad_pcb; then
+    echo "STALE PCB: the committed KiCad files differ from what design.py/gen_pcb.py generate — commit them"; exit 1
+  fi
 fi
 if [ "$SITL" = 1 ]; then
   echo "== ArduPilot SITL end-to-end (scripts/sitl.sh + sitl_smoke.py)"

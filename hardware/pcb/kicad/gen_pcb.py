@@ -25,8 +25,11 @@ KFP = os.environ.get("KICAD9_FOOTPRINT_DIR",
 P = design.ESP_ROW_PITCH
 PLACE = {
     # top edge: XT60 mating face flush with the edge (body -16.35..+2.55 from its pads)
-    "J1": (14.0, 16.35, 0, "F"),
-    "Q1": (31.0, 18.0, 0, "F"), "R1": (44.0, 9.0, 0, "F"), "D5": (42.6, 17.5, 0, "F"),   # D5 cathode pad lands in the +12V_RP pour
+    "J1": (14.0, 16.6, 0, "F"),     # mating face 0.25 mm inside the edge (silk stays on-board)
+    # Q1 in its SK104 heatsink along the top edge: pads at y 11.5, tab faces the edge; the heatsink
+    # wall sits 3.15 (tab) + 0.23 (insulator) + 0.76 (half wall) = 4.14 mm above the pad row
+    "Q1": (47.46, 11.5, 0, "F"), "HS1": (50.0, 11.5 - 4.14, 0, "F"),
+    "D5": (49.0, 15.5, 180, "F"), "R1": (44.5, 17.5, 90, "F"),   # gate clamp + pulldown in the heatsink mouth
     "F0": (36.0, 27.5, 180, "F"),       # flipped: +12V_RP pads beside Q1, +12V_BUS pads on the bus pour
     "D1": (24.0, 34.0, 0, "F"), "C1": (40.0, 35.0, 0, "F"),
     # left edge: branch fuse + its output terminal per row, wire entry facing the edge (270°)
@@ -35,7 +38,7 @@ PLACE = {
     "F3": (28.7, 67.5, 180, "F"), "TB3": (5.1, 62.5, 270, "F"),
     "F4": (16.0, 77.0, 0, "F"), "F5": (16.0, 89.0, 0, "F"),
     # relays (origin = COM pin; body spans x-23.2..+4.4, y-12.6..+19.2)
-    "K1": (74.0, 24.0, 0, "F"), "K2": (74.0, 64.0, 0, "F"),
+    "K1": (75.5, 28.5, 0, "F"), "K2": (75.5, 68.5, 0, "F"),
     "Q2": (44.0, 44.0, 0, "F"), "D2": (46.5, 49.5, 0, "F"), "R2": (39.0, 43.0, 0, "F"), "R3": (39.0, 47.0, 0, "F"),
     "Q3": (44.0, 64.0, 0, "F"), "D3": (46.5, 69.5, 0, "F"), "R4": (39.0, 63.0, 0, "F"), "R5": (39.0, 67.0, 0, "F"),
     "R8": (40.0, 80.0, 0, "F"), "LED2": (45.0, 80.0, 0, "F"),
@@ -46,8 +49,8 @@ PLACE = {
     "TB7": (100.0, 5.1, 180, "F"), "R6": (104.0, 13.0, 0, "F"),
     # ESP32-DevKitC socket pair + logic headers
     "H1": (92.0, 18.0, 0, "F"), "H2": (92.0 + P, 18.0, 0, "F"),
-    "J4": (82.0, 40.0, 0, "F"), "J5": (86.0, 40.0, 0, "F"),
-    "J2": (82.0, 62.0, 0, "F"), "J3": (86.0, 62.0, 0, "F"),
+    "J4": (83.0, 40.0, 0, "F"), "J5": (87.0, 40.0, 0, "F"),
+    "J2": (83.0, 62.0, 0, "F"), "J3": (87.0, 62.0, 0, "F"),
     "C2": (97.0, 74.0, 0, "F"), "C3": (97.0, 78.0, 0, "F"), "C4": (97.0, 82.0, 0, "F"),
     "R7": (106.0, 74.0, 0, "F"), "LED1": (106.0, 78.0, 0, "F"),
     "MH1": (4.5, 4.5, 0, "F"), "MH2": (115.5, 4.5, 0, "F"),
@@ -84,6 +87,22 @@ def write_pro(here, project):
                   "min_copper_edge_clearance": 0.5, "min_hole_to_hole": 0.25},
         "defaults": {"board_outline_line_width": 0.1}}
     json.dump(pro, open(path, "w"), indent=2)
+
+
+# designator positions that would otherwise sit on a neighbour's outline (board mm, rotation)
+REF_AT = {"TB1": (8.6, 41.0, 90), "TB2": (8.6, 53.0, 90), "TB3": (8.6, 65.0, 90)}
+
+
+def silk_tidy(fp, ref):
+    """Silkscreen hygiene without editing library footprints (that would trip lib_footprint_mismatch):
+    mounting holes need no designator; some designators move off a neighbour's outline.
+    Q1-in-HS1 and edge-connector silk are handled as scoped rules in mowercarrier.kicad_dru."""
+    if ref.startswith("MH"):
+        fp.Reference().SetVisible(False)
+    if ref in REF_AT:
+        x, y, rot = REF_AT[ref]
+        fp.Reference().SetPosition(pcbnew.VECTOR2I(mm(OX + x), mm(OY + y)))
+        fp.Reference().SetTextAngleDegrees(rot)
 
 
 def load_fp(fpid, here):
@@ -133,6 +152,7 @@ def place(board, here, root, placed):
         fp.SetPath(pcbnew.KIID_PATH("/" + placed[ref]))
         fp.SetSheetname("/")
         fp.SetSheetfile(os.path.basename(here) and "mowercarrier.kicad_sch")
+        silk_tidy(fp, ref)
         pads = {p.GetNumber() for p in fp.Pads() if p.GetNumber()}
         extra = set(pins) - pads
         assert not extra, f"{ref}: symbol pins {extra} have no pad in {fpid} ({sorted(pads)})"
@@ -173,8 +193,12 @@ def _zone(board, net, layer, pts, prio, solid):
 
 # 30 A trunk as solid pours (board mm). Different-net pads inside are cleared by the fill.
 POWER_ZONES = [
-    ("+12V_IN", "F", [(17.5, 10.5), (34.4, 10.5), (34.4, 19.6), (17.5, 19.6)]),                 # XT60 + -> Q1 drain
-    ("+12V_RP", "F", [(34.9, 16.3), (41.0, 16.3), (41.0, 29.2), (31.4, 29.2), (31.4, 23.2), (34.9, 23.2)]),  # Q1 source -> F0
+    # XT60 + -> Q1 drain: BOTTOM layer (the drain is Q1's middle leg, boxed in by G and S on top)
+    ("+12V_IN", "B", [(17.5, 9.5), (51.2, 9.5), (51.2, 20.3), (17.5, 20.3)]),
+    # Q1 source -> down out of the heatsink mouth -> left to F0's input clip (top layer)
+    ("+12V_RP", "F", [(51.5, 10.2), (54.0, 10.2), (54.0, 29.2), (31.4, 29.2), (31.4, 22.3), (50.8, 22.3),
+                      (50.8, 16.4), (49.9, 16.4), (49.9, 14.6), (50.8, 14.6), (50.8, 12.9), (51.5, 12.9)]),
+    # ^ covers Q1's source pad (y 10.5..12.5) and D5's cathode pad; clears Q1's drain by the zone clearance
     ("+12V_BUS", "B", [(11.4, 21.0), (37.6, 21.0), (37.6, 30.5), (42.0, 30.5), (42.0, 39.5),
                        (37.6, 39.5), (37.6, 93.5), (11.4, 93.5)]),                                # F0 -> branch fuses + C1
 ]
@@ -191,7 +215,53 @@ OUTPUT_ZONES = [
 KEEPOUT_NETS = ("+12V_IN", "+12V_RP", "+12V_BUS")
 
 
+HS_BOX = (32.25, 0.61, 67.75, 14.11)            # HS1 courtyard (board mm)
+HS_MOUTH = (42.5, 8.2, 57.5, 14.11)             # U interior + mouth: Q1 body and legs, no metal
+
+
+def _hs_ring():
+    x0, y0, x1, y1 = HS_BOX
+    m0, my0, m1, _ = HS_MOUTH
+    return [(x0, y0), (x1, y0), (x1, y1), (m1, y1), (m1, my0), (m0, my0), (m0, y1), (x0, y1)]
+
+
+# Short, current-critical links drawn by the generator (not left to the autorouter):
+# (net, layer, width mm, [(x, y), ...] board mm)
+FIXED_TRACKS = [
+    ("+12V_BUS", "F", 1.5, [(21.85, 34.0), (21.85, 30.0), (23.2, 28.65), (23.2, 27.5)]),   # D1 TVS -> F0 bus clip
+]
+
+
+def add_fixed_tracks(board):
+    for net, side, w, pts in FIXED_TRACKS:
+        for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+            t = pcbnew.PCB_TRACK(board)
+            t.SetStart(pcbnew.VECTOR2I(mm(OX + x1), mm(OY + y1)))
+            t.SetEnd(pcbnew.VECTOR2I(mm(OX + x2), mm(OY + y2)))
+            t.SetWidth(mm(w))
+            t.SetLayer(pcbnew.F_Cu if side == "F" else pcbnew.B_Cu)
+            t.SetNet(board.FindNet(knet(net)))
+            t.SetLocked(True)                                   # exported to the router as fixed
+            board.Add(t)
+
+
 def add_power_zones(board):
+    ring = _hs_ring()
+    _zone(board, board.FindNet(knet("GND")), pcbnew.F_Cu, ring, 12, True)
+    k = pcbnew.ZONE(board)
+    k.SetIsRuleArea(True)
+    k.SetLayer(pcbnew.F_Cu)
+    k.SetDoNotAllowTracks(True)
+    k.SetDoNotAllowVias(True)
+    k.SetDoNotAllowPads(False)
+    k.SetDoNotAllowCopperPour(False)
+    k.SetDoNotAllowFootprints(False)
+    k.SetZoneName("no tracks/vias under HS1 fins")
+    ol = k.Outline()
+    ol.NewOutline()
+    for px, py in ring:
+        ol.Append(mm(OX + px), mm(OY + py))
+    board.Add(k)
     for net, side, pts in POWER_ZONES:
         layer = pcbnew.F_Cu if side == "F" else pcbnew.B_Cu
         _zone(board, board.FindNet(knet(net)), layer, pts, 10, True)
@@ -230,7 +300,18 @@ def add_gnd_zones(board, nets):
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
 
 
-def autoroute(board, here, project):
+def unconnected(path):
+    """Unconnected items as KiCad's DRC reports them (the same check scripts/check.sh gates on)."""
+    import re
+    rpt = path + ".drc.tmp"
+    subprocess.run(["kicad-cli", "pcb", "drc", "--severity-error", "-o", rpt, path],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    txt = open(rpt).read()
+    os.remove(rpt)
+    return int(re.search(r"Found (\d+) unconnected", txt).group(1))
+
+
+def autoroute(board, here, project, passes):
     fr = shutil.which("freerouting")
     assert fr, "freerouting not on PATH (scripts/setup-dev.sh --kicad)"
     dsn = os.path.join(here, project + ".dsn")
@@ -238,7 +319,7 @@ def autoroute(board, here, project):
     if os.path.exists(ses):
         os.remove(ses)
     assert pcbnew.ExportSpecctraDSN(board, dsn), "DSN export failed"
-    subprocess.run([fr, "-de", dsn, "-do", ses, "-mp", "120"],
+    subprocess.run([fr, "-de", dsn, "-do", ses, "-mp", str(passes)],
                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, timeout=900)
     assert os.path.exists(ses), "freerouting produced no .ses"
     assert pcbnew.ImportSpecctraSES(board, ses), "SES import failed"
@@ -247,21 +328,42 @@ def autoroute(board, here, project):
 
 
 def build(here, project, root, placed, route=True):
+    # Seed KiCad's UUID generator: KiCad orders footprints/zones by UUID (e.g. in the DSN it hands
+    # the autorouter), so random UUIDs made identical designs route differently from run to run.
+    pcbnew.KIID.SeedGenerator(20260925)
     write_pro(here, project)
     path = os.path.join(here, project + ".kicad_pcb")
     board = pcbnew.NewBoard(path)
     board.SetCopperLayerCount(2)
     place(board, here, root, placed)
+    add_fixed_tracks(board)
     add_power_zones(board)
     board.Save(path)
     board = pcbnew.LoadBoard(path)                     # reload: picks up .kicad_pro rules + net classes
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())      # refill under the real clearance rules
     board.Save(path)
     if route:
-        autoroute(board, here, project)
-        for net, side, pts in OUTPUT_ZONES:
-            _zone(board, board.FindNet(knet(net)), pcbnew.F_Cu if side == "F" else pcbnew.B_Cu, pts, 10, True)
-        nets = {"GND": board.FindNet(knet("GND"))}
-        add_gnd_zones(board, nets)
-        board.Save(path)
+        # Freerouting is deterministic per pass budget but sensitive to it. Verify each attempt with
+        # KiCad's DRC on the real project file (project rules loaded) and retry from the unrouted
+        # board until nothing is left open.
+        pre = path + ".unrouted"
+        shutil.copyfile(path, pre)
+        try:
+            for passes in (250, 120, 180, 60, 400, 90):
+                shutil.copyfile(pre, path)
+                pcbnew.KIID.SeedGenerator(20260925 + passes)
+                board = pcbnew.LoadBoard(path)
+                autoroute(board, here, project, passes)
+                for net, side, pts in OUTPUT_ZONES:
+                    _zone(board, board.FindNet(knet(net)), pcbnew.F_Cu if side == "F" else pcbnew.B_Cu, pts, 10, True)
+                add_gnd_zones(board, {"GND": board.FindNet(knet("GND"))})
+                board.Save(path)
+                left = unconnected(path)
+                print(f"route: -mp {passes} -> {left} unconnected")
+                if left == 0:
+                    break
+            else:
+                raise SystemExit("autoroute: every pass budget left connections open — adjust placement")
+        finally:
+            os.remove(pre)
     print("pcb:", path)

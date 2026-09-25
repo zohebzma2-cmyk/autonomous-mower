@@ -1,36 +1,40 @@
 # MowerCarrier Rev A.1 — pre-fab review
 
 Status: **DRC/ERC-clean and generated end to end, not yet reviewed by a person.** This board
-switches 30 A and is the hardware half of the kill chain. Treat everything below as the
+carries up to 20 A (main fuse; the trunk copper is sized for 30 A) and is the hardware half of the kill chain. Treat everything below as the
 checklist a second pair of eyes signs off before the Gerber zip goes to JLCPCB.
 
 ## Must do before ordering
 
-1. **Q1 needs a heatsink (or a better FET).** IRF4905 R<sub>DS(on)</sub> is 20 mΩ max, so
-   2.0 W at 10 A, 4.5 W at 15 A (a realistic mowing load), 8 W at 20 A and 18 W at 30 A. A
-   bare TO-220 is ~62 °C/W: 4.5 W would be ~280 °C above ambient. Fit a clip-on TO-220
-   heatsink of ≤ 10 °C/W; Q1 stands vertical with open space toward the top edge. Better:
-   a sub-5 mΩ P-FET, or an ideal-diode controller driving an N-FET.
-2. **Caliper your ESP32-DevKitC.** The two 1×19 sockets are 25.4 mm apart (genuine
+1. **Caliper your ESP32-DevKitC.** The two 1×19 sockets are 25.4 mm apart (genuine
    Espressif V4). Most clones are 22.86 mm. Set `ESP_ROW_PITCH` in `design.py` and regenerate.
-3. **Confirm the fuse-holder rating.** F0 carries the whole board. The footprint is the
-   Littelfuse FLR 178.6165 ATO holder; confirm its rating is ≥ 30 A (or use a
-   direct-solder ATO fuse) and order the matching part. LCSC number not yet verified.
-4. **Look at the autorouted layout** in KiCad (`mowercarrier.kicad_pcb`). Freerouting
-   produced it; the trunk pours are placed deliberately, the rest is the router's.
+2. **Order Q1's insulating kit.** Q1 (IRF4905) clips into **HS1, a Fischer SK 104 50,8 STC
+   (9 K/W)**. That keeps it at ~46 °C over ambient at 15 A (4.5 W) and ~82 °C at the 20 A fuse
+   limit (8 W), inside the 175 °C junction limit. The tab is the drain (+12 V), and HS1 is tied
+   to GND, so a **TO-220 insulating pad + bushing is required**. Skipping it shorts the battery
+   through the heatsink.
+3. **Look over the autorouted signal layout** in KiCad. The power trunk is placed
+   deliberately; the logic nets are Freerouting's. It's DRC-clean, but a human eye is worth it
+   on a safety board.
+
+### Resolved since the first review
+- **Fuse-holder rating.** The Littelfuse 178.6165.0002 ATO holder is **22.5 A continuous /
+  30 A max**, so the main fuse is now **F0 = 20 A** (realistic peak ~17.5 A: Pi ~2, logic ~1,
+  PM02 0.5, both actuators ~10, PTO clutch ~4). Branch fuses are unchanged.
+- **Q1 heat.** The heatsink is in the design (above), not left as a note.
 
 ## Current capacity (IPC-2221, 2 oz outer copper)
 
 | Path | Copper | Capacity | Fuse |
 |---|---|---|---|
-| XT60 → Q1 → F0 → bus (+12V_IN, +12V_RP, +12V_BUS) | solid pours: top for IN/RP, **bottom** for the bus under the whole fuse column; ~15–20 mm wide, necking only at the XT60/TO-220/fuse-clip pads | 30 A needs 16.1 mm @ 10 °C rise, 10.6 mm @ 20 °C | 30 A |
+| XT60 → Q1 → F0 → bus (+12V_IN, +12V_RP, +12V_BUS) | solid pours: +12V_IN **bottom**, +12V_RP top (L-shape out of the heatsink mouth), +12V_BUS **bottom** under the whole fuse column; ~10–20 mm wide, necking only at the XT60/TO-220/fuse-clip pads | 20 A needs 9.2 mm @ 10 °C rise, 6.0 mm @ 20 °C | 20 A |
 | F4 → K1 → MOTOR V+, F5 → K2 → PTO (+12V_DRIVE, MOTOR_V+, +12V_PTO, PTO_OUT) | 2.5 mm tracks + solid pours on the fuse clips | 7.8 A @ 10 °C, 10.5 A @ 20 °C | 10 A / 7.5 A |
 | F1–F3 branch outputs, +5 V, GND tracks | 1.2 mm tracks + clip pours | 4.6 A @ 10 °C, 6.2 A @ 20 °C | 5 / 3 / 2 A |
 | GND return | solid pour on **both** layers, solid (not thermal) pad connections | — | — |
 
-The pours are generous, but the 30 A path still necks through TO-220 legs and fuse-clip
+The pours are generous, but the main path still necks through TO-220 legs and fuse-clip
 pads: that's the same as any board using those parts. Measure the narrowest pour neck in
-KiCad (Inspect → Measure) if you plan to run near 30 A continuously.
+KiCad (Inspect → Measure) if you plan to run near the 20 A fuse rating continuously.
 
 ## Rev A → A.1: design errors found while turning the netlist into copper
 
@@ -59,8 +63,12 @@ KiCad (Inspect → Measure) if you plan to run near 30 A continuously.
 - **Relay coils.** Each needs E-stop closed **and** its FET on. The 10k gate pulldowns keep
   both relays off while the ESP32 or Pixhawk is booting, reset or absent.
 
-## Cosmetic (DRC warnings, not errors)
+## Checks (every regeneration)
 
-13 × silkscreen within the board-edge clearance (edge-mounted XT60 + terminal outlines)
-and 3 × overlapping reference labels. Fab houses clip silk at the edge; fix the labels in
-KiCad if you care.
+- **ERC: 0. DRC: 0 violations of any severity, 0 unconnected, schematic parity 0.**
+  `mowercarrier.kicad_dru` holds two scoped exceptions: Q1 sits inside HS1 (their courtyards
+  and silk overlap by design), and the edge-mounted connector outlines reach the board edge.
+- **Deterministic.** Name-based schematic UUIDs plus a seeded KiCad UUID generator mean an
+  unchanged `design.py` regenerates the board byte for byte. `check.sh --full` fails if the
+  committed files are stale. (Random UUIDs reordered the autorouter's input between runs,
+  which made the route differ run to run.)

@@ -13,8 +13,14 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
   reverse-polarity protection), XT60 polarity, e-stop contacts had no supply, K1.COM on two nets,
   unfused PTO (new F5), R_LEN on boot-strapping GPIO12 (→ GPIO33; DRIVE_EN → GPIO32), Form-C relay
   is 20 A not 30 A (→ SLA-12VDC-SL-A, footprint drawn from Songle's drilling drawing)
-- **Before ordering:** Q1 needs a TO-220 heatsink (4.5 W at 15 A), caliper the ESP32 row pitch,
-  confirm the ATO holder rating — `kicad/REVIEW.md`
+- **Q1 heatsink designed in:** Fischer SK 104 50,8 STC (9 K/W → ~46 °C rise at 15 A), grounded, with a
+  TO-220 insulating kit; placed on the top edge with a GND-only, no-track zone under its fins
+- **Main fuse 30 → 20 A:** the Littelfuse ATO holder is 22.5 A continuous / 30 A max (realistic peak ~17.5 A)
+- **DRC now 0 of any severity** (silk included; two scoped `.kicad_dru` exceptions) and the generator is
+  **deterministic** (name-based/seeded UUIDs — random ones reordered the router input, so the route changed
+  run to run); `check.sh --full` fails if the committed board is stale. Schematic/layout SVGs and renders
+  are now exported from KiCad (the Rev A concept generators are retired)
+- **Before ordering:** caliper the ESP32 row pitch, order Q1's insulating kit — `kicad/REVIEW.md`
 - Firmware: DRIVE_EN keeps motor power off until the ESP32 is configured; R_LEN → GPIO33; ported to
   the Arduino-ESP32 **3.x** LEDC API (it no longer compiled on a current core) with a 2.x fallback.
   `check.sh` compiles it when arduino-cli is present

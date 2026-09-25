@@ -15,8 +15,15 @@ KSYM = os.environ.get("KICAD9_SYMBOL_DIR",
 GRID = 2.54
 
 
+_NS = uuid.UUID("6f0e2b1c-6d2b-4b8e-9d39-6d6f77657221")   # fixed namespace -> reproducible files
+_n = [0]
+
+
 def _u():
-    return str(uuid.uuid4())
+    """Deterministic UUIDs (name-based, in creation order): regenerating an unchanged design gives a
+    byte-identical schematic, and KiCad's item ordering (by UUID) stays stable downstream."""
+    _n[0] += 1
+    return str(uuid.uuid5(_NS, "mowercarrier-%d" % _n[0]))
 
 
 def _block(text, start):
@@ -81,6 +88,7 @@ def _snap(v):
 
 
 def build(path, project, parts, footprint_lib_prefix_ok=True):
+    _n[0] = 0
     root = _u()
     lib_blocks, placed, items = {}, {}, []
     cols, cw, ch = 7, 76.2, 58.42                     # grid cells (multiples of 2.54)
