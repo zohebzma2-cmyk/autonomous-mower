@@ -196,14 +196,36 @@ def _route(a, b, poly, holes):
         k = prev[k]
     return path[::-1]
 
-def _cells(poly, holes, spacing, inset=0.0, min_len=0.0):
-    """Swept rows grouped into cells: [[(y, xa, xb), ...], ...], rows in sweep order."""
+def _safe_spans(poly, holes, y, reach, ylo, yhi, samples=8):
+    """Row spans at `y`, each narrowed to what stays inside the yard across
+    y ± reach — the band a row-end turn sweeps. On a slanted edge the yard is
+    narrower one row over, and a turn sized from its own row pokes out."""
+    spans = _row_spans(poly, y, holes)
+    if reach <= 0:
+        return spans
+    out = []
+    for xa, xb in spans:
+        for k in range(samples + 1):
+            y2 = min(yhi, max(ylo, y - reach + 2 * reach * k / samples))
+            over = [(a, b) for a, b in _row_spans(poly, y2, holes) if a < xb and xa < b]
+            if not over:
+                continue
+            xa = max(xa, min(a for a, _ in over))
+            xb = min(xb, max(b for _, b in over))
+        if xb > xa:
+            out.append((xa, xb))
+    return out
+
+def _cells(poly, holes, spacing, inset=0.0, min_len=0.0, reach=0.0):
+    """Swept rows grouped into cells: [[(y, xa, xb), ...], ...], rows in sweep order.
+    reach > 0 narrows each row to what fits a turn that far above/below it."""
     ys = [p[1] for p in poly]
     y, ymax = min(ys) + spacing / 2, max(ys) - spacing / 2
+    lo, hi = min(ys) + 1e-6, max(ys) - 1e-6
     cells: list = []
     prev: list = []
     while y <= ymax + 1e-9:
-        spans = [(xa + inset, xb - inset) for xa, xb in _row_spans(poly, y, holes)
+        spans = [(xa + inset, xb - inset) for xa, xb in _safe_spans(poly, holes, y, reach, lo, hi)
                  if (xb - xa) - 2 * inset > max(min_len, 0.0)]
         cur = []
         for sp in spans:
@@ -230,7 +252,7 @@ def _orient(rows, rev, right):
         out.append(seg)
     return out
 
-def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0):
+def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0, reach=0.0):
     """Shared core: cells ordered nearest-next, each as oriented rows, plus the frame."""
     if len(polygon) < 3:
         raise ValueError("need >= 3 boundary points")
@@ -243,7 +265,7 @@ def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0):
         if not all(_inside(p, poly) for p in h):
             raise ValueError("keep-outs must lie inside the boundary")
         holes.append(h)
-    cells = [c for c in _cells(poly, holes, spacing, inset, min_len) if c]
+    cells = [c for c in _cells(poly, holes, spacing, inset, min_len, reach) if c]
     order = [_orient(cells.pop(0), False, False)] if cells else []
     while cells:                             # nearest next cell, best entry corner
         here = order[-1][-1][1]
@@ -443,9 +465,12 @@ def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M,
     turn radius (headland) from the boundary and every keep-out, so each turn
     stays in the yard. Cells are joined by routed transit legs; the headland
     is mowed last as perimeter laps (perimeter=False leaves it)."""
-    order, poly, holes, ref = _plan(polygon, keepouts, spacing, inset=r, min_len=spacing)
+    # a turn climbs up to max(r, spacing) toward the next row: rows are sized for that band
+    order, poly, holes, ref = _plan(polygon, keepouts, spacing, inset=r, min_len=spacing,
+                                    reach=max(r, spacing))
     wpts: list = []
     for rows in order:
+        rows = list(rows)
         if wpts:
             wpts += _route(wpts[-1], rows[0][0], poly, holes)
         for i, (a, b) in enumerate(rows):
@@ -453,6 +478,12 @@ def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M,
             if i + 1 < len(rows):
                 direction = 1 if b[0] > a[0] else -1
                 wpts += turn_points(b[0], b[1], rows[i + 1][0][1], direction, r)
+                # The turn finishes at this row's end x. If the next row would start
+                # beyond that, the machine would have to back up to reach it, so the
+                # next row starts where the turn ends; the perimeter laps take the rest.
+                (nsx, ny), nend = rows[i + 1]
+                nsx = min(nsx, b[0]) if direction > 0 else max(nsx, b[0])
+                rows[i + 1] = ((nsx, ny), nend)
     laps = _laps(poly, holes, spacing, r) if perimeter else []
     for lap in laps:
         if wpts:                             # start each lap at its corner nearest to here

@@ -147,6 +147,27 @@ def test_offset_moves_inward():
     assert all(abs(a - b) < 1e-9 for p, q in zip(inner, [(1, 1), (9, 1), (9, 9), (1, 9)])
                for a, b in zip(p, q)), inner
 
+def test_turns_stay_in_on_slanted_edges():
+    # a turn climbs a row over; on a slanted edge the yard is narrower there, and
+    # turns sized from their own row poked out: 75 of 251 legs on this trapezoid (#8)
+    for yard in ([_ll(0, 0), _ll(50, 0), _ll(35, 30), _ll(10, 30)],          # trapezoid
+                 [_ll(20, 0), _ll(40, 20), _ll(20, 40), _ll(0, 20)]):         # 45° diamond
+        rid, pts = missions.plan_coverage_turns("slant", yard, 1.15)
+        assert _bad_legs(yard, pts) == 0, "a turn leaves a slanted yard"
+        missions.delete_route(rid)
+
+def test_next_row_starts_where_the_turn_ends():
+    # after a turn the machine must drive forward into the next row, never back up
+    yard = [_ll(0, 0), _ll(50, 0), _ll(35, 30), _ll(10, 30)]
+    order, poly, holes, ref = missions._plan(yard, None, 1.15, inset=1.2, min_len=1.15, reach=1.2)
+    rid, pts = missions.plan_coverage_turns("slant", yard, 1.15, perimeter=False)
+    P = missions._xy(pts, ref)
+    for (x0, y0), (x1, y1), (x2, y2) in zip(P, P[1:], P[2:]):
+        if abs(y1 - y2) < 1e-6 and abs(y0 - y1) > 1e-6 and abs(x2 - x1) > 0.05:   # turn end -> row
+            back = (x1 - x0) * (x2 - x1) < 0 and abs(x1 - x0) > 0.05
+            assert not back, f"reverses into the row at ({x1:.1f},{y1:.1f})"
+    missions.delete_route(rid)
+
 # ---------------------------------------------------------------- missions persistence
 def test_persistence_roundtrip():
     before = len(missions.list_routes())
