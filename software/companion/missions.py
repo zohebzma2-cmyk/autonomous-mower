@@ -72,9 +72,15 @@ def _to_xy(poly):
     mlat, mlon = _frame(lat0)
     return [((p[1] - lon0) * mlon, (p[0] - lat0) * mlat) for p in poly], (lat0, lon0, mlat, mlon)
 
+def _rot(pt, th):
+    """Into the sweep frame: the row direction (angle th) becomes +x."""
+    c, s = math.cos(th), math.sin(th)
+    return (pt[0] * c + pt[1] * s, -pt[0] * s + pt[1] * c)
+
 def _to_ll(pt, ref):
-    lat0, lon0, mlat, mlon = ref
-    x, y = pt
+    """Local (optionally sweep-rotated: ref[4]) metres -> [lat, lon]."""
+    lat0, lon0, mlat, mlon = ref[:4]
+    x, y = _rot(pt, -ref[4]) if len(ref) > 4 else pt
     return [round(lat0 + y / mlat, 7), round(lon0 + x / mlon, 7)]
 
 # ---------------------------------------------------------------- coverage planner
@@ -92,8 +98,9 @@ EDGE_TOL_M = 0.05             # a point this close to an edge counts as on it
 KEEPOUT_MARGIN_M = 0.6        # how wide a transit leg swings around a keep-out corner
 
 def _xy(poly, ref):
-    lat0, lon0, mlat, mlon = ref
-    return [((p[1] - lon0) * mlon, (p[0] - lat0) * mlat) for p in poly]
+    lat0, lon0, mlat, mlon = ref[:4]
+    out = [((p[1] - lon0) * mlon, (p[0] - lat0) * mlat) for p in poly]
+    return [_rot(q, ref[4]) for q in out] if len(ref) > 4 else out
 
 def _crossings(poly_xy, y):
     xs = []
@@ -220,11 +227,16 @@ def _cells(poly, holes, spacing, inset=0.0, min_len=0.0, reach=0.0):
     """Swept rows grouped into cells: [[(y, xa, xb), ...], ...], rows in sweep order.
     reach > 0 narrows each row to what fits a turn that far above/below it."""
     ys = [p[1] for p in poly]
-    y, ymax = min(ys) + spacing / 2, max(ys) - spacing / 2
     lo, hi = min(ys) + 1e-6, max(ys) - 1e-6
+    # Rows spread evenly edge to edge: stepping `spacing` from one edge left an
+    # unmowed sliver at the far one (0.7 m on a 10 m strip). The effective
+    # spacing is <= the requested one, never wider.
+    first, last = min(ys) + spacing / 2, max(ys) - spacing / 2
+    n = max(1, math.ceil((last - first) / spacing - 1e-9) + 1) if last > first else 1
+    row_ys = [first + (last - first) * k / (n - 1) for k in range(n)] if n > 1 else [(min(ys) + max(ys)) / 2]
     cells: list = []
     prev: list = []
-    while y <= ymax + 1e-9:
+    for y in row_ys:
         spans = [(xa + inset, xb - inset) for xa, xb in _safe_spans(poly, holes, y, reach, lo, hi)
                  if (xb - xa) - 2 * inset > max(min_len, 0.0)]
         cur = []
@@ -240,7 +252,6 @@ def _cells(poly, holes, spacing, inset=0.0, min_len=0.0, reach=0.0):
             cells[ci].append((y, sp[0], sp[1]))
             cur.append((ci, sp))
         prev = cur
-        y += spacing
     return cells
 
 def _orient(rows, rev, right):
@@ -252,8 +263,27 @@ def _orient(rows, rev, right):
         out.append(seg)
     return out
 
-def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0, reach=0.0):
-    """Shared core: cells ordered nearest-next, each as oriented rows, plus the frame."""
+def _sweep_angle(poly, holes, spacing, inset, min_len, reach):
+    """Row direction with the fewest rows (= fewest turns): east-west or along
+    one of the boundary's edges. A long thin lawn gets long rows, not a turn
+    every few metres. Ties keep the angle nearest east-west."""
+    cands = {0.0}
+    n = len(poly)
+    for i in range(n):
+        (x1, y1), (x2, y2) = poly[i], poly[(i + 1) % n]
+        if math.hypot(x2 - x1, y2 - y1) >= 2.0:
+            cands.add(round(math.atan2(y2 - y1, x2 - x1) % math.pi, 6))
+
+    def rows(th):
+        P = [_rot(q, th) for q in poly]
+        H = [[_rot(q, th) for q in h] for h in holes]
+        return sum(len(c) for c in _cells(P, H, spacing, inset, min_len, reach))
+    return min(sorted(cands), key=lambda th: (rows(th), min(th, math.pi - th)))
+
+def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0, reach=0.0, angle=None):
+    """Shared core: cells ordered nearest-next, each as oriented rows, plus the frame.
+    angle: row direction in degrees from east (None = the one with fewest rows).
+    Everything returned is in the sweep frame; ref[4] carries the rotation."""
     if len(polygon) < 3:
         raise ValueError("need >= 3 boundary points")
     poly, ref = _to_xy(polygon)
@@ -265,6 +295,11 @@ def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0, reach=0.0):
         if not all(_inside(p, poly) for p in h):
             raise ValueError("keep-outs must lie inside the boundary")
         holes.append(h)
+    th = _sweep_angle(poly, holes, spacing, inset, min_len, reach) if angle is None \
+        else math.radians(float(angle))
+    poly = [_rot(q, th) for q in poly]
+    holes = [[_rot(q, th) for q in h] for h in holes]
+    ref = ref + (th,)
     cells = [c for c in _cells(poly, holes, spacing, inset, min_len, reach) if c]
     order = [_orient(cells.pop(0), False, False)] if cells else []
     while cells:                             # nearest next cell, best entry corner
@@ -311,7 +346,7 @@ def _measured_coverage(wpts, poly, holes, deck=DECK_M, cell=0.1):
                     cut.add((i, j))
     return round(100 * len(cut & lawn) / len(lawn), 1)
 
-def _stats(order, wpts, poly, holes, spacing, laps=()):
+def _stats(order, wpts, poly, holes, spacing, laps=(), sweep=0.0):
     """What the plan will take: shown before the machine moves."""
     mow = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for rows in order for a, b in rows)
     mow += sum(math.hypot(q[0] - p[0], q[1] - p[1]) for lap in laps for p, q in zip(lap, lap[1:]))
@@ -320,22 +355,24 @@ def _stats(order, wpts, poly, holes, spacing, laps=()):
     return {"lawn_m2": round(lawn), "mow_m": round(mow), "path_m": round(path),
             "cells": len(order), "turns": sum(max(len(rows) - 1, 0) for rows in order),
             "coverage_pct": _measured_coverage(wpts, poly, holes),
+            "sweep_deg": round(math.degrees(sweep) % 180, 1),
             "minutes": round(path / CRUISE_MPS / 60, 1)}
 
-def plan_coverage(name, polygon, spacing=DEFAULT_SPACING, keepouts=None):
+def plan_coverage(name, polygon, spacing=DEFAULT_SPACING, keepouts=None, angle=None):
     """polygon: [[lat,lon],...] (>=3); keepouts: optional list of polygons to
-    leave unmowed. Returns (route_id, waypoints[[lat,lon]...])."""
-    order, poly, holes, ref = _plan(polygon, keepouts, spacing)
+    leave unmowed; angle: row direction in degrees (None = fewest turns).
+    Returns (route_id, waypoints[[lat,lon]...])."""
+    order, poly, holes, ref = _plan(polygon, keepouts, spacing, angle=angle)
     wpts: list = []
     for rows in order:
-        if wpts:
-            wpts += _route(wpts[-1], rows[0][0], poly, holes)
         for a, b in rows:
+            if wpts:                         # between cells, and past an inside corner within one
+                wpts += _route(wpts[-1], a, poly, holes)
             wpts += [a, b]
     pts = [_to_ll(p, ref) for p in wpts]
     rid = _add({"name": name or "Coverage zone", "type": "coverage", "points": pts,
                 "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing,
-                "stats": _stats(order, wpts, poly, holes, spacing)})
+                "stats": _stats(order, wpts, poly, holes, spacing, sweep=ref[4])})
     return rid, pts
 
 # ---------------------------------------------------------------- obstacle hotspots
@@ -490,14 +527,14 @@ def _laps(poly, holes, spacing, width):
     return rings
 
 def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M, keepouts=None,
-                        perimeter=True):
+                        perimeter=True, angle=None):
     """Coverage rows + no-rut row turns (U or 3-point K), rows inset by the
     turn radius (headland) from the boundary and every keep-out, so each turn
     stays in the yard. Cells are joined by routed transit legs; the headland
     is mowed last as perimeter laps (perimeter=False leaves it)."""
     # a turn climbs up to max(r, spacing) toward the next row: rows are sized for that band
     order, poly, holes, ref = _plan(polygon, keepouts, spacing, inset=r, min_len=spacing,
-                                    reach=max(r, spacing))
+                                    reach=max(r, spacing), angle=angle)
     wpts: list = []
     for rows in order:
         rows = list(rows)
@@ -525,7 +562,7 @@ def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M,
     pts_ll = [_to_ll(pt, ref) for pt in wpts]
     rid = _add({"name": name or "Zone (no-rut turns)", "type": "coverage", "points": pts_ll,
                 "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing,
-                "stats": _stats(order, wpts, poly, holes, spacing, laps)})
+                "stats": _stats(order, wpts, poly, holes, spacing, laps, sweep=ref[4])})
     return rid, pts_ll
 
 

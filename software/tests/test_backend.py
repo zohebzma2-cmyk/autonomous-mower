@@ -37,7 +37,7 @@ def test_coverage_rows_fill_polygon():
 
 def test_coverage_is_boustrophedon():
     # each row (entry,exit) pair must reverse travel direction vs the previous row
-    _, pts = missions.plan_coverage("t", SQUARE, spacing=2.0)
+    _, pts = missions.plan_coverage("t", SQUARE, spacing=2.0, angle=0)   # rows east-west
     rows = [(pts[i], pts[i+1]) for i in range(0, len(pts), 2)]
     dirs = [1 if b[1] >= a[1] else -1 for a, b in rows]      # sign of lon travel
     assert all(dirs[i] != dirs[i+1] for i in range(len(dirs)-1)), \
@@ -176,6 +176,34 @@ def test_next_row_starts_where_the_turn_ends():
         if abs(y1 - y2) < 1e-6 and abs(y0 - y1) > 1e-6 and abs(x2 - x1) > 0.05:   # turn end -> row
             back = (x1 - x0) * (x2 - x1) < 0 and abs(x1 - x0) > 0.05
             assert not back, f"reverses into the row at ({x1:.1f},{y1:.1f})"
+    missions.delete_route(rid)
+
+L_YARD = [_ll(0, 0), _ll(40, 0), _ll(40, 15), _ll(15, 15), _ll(15, 40), _ll(0, 40)]
+
+def test_l_yard_inside_corner_is_routed():
+    # a long row and the short row above it share a cell; the straight leg
+    # between their ends cut the inside corner of the L
+    for angle in (0, 90, None):
+        rid, pts = missions.plan_coverage("L", L_YARD, 1.15, angle=angle)
+        assert _bad_legs(L_YARD, pts) == 0, f"angle {angle}: a leg cuts the L's corner"
+        missions.delete_route(rid)
+
+def test_sweep_angle_follows_a_long_thin_lawn():
+    strip = [_ll(0, 0), _ll(10, 0), _ll(10, 60), _ll(0, 60)]        # 10 m wide, 60 m north-south
+    rid_ew, _ = missions.plan_coverage_turns("ew", strip, 1.15, angle=0)
+    rid, pts = missions.plan_coverage_turns("auto", strip, 1.15)
+    ew, auto = missions.get_route(rid_ew)["stats"], missions.get_route(rid)["stats"]
+    assert auto["sweep_deg"] == 90.0, f"rows should run along the strip: {auto}"
+    assert auto["turns"] < ew["turns"] / 4, f"long rows, few turns: {auto['turns']} vs {ew['turns']}"
+    assert _bad_legs(strip, pts) == 0 and auto["coverage_pct"] >= 99.5, auto
+    missions.delete_route(rid_ew); missions.delete_route(rid)
+
+def test_sweep_angle_on_a_rotated_yard():
+    diamond = [_ll(20, 0), _ll(40, 20), _ll(20, 40), _ll(0, 20)]
+    rid, pts = missions.plan_coverage_turns("d", diamond, 1.15)
+    st = missions.get_route(rid)["stats"]
+    assert st["sweep_deg"] in (45.0, 135.0), f"rows should follow the diamond's edges: {st}"
+    assert _bad_legs(diamond, pts) == 0 and st["coverage_pct"] >= 99.5, st
     missions.delete_route(rid)
 
 # ---------------------------------------------------------------- missions persistence
