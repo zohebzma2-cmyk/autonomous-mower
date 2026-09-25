@@ -77,8 +77,24 @@ def _to_ll(pt, ref):
     return [round(lat0 + y / mlat, 7), round(lon0 + x / mlon, 7)]
 
 # ---------------------------------------------------------------- coverage planner
-def _row_spans(poly_xy, y):
-    """x-intervals where horizontal line at `y` is inside the polygon."""
+# Yards are rarely convex, and a sweep row through an L or U yard is cut into
+# several spans. Stitching a row's spans together drives the leg between them
+# straight across whatever fills the gap — in a real yard, the bed or the house
+# in the notch. So the rows are grouped into CELLS first (boustrophedon cell
+# decomposition): a span continues the cell above it only when the two overlap
+# one-to-one. Each cell is a simple lane mowed back and forth; cells are joined
+# by transit legs that are checked against the yard and, when blocked, routed
+# around (shortest path over the yard's corners and the keep-outs' corners).
+# Keep-outs — beds, trees, the shed, a spot the sonar keeps hitting — are holes
+# in the sweep, so they get the same treatment.
+EDGE_TOL_M = 0.05             # a point this close to an edge counts as on it
+KEEPOUT_MARGIN_M = 0.6        # how wide a transit leg swings around a keep-out corner
+
+def _xy(poly, ref):
+    lat0, lon0, mlat, mlon = ref
+    return [((p[1] - lon0) * mlon, (p[0] - lat0) * mlat) for p in poly]
+
+def _crossings(poly_xy, y):
     xs = []
     n = len(poly_xy)
     for i in range(n):
@@ -86,30 +102,171 @@ def _row_spans(poly_xy, y):
         x2, y2 = poly_xy[(i + 1) % n]
         if (y1 <= y < y2) or (y2 <= y < y1):
             xs.append(x1 + (y - y1) / (y2 - y1) * (x2 - x1))
+    return xs
+
+def _row_spans(poly_xy, y, holes=()):
+    """x-intervals where the horizontal line at `y` is inside the polygon and
+    outside every hole (even-odd over all edges; holes must lie inside)."""
+    xs = _crossings(poly_xy, y)
+    for h in holes:
+        xs += _crossings(h, y)
     xs.sort()
     return [(xs[i], xs[i + 1]) for i in range(0, len(xs) - 1, 2)]
 
-def plan_coverage(name, polygon, spacing=DEFAULT_SPACING):
-    """polygon: [[lat,lon],...] (>=3). Returns (route_id, waypoints[[lat,lon]...])."""
+def _inside(pt, poly):
+    x, y = pt
+    c = False
+    n = len(poly)
+    for i in range(n):
+        x1, y1 = poly[i]
+        x2, y2 = poly[(i + 1) % n]
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) / (y2 - y1) * (x2 - x1):
+            c = not c
+    return c
+
+def _edge_dist(pt, poly):
+    px, py = pt
+    best = float("inf")
+    n = len(poly)
+    for i in range(n):
+        ax, ay = poly[i]
+        bx, by = poly[(i + 1) % n]
+        dx, dy = bx - ax, by - ay
+        L2 = dx * dx + dy * dy
+        t = 0.0 if L2 == 0 else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / L2))
+        best = min(best, math.hypot(px - ax - t * dx, py - ay - t * dy))
+    return best
+
+def _ok(pt, poly, holes):
+    """Inside the yard (edges count) and not inside any keep-out (edges count)."""
+    if not _inside(pt, poly) and _edge_dist(pt, poly) > EDGE_TOL_M:
+        return False
+    return all(not _inside(pt, h) or _edge_dist(pt, h) <= EDGE_TOL_M for h in holes)
+
+def _clear(a, b, poly, holes, step=0.25):
+    n = max(2, int(math.hypot(b[0] - a[0], b[1] - a[1]) / step))
+    return all(_ok((a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n), poly, holes)
+               for k in range(1, n))
+
+def _route(a, b, poly, holes):
+    """Points to pass through between a and b (both excluded) so every leg stays
+    in the yard and out of the keep-outs. Raises ValueError if there is none."""
+    if _clear(a, b, poly, holes):
+        return []
+    m = KEEPOUT_MARGIN_M
+    nodes = []
+    ring = list(poly)
+    for i, v in enumerate(ring):             # yard corners, nudged inward
+        u = ring[i - 1]
+        w = ring[(i + 1) % len(ring)]
+        e1 = (u[0] - v[0], u[1] - v[1])
+        e2 = (w[0] - v[0], w[1] - v[1])
+        l1, l2 = math.hypot(*e1) or 1, math.hypot(*e2) or 1
+        bx, by = e1[0] / l1 + e2[0] / l2, e1[1] / l1 + e2[1] / l2
+        lb = math.hypot(bx, by) or 1
+        for sgn in (1, -1):
+            nodes.append((v[0] + sgn * m * bx / lb, v[1] + sgn * m * by / lb))
+    for h in holes:                          # keep-out corners, swung wide
+        xs = [p[0] for p in h]
+        ys = [p[1] for p in h]
+        nodes += [(min(xs) - m, min(ys) - m), (max(xs) + m, min(ys) - m),
+                  (max(xs) + m, max(ys) + m), (min(xs) - m, max(ys) + m)]
+    nodes = [a, b] + [q for q in nodes if _ok(q, poly, holes)]
+    dist = {0: 0.0}
+    prev = {}
+    todo = set(range(len(nodes)))
+    while todo:                              # Dijkstra, edges tested lazily
+        i = min(todo, key=lambda k: dist.get(k, float("inf")))
+        if i not in dist:
+            break
+        todo.discard(i)
+        if i == 1:
+            break
+        for j in todo:
+            d = dist[i] + math.hypot(nodes[j][0] - nodes[i][0], nodes[j][1] - nodes[i][1])
+            if d < dist.get(j, float("inf")) and _clear(nodes[i], nodes[j], poly, holes):
+                dist[j] = d
+                prev[j] = i
+    if 1 not in prev:
+        raise ValueError("no clear path between mowing areas — is a keep-out touching the boundary?")
+    path, k = [], prev[1]
+    while k != 0:
+        path.append(nodes[k])
+        k = prev[k]
+    return path[::-1]
+
+def _cells(poly, holes, spacing, inset=0.0, min_len=0.0):
+    """Swept rows grouped into cells: [[(y, xa, xb), ...], ...], rows in sweep order."""
+    ys = [p[1] for p in poly]
+    y, ymax = min(ys) + spacing / 2, max(ys) - spacing / 2
+    cells: list = []
+    prev: list = []
+    while y <= ymax + 1e-9:
+        spans = [(xa + inset, xb - inset) for xa, xb in _row_spans(poly, y, holes)
+                 if (xb - xa) - 2 * inset > max(min_len, 0.0)]
+        cur = []
+        for sp in spans:
+            over = [(ci, ps) for ci, ps in prev if ps[0] < sp[1] and sp[0] < ps[1]]
+            one_to_one = len(over) == 1 and sum(
+                1 for s2 in spans if over[0][1][0] < s2[1] and s2[0] < over[0][1][1]) == 1
+            if one_to_one:
+                ci = over[0][0]
+            else:
+                ci = len(cells)
+                cells.append([])
+            cells[ci].append((y, sp[0], sp[1]))
+            cur.append((ci, sp))
+        prev = cur
+        y += spacing
+    return cells
+
+def _orient(rows, rev, right):
+    """Row list for one cell as [(start, end)], alternating direction."""
+    rows = rows[::-1] if rev else rows
+    out = []
+    for k, (y, xa, xb) in enumerate(rows):
+        seg = ((xb, y), (xa, y)) if (k % 2 == 0) == right else ((xa, y), (xb, y))
+        out.append(seg)
+    return out
+
+def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0):
+    """Shared core: cells ordered nearest-next, each as oriented rows, plus the frame."""
     if len(polygon) < 3:
         raise ValueError("need >= 3 boundary points")
-    poly_xy, ref = _to_xy(polygon)
-    ys = [p[1] for p in poly_xy]
-    ymin, ymax = min(ys) + spacing / 2, max(ys) - spacing / 2
-    wpts, flip = [], False
-    y = ymin
-    while y <= ymax:
-        spans = _row_spans(poly_xy, y)
-        for (xa, xb) in spans:
-            seg = [(xa, y), (xb, y)]
-            if flip:
-                seg.reverse()
-            wpts.extend(seg)
-        flip = not flip
-        y += spacing
+    poly, ref = _to_xy(polygon)
+    holes = []
+    for k in keepouts or []:
+        if len(k) < 3:
+            raise ValueError("each keep-out needs >= 3 points")
+        h = _xy(k, ref)
+        if not all(_inside(p, poly) for p in h):
+            raise ValueError("keep-outs must lie inside the boundary")
+        holes.append(h)
+    cells = [c for c in _cells(poly, holes, spacing, inset, min_len) if c]
+    order = [_orient(cells.pop(0), False, False)] if cells else []
+    while cells:                             # nearest next cell, best entry corner
+        here = order[-1][-1][1]
+        best = min(((math.hypot(rows[0][0][0] - here[0], rows[0][0][1] - here[1]), ci, rows)
+                    for ci, c in enumerate(cells)
+                    for rows in (_orient(c, rev, right) for rev in (False, True) for right in (False, True))),
+                   key=lambda t: t[0])
+        order.append(best[2])
+        cells.pop(best[1])
+    return order, poly, holes, ref
+
+def plan_coverage(name, polygon, spacing=DEFAULT_SPACING, keepouts=None):
+    """polygon: [[lat,lon],...] (>=3); keepouts: optional list of polygons to
+    leave unmowed. Returns (route_id, waypoints[[lat,lon]...])."""
+    order, poly, holes, ref = _plan(polygon, keepouts, spacing)
+    wpts: list = []
+    for rows in order:
+        if wpts:
+            wpts += _route(wpts[-1], rows[0][0], poly, holes)
+        for a, b in rows:
+            wpts += [a, b]
     pts = [_to_ll(p, ref) for p in wpts]
-    rid = _add({"name": name or "Coverage zone", "type": "coverage",
-                "points": pts, "boundary": polygon, "spacing": spacing})
+    rid = _add({"name": name or "Coverage zone", "type": "coverage", "points": pts,
+                "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing})
     return rid, pts
 
 # ---------------------------------------------------------------- nav helper
@@ -180,32 +337,23 @@ def turn_points(x_end, y, y_next, direction, r=TURN_RADIUS_M):
                  (y + up * (r - b)) + up * r * math.sin(t * math.pi / 6)) for t in (1, 2, 3)]
     return pts
 
-def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M):
+def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M, keepouts=None):
     """Coverage rows + no-rut row turns (U or 3-point K), rows inset by the
-    turn radius (headland) so every turn stays inside the boundary."""
-    if len(polygon) < 3:
-        raise ValueError("need >= 3 boundary points")
-    poly_xy, ref = _to_xy(polygon)
-    ys = [pt[1] for pt in poly_xy]
-    ymin, ymax = min(ys) + spacing / 2, max(ys) - spacing / 2
-    rows, flip = [], False
-    y = ymin
-    while y <= ymax:
-        for (xa, xb) in _row_spans(poly_xy, y):
-            xa, xb = xa + r, xb - r                    # headland inset
-            if xb - xa < spacing:
-                continue
-            rows.append(((xb, y), (xa, y)) if flip else ((xa, y), (xb, y)))
-            flip = not flip
-        y += spacing
-    wpts = []
-    for i, (a, b) in enumerate(rows):
-        wpts += [a, b]
-        if i + 1 < len(rows):
-            direction = 1 if b[0] > a[0] else -1
-            wpts += turn_points(b[0], b[1], rows[i + 1][0][1], direction, r)
+    turn radius (headland) from the boundary and every keep-out, so each turn
+    stays in the yard. Cells are joined by routed transit legs."""
+    order, poly, holes, ref = _plan(polygon, keepouts, spacing, inset=r, min_len=spacing)
+    wpts: list = []
+    for rows in order:
+        if wpts:
+            wpts += _route(wpts[-1], rows[0][0], poly, holes)
+        for i, (a, b) in enumerate(rows):
+            wpts += [a, b]
+            if i + 1 < len(rows):
+                direction = 1 if b[0] > a[0] else -1
+                wpts += turn_points(b[0], b[1], rows[i + 1][0][1], direction, r)
     pts_ll = [_to_ll(pt, ref) for pt in wpts]
-    rid = _add({"name": name or "Zone (no-rut turns)", "type": "coverage", "points": pts_ll})
+    rid = _add({"name": name or "Zone (no-rut turns)", "type": "coverage", "points": pts_ll,
+                "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing})
     return rid, pts_ll
 
 

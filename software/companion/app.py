@@ -611,7 +611,8 @@ class H(BaseHTTPRequestHandler):
             try:
                 planner = missions.plan_coverage_turns if p.get("turns") == "smooth" else missions.plan_coverage
                 rid, pts = planner(p.get("name"), p.get("polygon", []),
-                                   float(p.get("spacing") or missions.DEFAULT_SPACING))
+                                   float(p.get("spacing") or missions.DEFAULT_SPACING),
+                                   keepouts=p.get("keepouts") or [])
                 self._send(200, json.dumps({"ok": True, "id": rid, "points": pts,
                                             "msg": f"planned {len(pts)} waypoints"}))
             except Exception as e:
