@@ -18,12 +18,18 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 - **Sonar hotspots → suggested keep-outs:** ≥ 3 obstacle stops within 1.5 m is a stump, not a dog;
   `GET /api/obstacles/hotspots`, offered in the UI while drawing (never added silently)
 - **Plan stats before it moves:** lawn m² (minus keep-outs), path vs mowed length, turns, cells,
-  **minutes at CRUISE_SPEED**, and an honest **% covered** — which exposed the next item
-- **Perimeter laps:** the no-rut planner left the 1.2 m turn headland unmowed (10–14 % of a lawn). It
-  now finishes with laps around the yard and every keep-out (tractor order: headlands last). 40 × 40 m
-  lawn with a bed: 90.5 % → 100 % covered, 16.7 → 21.7 min
+  **minutes at CRUISE_SPEED**, and **% covered — measured**: the 52″ deck is swept along the whole
+  driven path on a 0.1 m grid. (A first cut estimated rows × spacing and claimed 10–14 % of the
+  headland went unmowed; measured, the turns themselves cut most of it. A 0.3 m grid also read
+  97.7 % on a plan that truly cuts 84.7 % — it steps over the thin strips between rows.)
+- **Perimeter laps:** the no-rut planner now finishes with laps around the yard and every keep-out
+  (tractor order: headlands last) — measured 97.5 % → 100 % on a 40 × 40 m lawn with a bed, 91.3 % →
+  100 % on a diamond-shaped yard, where the slanted headland is widest
+- **No-rut turns on slanted edges (#8):** a turn climbs a row over, where a slanted yard is narrower —
+  75 of 251 legs left a trapezoid yard. Rows are now sized for the band a turn sweeps, and the next
+  row starts where the turn ends so the machine never backs up into it
 - `missions.py` joins the mypy gate; `scripts/plan_figure.py` draws `docs/coverage-plan.svg` from the
-  real planner. Tests 54 → **63**; SITL end-to-end still green on ArduRover 4.7.1
+  real planner. Tests 54 → **66**; SITL end-to-end still green on ArduRover 4.7.1
 
 **MowerCarrier Rev A.1 — the carrier PCB is routed (roadmap #38/#39)**
 - `hardware/pcb/kicad/`: KiCad 9 project **generated from `design.py`** (schematic from KiCad's own
