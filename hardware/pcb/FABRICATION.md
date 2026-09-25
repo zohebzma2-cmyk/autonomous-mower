@@ -1,8 +1,10 @@
 # MowerCarrier Rev A — how to fabricate
 
-This is a **design package** (schematic + placement + netlist + BOM), not a set
-of Gerbers yet — the Rev A step is to open it in KiCad, drop the BOM parts onto
-the placement, route the two layers, and export. Here's the path end-to-end.
+**Rev A.1 is routed:** [`kicad/`](kicad/) holds the generated KiCad 9 project (ERC 0, DRC 0
+errors, schematic parity 0) and [`kicad/fab/mowercarrier-gerbers.zip`](kicad/fab/mowercarrier-gerbers.zip)
++ pick-and-place + BOM. **Work through [`kicad/REVIEW.md`](kicad/REVIEW.md) before ordering**
+(Q1 heatsink, ESP32 row pitch, fuse-holder rating). Section 1 below is how the project was
+built — regenerate with `kicad/gen_kicad.sh` instead of redrawing it.
 
 ## 1. Route it in KiCad (free)
 

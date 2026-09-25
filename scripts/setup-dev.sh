@@ -10,7 +10,8 @@
 #                    (a dev snapshot — it has the Manifold backend; the 2021 stable
 #                    release takes ~55 min on the tyre group vs seconds here)
 #                    Linux: prints the AppImage/apt route
-# Optional (flags): --kicad   KiCad 9 for the MowerCarrier PCB gates (macOS, ~1.3 GB)
+# Optional (flags): --kicad   KiCad 9 + Java 25 + Freerouting + arduino-cli/ESP32 core:
+#                             the MowerCarrier PCB generator/gates and the firmware compile gate
 set -euo pipefail
 cd "$(dirname "$0")/.."
 BIN="$HOME/.local/bin"; mkdir -p "$BIN"
@@ -59,6 +60,32 @@ if [ "${1:-}" = "--kicad" ]; then
   fi
   printf '#!/bin/sh\nexec "$HOME/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli" "$@"\n' > "$BIN/kicad-cli"
   chmod +x "$BIN/kicad-cli"; kicad-cli version
+
+  say "Java 25 JRE + Freerouting 1.9.0 (autorouter for hardware/pcb/kicad/gen_kicad.sh)"
+  JDIR="$HOME/.local/share/java"; mkdir -p "$JDIR" "$HOME/.local/share/freerouting"
+  if ! ls -d "$JDIR"/jdk-25*/ >/dev/null 2>&1; then
+    arch=$(uname -m | sed 's/arm64/aarch64/; s/x86_64/x64/'); os=$([ "$(uname -s)" = Darwin ] && echo mac || echo linux)
+    curl -sL "https://api.adoptium.net/v3/binary/latest/25/ga/$os/$arch/jre/hotspot/normal/eclipse" | tar -xz -C "$JDIR"
+  fi
+  J=$( (ls -d "$JDIR"/jdk-25*/Contents/Home/bin/java "$JDIR"/jdk-25*/bin/java 2>/dev/null || true) | head -1)  # macOS | Linux layout
+  FRJ="$HOME/.local/share/freerouting/freerouting-1.9.0.jar"
+  [ -f "$FRJ" ] || curl -sL -o "$FRJ" https://github.com/freerouting/freerouting/releases/download/v1.9.0/freerouting-1.9.0.jar
+  # 1.9.0 on purpose: 2.x intermittently writes an empty .ses when run headless
+  printf '#!/bin/sh\nexec "%s" -jar "%s" "$@"\n' "$J" "$FRJ" > "$BIN/freerouting"; chmod +x "$BIN/freerouting"
+  "$J" -version 2>&1 | head -1
+
+  say "arduino-cli + ESP32 core (firmware compile gate)"
+  command -v arduino-cli >/dev/null || curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$BIN" sh
+  arduino-cli config init --overwrite >/dev/null
+  arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+  arduino-cli core update-index >/dev/null && arduino-cli core install esp32:esp32 >/dev/null
+  CT="$HOME/Library/Arduino15/packages/builtin/tools/ctags/5.8-arduino11/ctags"
+  if [ "$(uname -m)" = arm64 ] && [ -f "$CT" ] && file "$CT" | grep -q x86_64 && ! arch -x86_64 /usr/bin/true 2>/dev/null; then
+    # Arduino's ctags is x86_64-only and needs Rosetta; our sketches declare functions before use,
+    # so a no-op stub is enough (original kept alongside)
+    mv "$CT" "$CT.x86_64"; printf '#!/bin/sh\nexit 0\n' > "$CT"; chmod +x "$CT"
+  fi
+  arduino-cli core list
 fi
 
 say "done — now run:  PATH=\"$BIN:\$PATH\" ./scripts/check.sh --full"

@@ -45,11 +45,25 @@ if [ "$FULL" = 1 ]; then
   fi
   cd cad
 fi
-# MowerCarrier PCB gates (#39): active as soon as a KiCad project lands in hardware/pcb/kicad
+# MowerCarrier PCB gates (#39): ERC clean, DRC with zero errors + schematic parity
 if ls ../hardware/pcb/kicad/*.kicad_sch >/dev/null 2>&1 && command -v kicad-cli >/dev/null; then
-  echo "== KiCad ERC + DRC (MowerCarrier)"
-  for f in ../hardware/pcb/kicad/*.kicad_sch; do kicad-cli sch erc --exit-code-violations -o /tmp/erc.rpt "$f"; done
-  for f in ../hardware/pcb/kicad/*.kicad_pcb; do kicad-cli pcb drc --exit-code-violations -o /tmp/drc.rpt "$f"; done
+  echo "== KiCad ERC + DRC (MowerCarrier: errors + schematic parity)"
+  for f in ../hardware/pcb/kicad/*.kicad_sch; do
+    kicad-cli sch erc --severity-all --exit-code-violations -o /tmp/erc.rpt "$f" 2>&1 | grep -E "violation" || true
+    kicad-cli sch erc --severity-all --exit-code-violations -o /tmp/erc.rpt "$f" >/dev/null 2>&1 || { cat /tmp/erc.rpt; exit 1; }
+  done
+  for f in ../hardware/pcb/kicad/*.kicad_pcb; do
+    kicad-cli pcb drc --severity-error --schematic-parity --exit-code-violations -o /tmp/drc.rpt "$f" >/dev/null 2>&1 \
+      || { cat /tmp/drc.rpt; exit 1; }
+    grep -E "^\*\* Found" /tmp/drc.rpt | sed 's/^/   /'
+  done
+fi
+# ESP32 lap-bar firmware compiles (current Arduino-ESP32 core) — when the toolchain is installed
+if command -v arduino-cli >/dev/null && arduino-cli core list 2>/dev/null | grep -q "^esp32:esp32"; then
+  echo "== firmware: lapbar_controller compiles (esp32:esp32)"
+  arduino-cli compile --fqbn esp32:esp32:esp32 --warnings default ../firmware/lapbar_controller 2>&1 \
+    | grep -E "error|warning|Sketch uses" | sed 's/^/   /'
+  arduino-cli compile --fqbn esp32:esp32:esp32 ../firmware/lapbar_controller >/dev/null 2>&1 || exit 1
 fi
 if [ -x ../.venv/bin/mkdocs ]; then
   echo "== docs site builds clean (mkdocs --strict)"

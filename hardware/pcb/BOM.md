@@ -1,5 +1,12 @@
 # MowerCarrier Rev A — Bill of Materials
 
+> **Rev A.1:** the generated, grouped BOM with LCSC numbers is
+> [`kicad/fab/mowercarrier-bom.csv`](kicad/fab/mowercarrier-bom.csv). Changes vs the table below:
+> relays → **SLA-12VDC-SL-A** (Form A, 30 A; the SL-C's NO contact is 20 A @ 28 VDC); ATO holders →
+> **Littelfuse FLR 178.6165** footprint (verify rating/LCSC); **F5 7.5 A** added for the PTO;
+> e-stop terminal → **5-pole**; **BZT52C15** gate zener + **R1 10k** for Q1; **LED2 + 2k** drive-live
+> indicator; pot terminals → 3.5 mm pitch. Q1 needs a **TO-220 heatsink** (see kicad/REVIEW.md).
+
 Real, in-stock **LCSC / JLCPCB** part numbers. Nothing here is invented — where a
 part or its assembly tier couldn't be verified this is flagged explicitly.
 **Re-check Basic/Extended tier and stock at order time** (JLCPCB rotates its

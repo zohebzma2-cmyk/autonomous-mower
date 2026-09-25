@@ -1,5 +1,12 @@
 # MowerCarrier Rev A — netlist (authoritative connectivity)
 
+> **Superseded by Rev A.1 — [`kicad/design.py`](kicad/design.py) is now the source of truth**
+> (it generates the ERC/DRC-clean KiCad project). Turning this table into copper found 7
+> errors, fixed there and listed in [`kicad/REVIEW.md`](kicad/REVIEW.md): Q1 orientation
+> (no reverse-polarity protection as drawn), XT60 polarity, no supply to the e-stop contacts,
+> K1.COM on two nets, unfused PTO, R_LEN on strapping pin GPIO12 (→ GPIO33, DRIVE_EN →
+> GPIO32), and the 20 A (not 30 A) rating of the Form-C relay. Kept below for history.
+
 The schematic SVG is for review; **this table is the source of truth** for
 routing. Pin names match `firmware/lapbar_controller/lapbar_controller.ino` and
 `docs/WIRING.md`. Color key: **+12V**, **+5V**, **+3V3**, GND, signal.

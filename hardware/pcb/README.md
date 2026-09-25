@@ -10,7 +10,12 @@ onto one board that every off-board module plugs into by connector.
 | **Board** | 120 × 100 mm, 2-layer FR4, **2 oz copper** (high-current pours) |
 | **Fab/assembly** | JLCPCB (economic PCBA for SMD; hand-solder the THT connectors) |
 | **License** | MIT (hardware too — remix it) |
-| **Status** | Rev A design package — schematic + placement + netlist + BOM, ready to route in KiCad |
+| **Status** | **Rev A.1 routed** — generated KiCad 9 project in [`kicad/`](kicad/) (ERC 0 · DRC 0 errors · parity 0), Gerbers in `kicad/fab/`. **Human pre-fab review pending: [`kicad/REVIEW.md`](kicad/REVIEW.md)** |
+
+![MowerCarrier Rev A.1 — 3D render of the routed board](render-iso.png)
+
+*Rev A.1 as generated. The SVGs below are the original Rev A concept drawings — see
+`kicad/REVIEW.md` for the 7 corrections the routed board makes to them.*
 
 ![schematic](schematic.svg)
 

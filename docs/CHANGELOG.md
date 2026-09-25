@@ -4,6 +4,23 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 [DESIGN-LOG.md](DESIGN-LOG.md).
 
 ## Unreleased
+**MowerCarrier Rev A.1 — the carrier PCB is routed (roadmap #38/#39)**
+- `hardware/pcb/kicad/`: KiCad 9 project **generated from `design.py`** (schematic from KiCad's own
+  symbols → placement → 30 A trunk as solid pours + track keepouts → Freerouting → fuse-clip + GND
+  pours). ERC 0 · DRC 0 errors · 0 unconnected · schematic parity 0. Gerbers/drill/pos/BOM in `fab/`,
+  3D renders in `hardware/pcb/`. `check.sh` gates ERC + DRC(+parity); a deleted track fails it
+- **7 design errors in the Rev A netlist fixed** (details in `kicad/REVIEW.md`): Q1 reversed (no
+  reverse-polarity protection), XT60 polarity, e-stop contacts had no supply, K1.COM on two nets,
+  unfused PTO (new F5), R_LEN on boot-strapping GPIO12 (→ GPIO33; DRIVE_EN → GPIO32), Form-C relay
+  is 20 A not 30 A (→ SLA-12VDC-SL-A, footprint drawn from Songle's drilling drawing)
+- **Before ordering:** Q1 needs a TO-220 heatsink (4.5 W at 15 A), caliper the ESP32 row pitch,
+  confirm the ATO holder rating — `kicad/REVIEW.md`
+- Firmware: DRIVE_EN keeps motor power off until the ESP32 is configured; R_LEN → GPIO33; ported to
+  the Arduino-ESP32 **3.x** LEDC API (it no longer compiled on a current core) with a 2.x fallback.
+  `check.sh` compiles it when arduino-cli is present
+- `setup-dev.sh --kicad` now also installs Java 25, Freerouting 1.9.0 (2.x writes empty routes when
+  headless) and arduino-cli + the ESP32 core
+
 **Runs for real, end to end — and running it found 10 bugs**
 - **ArduPilot SITL end-to-end:** `scripts/sitl.sh` boots the real ArduRover **4.7.1** firmware
   (skid-steer, home on the Yard), loads this repo's params and puts the companion UI on it;

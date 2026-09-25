@@ -99,7 +99,8 @@ failsafe → HOLD + disarm) and **ArduPilot failsafes** (GPS loss, geofence, low
 | GPIO16/17 | L_RPWM/L_LPWM | BTS7960 #1 RPWM/LPWM |
 | GPIO18/19 | L_REN/L_LEN | BTS7960 #1 R_EN/L_EN |
 | GPIO26/27 | R_RPWM/R_LPWM | BTS7960 #2 RPWM/LPWM |
-| GPIO14/12 | R_REN/R_LEN | BTS7960 #2 R_EN/L_EN |
+| GPIO14/33 | R_REN/R_LEN | BTS7960 #2 R_EN/L_EN (R_LEN moved off GPIO12 — a boot strapping pin — in MowerCarrier Rev A.1) |
+| GPIO32 | DRIVE_EN | MowerCarrier Q2 gate → DRIVE relay K1 coil (10k pulldown: motor V+ stays off while the ESP32 boots) |
 | 5V / GND | power | Buck #2 |
 | GPIO2 | status LED | onboard |
 

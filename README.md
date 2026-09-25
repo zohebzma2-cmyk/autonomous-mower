@@ -95,6 +95,7 @@ autonomous-mower/
 │   ├── lapbar_controller/   ← ESP32: FC-PWM → pot → BTS7960 position loop, fail-to-neutral
 │   └── ardupilot/           ← rover_params.parm (skid-steer, RTK, geofence, moving-baseline)
 ├── hardware/pcb/            ← ★ MowerCarrier: power + kill-chain + ESP32 carrier board
+│   └── kicad/               ← generated KiCad 9 project (ERC/DRC clean) + Gerbers — read REVIEW.md before fab
 │   ├── schematic.svg · layout.svg   ← generated (gen_schematic.py / gen_layout.py)
 │   └── README.md · netlist.md · BOM.md · FABRICATION.md
 └── cart/                    ← ORDER.md (real BOM + links), order.html
@@ -119,7 +120,7 @@ openscad assembly.scad          # see the whole machine
 
 ### Dev setup (once — user-level, no sudo/Homebrew)
 ```bash
-./scripts/setup-dev.sh            # uv + Python 3.12 .venv + OpenSCAD (+ --kicad for the PCB gates)
+./scripts/setup-dev.sh            # uv + Python 3.12 .venv + OpenSCAD (+ --kicad: KiCad, Freerouting, arduino-cli)
 ./scripts/check.sh --full --sitl  # every gate: tests, mypy, CAD asserts, renders, docs, SITL end-to-end
 ```
 
@@ -205,7 +206,7 @@ This project stands on the shoulders of a great open community — go star these
 
 - 💬 **[GitHub Discussions](https://github.com/zohebzma2-cmyk/autonomous-mower/discussions)** — *Show & Tell* your ZTR build, ask in *Q&A*, propose *Ideas*, follow *Build logs*.
 - 🔧 **Adapting to a different zero-turn?** That's the whole point — a new machine profile is the most valuable contribution you can make. See [`Adapting to another zero-turn`](#adapting-to-another-zero-turn) and open a PR with your `params.scad` SECTION 1.
-- 🛠️ **Custom carrier PCB** — the power/kill-chain/ESP32 board lives in [`hardware/pcb/`](hardware/pcb/) (schematic, placement, netlist, BOM). Remix it for your machine.
+- 🛠️ **Custom carrier PCB** — the power/kill-chain/ESP32 board lives in [`hardware/pcb/`](hardware/pcb/): a routed, ERC/DRC-clean KiCad 9 project generated from one Python file, with Gerbers ready for review ([`REVIEW.md`](hardware/pcb/kicad/REVIEW.md) first). Remix it for your machine.
 - See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the safety-gated workflow. Good first issues are labeled `good first issue`.
 
 ## License & safety
