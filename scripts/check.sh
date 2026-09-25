@@ -75,6 +75,9 @@ if [ "$FULL" = 1 ] && [ -x ../hardware/pcb/kicad/gen_kicad.sh ] && command -v fr
   if ! git -C .. diff --quiet -- hardware/pcb/kicad/*.kicad_sch hardware/pcb/kicad/*.kicad_pcb; then
     echo "STALE PCB: the committed KiCad files differ from what design.py/gen_pcb.py generate — commit them"; exit 1
   fi
+  # design files match, so the derived exports (zip timestamps, SVG dates, ray-trace noise) are too
+  git -C .. checkout -- hardware/pcb/kicad/fab hardware/pcb/schematic.svg hardware/pcb/layout.svg \
+    hardware/pcb/render-top.png hardware/pcb/render-iso.png
 fi
 if [ "$SITL" = 1 ]; then
   echo "== ArduPilot SITL end-to-end (scripts/sitl.sh + sitl_smoke.py)"
