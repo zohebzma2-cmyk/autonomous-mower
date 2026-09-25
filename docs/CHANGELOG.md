@@ -28,8 +28,15 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 - **No-rut turns on slanted edges (#8):** a turn climbs a row over, where a slanted yard is narrower —
   75 of 251 legs left a trapezoid yard. Rows are now sized for the band a turn sweeps, and the next
   row starts where the turn ends so the machine never backs up into it
+- **Row direction with the fewest turns (#7):** rows used to run east-west only (a 10 × 60 m north-south
+  strip got 51 turns). The planner now tries east-west and every boundary edge direction and keeps the
+  fewest rows — the strip gets 6 turns, 10.9 → 8.3 min. `angle=` pins it; stats report `sweep_deg`
+- **Rows reach both edges:** rows are spread evenly edge to edge (effective spacing ≤ the requested),
+  instead of stepping from one edge and leaving a sliver at the other; and legs *within* a cell are
+  routed too (an L yard's inside corner was being cut). 8 test yards × both planners: 0 legs leave
+  the yard, 99.9–100 % measured
 - `missions.py` joins the mypy gate; `scripts/plan_figure.py` draws `docs/coverage-plan.svg` from the
-  real planner. Tests 54 → **66**; SITL end-to-end still green on ArduRover 4.7.1
+  real planner. Tests 54 → **69**; SITL end-to-end still green on ArduRover 4.7.1
 
 **MowerCarrier Rev A.1 — the carrier PCB is routed (roadmap #38/#39)**
 - `hardware/pcb/kicad/`: KiCad 9 project **generated from `design.py`** (schematic from KiCad's own
