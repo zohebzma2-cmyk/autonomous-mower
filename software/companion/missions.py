@@ -259,9 +259,10 @@ def _area(poly):
     return abs(sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1]
                    for i in range(len(poly)))) / 2
 
-def _stats(order, wpts, poly, holes, spacing):
+def _stats(order, wpts, poly, holes, spacing, laps=()):
     """What the plan will take: shown before the machine moves."""
     mow = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for rows in order for a, b in rows)
+    mow += sum(math.hypot(q[0] - p[0], q[1] - p[1]) for lap in laps for p, q in zip(lap, lap[1:]))
     path = sum(math.hypot(q[0] - p[0], q[1] - p[1]) for p, q in zip(wpts, wpts[1:]))
     lawn = max(_area(poly) - sum(_area(h) for h in holes), 1e-9)
     return {"lawn_m2": round(lawn), "mow_m": round(mow), "path_m": round(path),
@@ -389,10 +390,59 @@ def turn_points(x_end, y, y_next, direction, r=TURN_RADIUS_M):
                  (y + up * (r - b)) + up * r * math.sin(t * math.pi / 6)) for t in (1, 2, 3)]
     return pts
 
-def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M, keepouts=None):
+# ---------------------------------------------------------------- perimeter laps
+# Rows stop a turn radius short of every edge so the no-rut turns fit; that
+# strip (the headland) is 10-14% of a typical lawn. It is mowed last, as laps
+# around the yard and around each keep-out — the tractor order, so the laps
+# also clean up the turn marks.
+def _signed_area(ring):
+    return sum(ring[i][0] * ring[(i + 1) % len(ring)][1] - ring[(i + 1) % len(ring)][0] * ring[i][1]
+               for i in range(len(ring))) / 2
+
+def _offset(ring, d):
+    """The ring moved d metres to the left of travel (for a CCW ring: inward)."""
+    n = len(ring)
+    lines = []
+    for i in range(n):
+        (x1, y1), (x2, y2) = ring[i], ring[(i + 1) % n]
+        L = math.hypot(x2 - x1, y2 - y1) or 1
+        nx, ny = -(y2 - y1) / L, (x2 - x1) / L
+        lines.append(((x1 + nx * d, y1 + ny * d), (x2 + nx * d, y2 + ny * d)))
+    out = []
+    for i in range(n):                       # mitred corners: adjacent offset lines meet
+        (p1, p2), (p3, p4) = lines[i - 1], lines[i]
+        den = (p1[0] - p2[0]) * (p3[1] - p4[1]) - (p1[1] - p2[1]) * (p3[0] - p4[0])
+        if abs(den) < 1e-9:
+            out.append(p3)
+            continue
+        t = ((p1[0] - p3[0]) * (p3[1] - p4[1]) - (p1[1] - p3[1]) * (p3[0] - p4[0])) / den
+        out.append((p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])))
+    return out
+
+def _laps(poly, holes, spacing, width):
+    """Closed laps covering `width` metres in from the yard edge and out from
+    each keep-out, innermost first. A lap that would leave the yard or clip a
+    keep-out (a pinch point) is dropped rather than driven."""
+    n = max(1, math.ceil(width / spacing))
+    rings = []
+    for ring, sign in [(h, -1) for h in holes] + [(poly, 1)]:
+        ccw = ring if _signed_area(ring) > 0 else ring[::-1]
+        for k in reversed(range(n)):
+            lap = _offset(ccw, sign * (spacing / 2 + k * spacing))
+            if _signed_area(lap) <= 0:
+                continue
+            lap = lap + lap[:1]
+            if all(_ok(q, poly, holes) for q in lap) and \
+                    all(_clear(a, b, poly, holes) for a, b in zip(lap, lap[1:])):
+                rings.append(lap)
+    return rings
+
+def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M, keepouts=None,
+                        perimeter=True):
     """Coverage rows + no-rut row turns (U or 3-point K), rows inset by the
     turn radius (headland) from the boundary and every keep-out, so each turn
-    stays in the yard. Cells are joined by routed transit legs."""
+    stays in the yard. Cells are joined by routed transit legs; the headland
+    is mowed last as perimeter laps (perimeter=False leaves it)."""
     order, poly, holes, ref = _plan(polygon, keepouts, spacing, inset=r, min_len=spacing)
     wpts: list = []
     for rows in order:
@@ -403,10 +453,18 @@ def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M,
             if i + 1 < len(rows):
                 direction = 1 if b[0] > a[0] else -1
                 wpts += turn_points(b[0], b[1], rows[i + 1][0][1], direction, r)
+    laps = _laps(poly, holes, spacing, r) if perimeter else []
+    for lap in laps:
+        if wpts:                             # start each lap at its corner nearest to here
+            i = min(range(len(lap) - 1), key=lambda k: math.hypot(lap[k][0] - wpts[-1][0],
+                                                                  lap[k][1] - wpts[-1][1]))
+            lap = lap[i:-1] + lap[:i + 1]
+            wpts += _route(wpts[-1], lap[0], poly, holes)
+        wpts += lap
     pts_ll = [_to_ll(pt, ref) for pt in wpts]
     rid = _add({"name": name or "Zone (no-rut turns)", "type": "coverage", "points": pts_ll,
                 "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing,
-                "stats": _stats(order, wpts, poly, holes, spacing)})
+                "stats": _stats(order, wpts, poly, holes, spacing, laps)})
     return rid, pts_ll
 
 

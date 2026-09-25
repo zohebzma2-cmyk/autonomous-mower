@@ -131,6 +131,22 @@ def test_plan_stats_are_honest():
     assert abs(st["minutes"] - st["path_m"] / missions.CRUISE_MPS / 60) < 0.1, st
     missions.delete_route(rid)
 
+def test_perimeter_laps_mow_the_headland():
+    for yard, ko in ((SQ40, [BED]), (U_YARD, [])):
+        rid0, _ = missions.plan_coverage_turns("p0", yard, 1.15, keepouts=ko, perimeter=False)
+        rid1, pts = missions.plan_coverage_turns("p1", yard, 1.15, keepouts=ko)
+        before = missions.get_route(rid0)["stats"]["coverage_pct"]
+        after = missions.get_route(rid1)["stats"]["coverage_pct"]
+        assert before < 92 and after >= 99, f"headland must be mowed: {before}% -> {after}%"
+        assert _bad_legs(yard, pts, ko) == 0, "perimeter laps must stay in the yard and out of keep-outs"
+        missions.delete_route(rid0); missions.delete_route(rid1)
+
+def test_offset_moves_inward():
+    sq = [(0, 0), (10, 0), (10, 10), (0, 10)]
+    inner = missions._offset(sq, 1.0)
+    assert all(abs(a - b) < 1e-9 for p, q in zip(inner, [(1, 1), (9, 1), (9, 9), (1, 9)])
+               for a, b in zip(p, q)), inner
+
 # ---------------------------------------------------------------- missions persistence
 def test_persistence_roundtrip():
     before = len(missions.list_routes())
