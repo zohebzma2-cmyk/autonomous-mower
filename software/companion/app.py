@@ -550,10 +550,12 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(S.snapshot())); return
         if self.path == "/api/missions":
             self._send(200, json.dumps(missions.list_routes())); return
-        if self.path == "/api/obstacles":
+        if self.path in ("/api/obstacles", "/api/obstacles/hotspots"):
             try:
                 with open(_obstacles_path()) as f: hits = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError, OSError): hits = []
+            if self.path.endswith("/hotspots"):
+                hits = missions.obstacle_hotspots(hits)      # suggested keep-outs
             self._send(200, json.dumps(hits)); return
         if self.path.startswith("/api/route.plan"):
             from urllib.parse import urlparse, parse_qs

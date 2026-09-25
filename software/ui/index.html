@@ -164,6 +164,7 @@ svg.mower{position:relative;height:215px;transition:filter .3s}
       <button id="drawBtn" onclick="toggleDraw()">✏︎ Draw zone</button>
       <button id="fenceBtn" onclick="toggleFence()">⛨ Fence</button>
       <button id="koBtn" onclick="startKeepout()" style="display:none">＋ Keep-out</button>
+      <button id="hotBtn" onclick="addHotspots()" style="display:none"></button>
       <button id="planBtn" class="go" onclick="planZone()" style="display:none">Plan coverage</button>
       <button id="setFenceBtn" class="go" onclick="setFence()" style="display:none">Set fence</button>
       <button id="clearBtn" class="warn" onclick="clearDraw()" style="display:none">✕</button>
@@ -234,7 +235,25 @@ async function loadObstacles(){
     obsLayer.clearLayers();
     hits.forEach(h=>L.circleMarker([h.lat,h.lon],{radius:6,color:'#e5504a',fillColor:'#e5504a',
       fillOpacity:.25,weight:1,interactive:false}).addTo(obsLayer));
+    hotspots=await (await fetch('/api/obstacles/hotspots')).json();
+    hotspots.forEach(h=>L.polygon(h.keepout,{color:'#e5504a',weight:1.5,dashArray:'4 4',
+      fillOpacity:.05,interactive:false}).addTo(obsLayer));
+    showHotBtn();
   }catch(e){}
+}
+// repeated sonar stops at one spot -> offered as keep-outs while drawing a zone
+let hotspots=[];
+function showHotBtn(){
+  const b=document.getElementById('hotBtn');
+  b.style.display=(drawing&&hotspots.length)?'block':'none';
+  b.textContent='⚑ '+hotspots.length+' sonar spot'+(hotspots.length===1?'':'s');
+}
+function addHotspots(){
+  if(!zone){ document.getElementById('sub').textContent='⚠ draw the lawn boundary, then ＋ Keep-out, first'; return; }
+  hotspots.forEach(h=>{ holes.push(h.keepout);
+    frozen.push(L.polygon(h.keepout,{color:'#e0525a',weight:2,fillOpacity:.25,interactive:false}).addTo(map)); });
+  document.getElementById('sub').textContent='added '+hotspots.length+' sonar keep-out'+(hotspots.length===1?'':'s');
+  document.getElementById('hotBtn').style.display='none';
 }
 setInterval(loadObstacles, 30000);
 // 61: ghost mower — where the plan says it SHOULD be (nearest point on the plan)
@@ -266,6 +285,7 @@ function toggleDraw(){
   document.getElementById('drawBtn').classList.toggle('go',drawing);
   document.getElementById('planBtn').style.display = drawing?'block':'none';
   document.getElementById('koBtn').style.display = drawing?'block':'none';
+  showHotBtn();
   document.getElementById('clearBtn').style.display = (drawing||fencing)?'block':'none';
   document.getElementById('hint').style.display = drawing?'block':'none';
   document.getElementById('hint').textContent = HINT_ZONE;

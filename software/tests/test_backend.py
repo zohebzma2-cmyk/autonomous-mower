@@ -112,6 +112,16 @@ def test_keepout_validation():
         except ValueError:
             pass
 
+def test_obstacle_hotspots_cluster_repeats_only():
+    stump = [{"lat": _ll(20, 20)[0] + d * 1e-6, "lon": _ll(20, 20)[1]} for d in (0, 3, 6, 9)]
+    dog = [{"lat": _ll(5, 30)[0], "lon": _ll(5, 30)[1]}]
+    spots = missions.obstacle_hotspots(stump + dog)
+    assert len(spots) == 1 and spots[0]["hits"] == 4, f"one stump, the dog ignored: {spots}"
+    rid, pts = missions.plan_coverage("s", SQ40, 1.5, keepouts=[spots[0]["keepout"]])
+    assert _bad_legs(SQ40, pts, [spots[0]["keepout"]]) == 0, "the suggested keep-out must plan cleanly"
+    missions.delete_route(rid)
+    assert missions.obstacle_hotspots([]) == [] and missions.obstacle_hotspots([{"lat": None}]) == []
+
 # ---------------------------------------------------------------- missions persistence
 def test_persistence_roundtrip():
     before = len(missions.list_routes())

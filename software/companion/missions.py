@@ -269,6 +269,42 @@ def plan_coverage(name, polygon, spacing=DEFAULT_SPACING, keepouts=None):
                 "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing})
     return rid, pts
 
+# ---------------------------------------------------------------- obstacle hotspots
+# The companion logs where the sonar/vision stop fired (app.obstacle_log). One
+# hit is a dog or a kid; the same spot again and again is a stump, a post or a
+# low branch. Those clusters are offered as keep-outs — a suggestion the user
+# confirms, never added silently.
+def obstacle_hotspots(hits, radius_m=1.5, min_hits=3, pad_m=0.5):
+    """hits: [{"lat","lon",...}] -> [{"lat","lon","hits","keepout":[[lat,lon]x4]}],
+    densest first. A hotspot is >= min_hits within radius_m of one another."""
+    pts = [(h["lat"], h["lon"]) for h in hits
+           if isinstance(h, dict) and h.get("lat") is not None and h.get("lon") is not None]
+    if not pts:
+        return []
+    mlat, mlon = _frame(pts[0][0])
+    xy = [((lon - pts[0][1]) * mlon, (lat - pts[0][0]) * mlat) for lat, lon in pts]
+    left = list(range(len(xy)))
+    out = []
+    while left:
+        best: list = []
+        for i in left:
+            near = [j for j in left if math.hypot(xy[j][0] - xy[i][0], xy[j][1] - xy[i][1]) <= radius_m]
+            if len(near) > len(best):
+                best = near
+        if len(best) < min_hits:
+            break
+        cx = sum(xy[j][0] for j in best) / len(best)
+        cy = sum(xy[j][1] for j in best) / len(best)
+        half = max(0.75, max(math.hypot(xy[j][0] - cx, xy[j][1] - cy) for j in best) + pad_m)
+
+        def ll(x, y):
+            return [round(pts[0][0] + y / mlat, 7), round(pts[0][1] + x / mlon, 7)]
+        out.append({"lat": ll(cx, cy)[0], "lon": ll(cx, cy)[1], "hits": len(best),
+                    "keepout": [ll(cx - half, cy - half), ll(cx + half, cy - half),
+                                ll(cx + half, cy + half), ll(cx - half, cy + half)]})
+        left = [j for j in left if j not in best]
+    return out
+
 # ---------------------------------------------------------------- nav helper
 def step_towards(lat, lon, target, dist_m):
     """Move dist_m from (lat,lon) toward target [lat,lon]; returns (lat,lon,heading,reached)."""
