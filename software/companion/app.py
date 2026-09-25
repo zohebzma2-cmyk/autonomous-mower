@@ -615,8 +615,12 @@ class H(BaseHTTPRequestHandler):
                 rid, pts = planner(p.get("name"), p.get("polygon", []),
                                    float(p.get("spacing") or missions.DEFAULT_SPACING),
                                    keepouts=p.get("keepouts") or [])
+                st = (missions.get_route(rid) or {}).get("stats") or {}
+                msg = f"planned {len(pts)} waypoints"
+                if st:
+                    msg += f" · {st['lawn_m2']:,} m² · ~{st['minutes']:g} min · {st['coverage_pct']:g}% covered"
                 self._send(200, json.dumps({"ok": True, "id": rid, "points": pts,
-                                            "msg": f"planned {len(pts)} waypoints"}))
+                                            "stats": st, "msg": msg}))
             except Exception as e:
                 self._send(409, json.dumps({"ok": False, "msg": str(e)}))
             return

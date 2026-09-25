@@ -16,6 +16,7 @@ DATA = os.path.join(os.path.dirname(__file__), "data")
 FILE = os.path.join(DATA, "missions.json")
 DECK_M = 1.32                 # 52" deck width
 DEFAULT_SPACING = 1.15        # row spacing (deck minus overlap)
+CRUISE_MPS = 1.4              # firmware/ardupilot/rover_params.parm CRUISE_SPEED/WP_SPEED
 
 # ---------------------------------------------------------------- persistence
 def _load():
@@ -254,6 +255,20 @@ def _plan(polygon, keepouts, spacing, inset=0.0, min_len=0.0):
         cells.pop(best[1])
     return order, poly, holes, ref
 
+def _area(poly):
+    return abs(sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1]
+                   for i in range(len(poly)))) / 2
+
+def _stats(order, wpts, poly, holes, spacing):
+    """What the plan will take: shown before the machine moves."""
+    mow = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for rows in order for a, b in rows)
+    path = sum(math.hypot(q[0] - p[0], q[1] - p[1]) for p, q in zip(wpts, wpts[1:]))
+    lawn = max(_area(poly) - sum(_area(h) for h in holes), 1e-9)
+    return {"lawn_m2": round(lawn), "mow_m": round(mow), "path_m": round(path),
+            "cells": len(order), "turns": sum(max(len(rows) - 1, 0) for rows in order),
+            "coverage_pct": round(min(100.0, 100 * mow * spacing / lawn), 1),
+            "minutes": round(path / CRUISE_MPS / 60, 1)}
+
 def plan_coverage(name, polygon, spacing=DEFAULT_SPACING, keepouts=None):
     """polygon: [[lat,lon],...] (>=3); keepouts: optional list of polygons to
     leave unmowed. Returns (route_id, waypoints[[lat,lon]...])."""
@@ -266,7 +281,8 @@ def plan_coverage(name, polygon, spacing=DEFAULT_SPACING, keepouts=None):
             wpts += [a, b]
     pts = [_to_ll(p, ref) for p in wpts]
     rid = _add({"name": name or "Coverage zone", "type": "coverage", "points": pts,
-                "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing})
+                "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing,
+                "stats": _stats(order, wpts, poly, holes, spacing)})
     return rid, pts
 
 # ---------------------------------------------------------------- obstacle hotspots
@@ -389,7 +405,8 @@ def plan_coverage_turns(name, polygon, spacing=DEFAULT_SPACING, r=TURN_RADIUS_M,
                 wpts += turn_points(b[0], b[1], rows[i + 1][0][1], direction, r)
     pts_ll = [_to_ll(pt, ref) for pt in wpts]
     rid = _add({"name": name or "Zone (no-rut turns)", "type": "coverage", "points": pts_ll,
-                "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing})
+                "boundary": polygon, "keepouts": keepouts or [], "spacing": spacing,
+                "stats": _stats(order, wpts, poly, holes, spacing)})
     return rid, pts_ll
 
 

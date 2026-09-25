@@ -122,6 +122,15 @@ def test_obstacle_hotspots_cluster_repeats_only():
     missions.delete_route(rid)
     assert missions.obstacle_hotspots([]) == [] and missions.obstacle_hotspots([{"lat": None}]) == []
 
+def test_plan_stats_are_honest():
+    rid, pts = missions.plan_coverage("st", SQ40, 1.5, keepouts=[BED])
+    st = missions.get_route(rid)["stats"]
+    assert abs(st["lawn_m2"] - (1600 - 70)) <= 2, f"lawn = yard minus bed: {st}"
+    assert st["path_m"] >= st["mow_m"] > 0 and st["cells"] >= 2, st
+    assert 85 <= st["coverage_pct"] <= 100, f"rows at 1.5 m should cover the lawn: {st}"
+    assert abs(st["minutes"] - st["path_m"] / missions.CRUISE_MPS / 60) < 0.1, st
+    missions.delete_route(rid)
+
 # ---------------------------------------------------------------- missions persistence
 def test_persistence_roundtrip():
     before = len(missions.list_routes())
