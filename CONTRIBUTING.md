@@ -23,6 +23,12 @@ test or a bench-test description.
 - **Hardware** — footprint fixes, Rev B ideas, or Gerbers for `hardware/pcb/`.
 - **Docs** — clarify the build manual, wiring, or translate a section.
 
+## Dev setup
+
+`./scripts/setup-dev.sh` installs everything user-level (uv, Python 3.12 `.venv`, OpenSCAD;
+`--kicad` adds KiCad). Then `./scripts/check.sh` runs every gate; add `--full` to re-render the
+gallery and `--sitl` to drive the real ArduPilot firmware in SITL (see `software/dev/SITL.md`).
+
 ## Workflow
 
 1. Open an issue or a Discussion first for anything non-trivial, so we agree on

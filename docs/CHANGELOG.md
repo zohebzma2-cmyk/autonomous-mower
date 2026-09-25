@@ -4,7 +4,33 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 [DESIGN-LOG.md](DESIGN-LOG.md).
 
 ## Unreleased
-- (nothing yet)
+**Runs for real, end to end — and running it found 10 bugs**
+- **ArduPilot SITL end-to-end:** `scripts/sitl.sh` boots the real ArduRover **4.7.1** firmware
+  (skid-steer, home on the Yard), loads this repo's params and puts the companion UI on it;
+  `scripts/sitl_smoke.py` drives fence → arm → coverage route in AUTO → E-STOP through the UI's
+  own API. `./scripts/check.sh --sitl` runs it (~60 s)
+- `scripts/check_parm.py` validates every `.parm` name against live firmware and can load them
+- `scripts/setup-dev.sh` + `requirements-dev.txt`: uv, Python 3.12 `.venv`, OpenSCAD, KiCad
+  (`--kicad`) — user-level, no Homebrew. `check.sh` now also runs mypy and a strict docs build
+- Fixed — found by running against real firmware:
+  - 5 param names renamed upstream and silently skipped by Mission Planner's Load:
+    `GPS_TYPE`→`GPS1_TYPE`, `GPS_RATE_MS`→`GPS1_RATE_MS`, `ARMING_CHECK`→`ARMING_SKIPCHK`,
+    `BATT_LOW_ACT`→`BATT_FS_LOW_ACT`, `TURN_MAX_G`→`ATC_TURN_MAX_G` (+ `GPS1/2_POS_Y`)
+  - RC profile put the E-STOP on ch 8 = Rover's mode channel → 4.7 refused to arm; now ch 7
+  - mission upload raced the telemetry thread for the link and always timed out
+  - seq 0 is ArduPilot's HOME slot — the route's first waypoint was being dropped
+  - uploading while in AUTO restarted the current command per item (~100×); now HOLD → upload → AUTO
+  - fence upload skipped the mission protocol (blasted items without requests); now
+    request/ACK-driven like the route, with a `fence_synced` flag
+  - ARM/AUTO were reported optimistically: the UI said "armed"/"running" while the firmware
+    refused; ARMED now comes from the heartbeat, a refused AUTO drops the mission to idle with why
+  - `--mav` mode never finished a crank, so the engine hung in "cranking" after any E-STOP
+  - `--mav` mode ignored ATTITUDE, so the slope/rollover gate saw stale roll/pitch
+  - sim: a cleared safety hold left "holding" on screen while the mower drove at 1.4 m/s
+- Docs site actually builds now (nav paths were wrong); a hook rewrites links to repo files
+  into GitHub URLs; pinned `mkdocs<2` (2.0 drops hooks)
+- Tests 52 → 54 (upload protocol through the queue, fence encoding)
+
 
 ## v0.3-sensors — 2026-09-24
 **CAD — 32 → 40 printable parts, every new interface datasheet-exact and `assert()`-checked**
@@ -32,7 +58,7 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
   (+3 tests → 52/52)
 - RC / electric-drive mower adapter: `docs/ADAPT-RC-MOWER.md` +
   `firmware/ardupilot/profiles/rc-tracked.parm` (Pixhawk in front of the stock drive controller)
-- `rover_params.parm`: moving-baseline `GPS_POS1_Y/GPS_POS2_Y = ∓0.30` for the printed crossbar
+- `rover_params.parm`: moving-baseline `GPS1_POS_Y/GPS2_POS_Y = ∓0.30` for the printed crossbar
 - Fixed: companion crashed on Python 3.9 (PEP 604 hints) → `from __future__ import annotations`
 - Fixed: route ids collided within one millisecond (flaky `test_teach_records_and_saves`;
   `get_route` could return the wrong route)

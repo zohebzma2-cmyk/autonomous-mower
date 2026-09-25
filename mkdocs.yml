@@ -7,17 +7,21 @@ theme:
     scheme: slate
     primary: green
 nav:
-  - Start: docs/00-BUILD-MANUAL.md
-  - Measure your machine: docs/MEASURE.md
-  - Build & safety: docs/BUILD.md
-  - Wiring: docs/WIRING.md
-  - Print queue: docs/PRINT-QUEUE.md
-  - Tools: docs/TOOLS.md
-  - Substitutions: docs/SUBSTITUTIONS.md
-  - Attachments (Phase 3): docs/ATTACHMENTS.md
-  - RC / tracked mowers: docs/ADAPT-RC-MOWER.md
-  - Design log: docs/DESIGN-LOG.md
-  - Roadmap: docs/ROADMAP-75.md
-  - Changelog: docs/CHANGELOG.md
-# serve locally: pip install mkdocs-material && mkdocs serve
+  - Start: 00-BUILD-MANUAL.md
+  - Measure your machine: MEASURE.md
+  - Build & safety: BUILD.md
+  - Wiring: WIRING.md
+  - Print queue: PRINT-QUEUE.md
+  - Tools: TOOLS.md
+  - Substitutions: SUBSTITUTIONS.md
+  - Attachments (Phase 3): ATTACHMENTS.md
+  - RC / tracked mowers: ADAPT-RC-MOWER.md
+  - Design log: DESIGN-LOG.md
+  - Roadmap: ROADMAP-75.md
+  - Changelog: CHANGELOG.md
+exclude_docs: |
+  _hooks/
+hooks:
+  - docs/_hooks/repo_links.py
+# serve locally: ./scripts/setup-dev.sh && .venv/bin/mkdocs serve
 # (hosted docs need CI/Pages — blocked on this account; local serve works today)

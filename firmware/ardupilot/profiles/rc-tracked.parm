@@ -31,11 +31,11 @@ MOT_SAFE_DISARM,0      # keep sending NEUTRAL pulses while disarmed (not silence
 # SERVO6_FUNCTION,56   # RCIN6 passthrough (blade clutch). Keep blades DISCONNECTED until go/no-go
 
 # ---- software e-stop on a transmitter switch (on top of the hardware kill) ----
-RC8_OPTION,31          # Motor Emergency Stop
+RC7_OPTION,31          # Motor Emergency Stop (NOT ch 8: MODE_CH defaults to 8 and 4.7 refuses to arm on the conflict)
 
 # ---- tracks + turf: avoid pivot-in-place scrubbing ----
 WP_PIVOT_ANGLE,0       # 0 = never pivot; use arc turns (raise to e.g. 60 if you need pivots)
 CRUISE_SPEED,1.0       # m/s, start slow on a 300+ kg machine
 WP_SPEED,1.0
 WP_RADIUS,0.8
-TURN_MAX_G,0.3
+ATC_TURN_MAX_G,0.3

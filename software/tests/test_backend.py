@@ -208,10 +208,37 @@ def test_vision_grass_only_clear_with_coverage():
 # ---------------------------------------------------------------- MAVLink mission encoding
 def test_mission_items_encoding():
     items = mav.to_mission_items([[42.806, -71.367], [42.807, -71.368]])
-    assert len(items) == 2
-    assert items[0]["lat"] == int(round(42.806 * 1e7)) and items[0]["lon"] == int(round(-71.367 * 1e7))
-    assert items[0]["command"] == 16 and items[0]["frame"] == 3 and items[0]["current"] == 1
-    assert items[1]["current"] == 0, "only the first item is 'current'"
+    assert len(items) == 3, "seq 0 is ArduPilot's HOME slot + one item per waypoint"
+    assert [it["seq"] for it in items] == [0, 1, 2]
+    assert items[1]["lat"] == int(round(42.806 * 1e7)) and items[1]["lon"] == int(round(-71.367 * 1e7))
+    assert items[2]["lat"] == int(round(42.807 * 1e7)), "route order preserved after HOME"
+    assert items[1]["command"] == 16 and items[1]["frame"] == 3
+
+def test_upload_mission_reads_replies_from_queue():
+    """The pump owns the link; upload_mission must answer requests fed through the queue."""
+    import queue, types
+    sent = []
+    q = queue.Queue()
+    def req(seq): return types.SimpleNamespace(get_type=lambda: "MISSION_REQUEST_INT", seq=seq)
+    def on_count(*a):                     # the autopilot answers COUNT with requests + ACK
+        sent.append(("count", a[2]))
+        for s in range(a[2]): q.put(req(s))
+        q.put(types.SimpleNamespace(get_type=lambda: "MISSION_ACK", type=0))
+    fake_mav = types.SimpleNamespace(mission_count_send=on_count,
+                                     mission_item_int_send=lambda *a: sent.append(("item", a[2])))
+    m = types.SimpleNamespace(mav=fake_mav, target_system=1, target_component=1)
+    q.put(req(9))                         # stale reply from an earlier upload: must be dropped
+    assert mav.upload_mission(m, [[42.806, -71.367], [42.807, -71.368]], q, timeout=1)
+    assert sent == [("count", 3), ("item", 0), ("item", 1), ("item", 2)]
+    assert not mav.upload_mission(m, [[42.8, -71.3]], queue.Queue(), timeout=0.05), "no replies = timeout"
+
+def test_fence_items_encoding():
+    sq = [[42.806, -71.3675], [42.806, -71.367], [42.8064, -71.367]]
+    items = mav.to_fence_items(sq)
+    assert [it["seq"] for it in items] == [0, 1, 2]
+    assert all(it["command"] == 5001 and it["p1"] == 3.0 for it in items), "inclusion vertices, count in param1"
+    assert items[2]["lat"] == int(round(42.8064 * 1e7))
+    assert mav.to_fence_items(sq[:2]) == [], "a fence needs >= 3 vertices"
 
 def test_mission_items_empty():
     assert mav.to_mission_items([]) == []

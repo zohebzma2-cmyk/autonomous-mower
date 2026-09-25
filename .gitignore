@@ -35,3 +35,6 @@ cad/vendor/*.igs
 __pycache__/
 *.pyc
 software/companion/data/
+
+# local dev environment (scripts/setup-dev.sh)
+.venv/

@@ -68,7 +68,8 @@ e-stop **independent of the Pixhawk**:
   (separate receiver and frequency). Both open the engine ignition/kill circuit and
   the drive controller's enable or power, through the same normally-closed relay
   topology as [`WIRING.md`](WIRING.md) and the MowerCarrier board.
-- Also map a transmitter switch to `RCx_OPTION=31` (Motor Emergency Stop). This is a
+- Also map a transmitter switch to `RCx_OPTION=31` (Motor Emergency Stop). The profile uses channel 7. Don't use
+  channel 8: it's Rover's default mode channel (`MODE_CH`), and 4.7 refuses to arm on the conflict (found in SITL). This is a
   software layer on top of the hardware kill and does not replace it.
 - Keep the stock RC failsafe. Set the receiver to output **no pulses** (not "hold")
   on signal loss, so `FS_THR_ENABLE` trips.
