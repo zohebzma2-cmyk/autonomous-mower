@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-3fb950.svg)](LICENSE)
 [![Status: active build](https://img.shields.io/badge/status-active%20build-f0883e.svg)](#status--honest-limitations)
-[![Tests](https://img.shields.io/badge/tests-49%2F49-3fb950.svg)](software/tests)
+[![Tests](https://img.shields.io/badge/tests-52%2F52-3fb950.svg)](software/tests)
 [![Autopilot: ArduPilot Rover](https://img.shields.io/badge/autopilot-ArduPilot%20Rover-5ab0ff.svg)](https://ardupilot.org/rover)
 [![Discussions](https://img.shields.io/badge/community-Discussions-3fb950.svg)](https://github.com/zohebzma2-cmyk/autonomous-mower/discussions)
 
@@ -13,7 +13,7 @@
 
 Turn a seated zero-turn mower into a self-driving, iPad-controlled robot — **RTK GPS + LiDAR + cameras + on-device AI** — weatherproofed to live outdoors, and **reproducible on any ZTR** by re-measuring a handful of dimensions.
 
-> **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (49/49 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
+> **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (52/52 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
 
 **Confirmed reference machine:** Gravely **ZT X 52** · ~2021 · **Kohler 7000** (24 hp, 725 cc) · electric PTO clutch.
 
@@ -81,14 +81,15 @@ autonomous-mower/
 │   ├── params.scad          ← ★ MASTER PARAMETERS — edit SECTION 1 to fit any ZTR
 │   ├── assembly.scad        ← whole machine; SHOW=all|body|black|retro for multi-material export
 │   ├── mower.scad           ← parametric mower mock (context)
-│   ├── {enclosure,actuator_brackets,gps_mast,lidar_mount,camera_mount,controls_bracket,badge,attachments_brackets}.scad
+│   ├── {enclosure,actuator_brackets,gps_mast,lidar_mount,camera_mount,controls_bracket,badge,attachments_brackets,sensor_mounts}.scad
 │   ├── export_stl.sh        ← export every PRINT_* part + bed-fit gate (rejects > 145 mm)
 │   ├── bake_brims.sh        ← welds a bed-adhesion brim onto every part
+│   ├── render_gallery.sh · render_hero.py ← gallery stills · README orbit GIF + social card
 │   └── stl/ · renders/ · vendor/
 ├── software/
 │   ├── companion/           ← Python: app.py (HTTP+SSE), safety.py, vision.py, missions.py, mav.py
 │   ├── ui/                  ← the control UI (iPad + on-unit kiosk)
-│   ├── tests/               ← 49 stdlib tests (safety, geofence, attachments, turns, coverage, vision, mission encoding)
+│   ├── tests/               ← 52 stdlib tests (safety, geofence, attachments, turns, coverage, vision, mission encoding)
 │   └── deploy/              ← systemd service + Chromium kiosk autostart
 ├── firmware/
 │   ├── lapbar_controller/   ← ESP32: FC-PWM → pot → BTS7960 position loop, fail-to-neutral
@@ -112,6 +113,7 @@ cd cad
 openscad assembly.scad          # see the whole machine
 ./export_stl.sh                 # export all printable parts + bed-fit check
 ./bake_brims.sh                 # weld brims for adhesion
+./render_gallery.sh             # machine stills; python3 render_hero.py re-shoots the orbit GIF (needs Pillow)
 # slice cad/stl/brim/*.stl in FlashPrint for the Adventurer 3 (ASA or PETG)
 ```
 
@@ -119,7 +121,7 @@ openscad assembly.scad          # see the whole machine
 ```bash
 python3 software/companion/app.py --sim --port 8080
 # open http://localhost:8080 — arm, draw a zone, run a coverage mission in simulation
-python3 software/tests/test_backend.py       # 49/49
+python3 software/tests/test_backend.py       # 52/52
 ```
 
 ### Firmware

@@ -15,7 +15,10 @@ for f in mower.scad assembly.scad enclosure.scad actuator_brackets.scad \
          gps_mast.scad lidar_mount.scad camera_mount.scad controls_bracket.scad badge.scad \
          attachments_brackets.scad sensor_mounts.scad; do
   echo "   $f"
-  openscad -o /tmp/check.csg "$f" 2>/dev/null
+  # openscad exits 0 on a failed assert() — fail on any ERROR line instead
+  if openscad -o /tmp/check.csg "$f" 2>&1 | grep -E "^(ERROR|WARNING: Assertion)"; then
+    echo "FAIL: $f"; exit 1
+  fi
 done
 
 echo "== envelope self-check vs the published spec"

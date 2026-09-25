@@ -24,6 +24,26 @@ WARN_SLOPE_DEG = 12.0     # caution band (still moves, UI warns)
 MAST_HEIGHT_M  = 1.45     # top of GPS mast above ground (tune to the built mast)
 OVERHEAD_MARGIN_M = 0.15
 MIN_OVERHEAD_M = MAST_HEIGHT_M + OVERHEAD_MARGIN_M    # 1.60 m
+# (CAD tallest point: antenna top 1.370 m single / 1.399 m dual-RTK — 1.45 stays as the
+#  conservative figure until the built mast is tape-measured.)
+
+# The JSN-SR04T rides the GPS mast face-UP (cad/sensor_mounts.scad), so it reports the
+# distance ABOVE ITS FACE. overhead_from_sonar() turns that into branch height above
+# ground, which is what evaluate() compares against MIN_OVERHEAD_M.
+SONAR_FACE_HEIGHT_M = 1.370   # CAD: mast top 1.340 + 0.030 (face level with the antenna top);
+                              # dual-RTK build: 1.358 (collar sits under the baseline tee)
+JSN_MIN_RANGE_M = 0.20        # blind zone — an echo this close is "something right on the mast"
+JSN_MAX_RANGE_M = 6.0         # no echo within this = open sky
+
+def overhead_from_sonar(reading_m: float | None, face_height_m: float = SONAR_FACE_HEIGHT_M) -> float:
+    """Branch height above ground from a raw upward sonar reading (m).
+    None = no echo (clear sky) -> face + max range. Inside the blind zone -> the face
+    height itself (fail-safe: treat it as touching). Otherwise face + reading."""
+    if reading_m is None or reading_m >= JSN_MAX_RANGE_M:
+        return face_height_m + JSN_MAX_RANGE_M
+    if reading_m < JSN_MIN_RANGE_M:
+        return face_height_m
+    return face_height_m + reading_m
 
 # --- horizontal obstacle ---
 OBSTACLE_STOP_M = 2.0     # RPLidar stop-zone radius ahead

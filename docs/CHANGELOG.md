@@ -4,18 +4,46 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 [DESIGN-LOG.md](DESIGN-LOG.md).
 
 ## Unreleased
-- **8 new printable parts, 40 total** (`cad/sensor_mounts.scad`), all bed-gated and brim-baked:
-  overhead sonar collar with a raised probe cup (JSN-SR04T sits face-up above the antenna),
-  a split sun hood + braces + tilt yoke for the 7" Touch Display 2 on the brain-box lid, and
-  the dual-RTK crossbar tee + antenna plates (replaces "print 2x gps_mast")
-- Assembly shows the sonar and screen; `DUAL_ANTENNA=true` shows the crossbar. New gallery
-  renders: `assembly_dual_rtk`, `closeup_sonar_baseline`, `closeup_display`, `sensor_mounts`
-- GLB builder gains `retro_sonar` + `retro_display` nodes; viewer lists all 40 parts and loads a
-  fresh decimated full-machine STL (was a prototype-era model)
-- Adapting to RC / electric-drive mowers (tracked or wheeled): `docs/ADAPT-RC-MOWER.md` + `firmware/ardupilot/profiles/rc-tracked.parm`. The Pixhawk sits in front of the stock drive controller, so no actuators or ESP32 are needed
-- Companion runs on Python 3.9 again (`from __future__ import annotations`), so the test suite passes on stock macOS
-- Route ids no longer collide when two routes are saved in the same millisecond (was a flaky `test_teach_records_and_saves`; `get_route` could return the wrong route)
-- Print queue, tool checklist, substitution guide (this file's sibling docs)
+- (nothing yet)
+
+## v0.3-sensors — 2026-09-24
+**CAD — 32 → 40 printable parts, every new interface datasheet-exact and `assert()`-checked**
+- `cad/sensor_mounts.scad`: overhead-sonar collar (JSN-SR04T face-up, 85 mm off the mast axis,
+  face level with the antenna top so its ±37.5° cone clears it), split sun hood + 2 braces +
+  tilt yoke for the Touch Display 2 (189.32 × 120.24 × 15; window clears the 154.56 × 86.94
+  active area with 3 mm per side, 14.8 / 14.1 mm lip bite), dual-RTK tee + 2 antenna plates
+  (600 mm ARP-to-ARP; 20 mm tube cut to 628 mm)
+- **Antenna fixed to the real part:** ANN-MB-00 per u-blox UBX-18049862 Fig. 1 — 82.0 × 60.0 ×
+  22.5, 2× M4 on a 68.0 mm pitch, Ø120 metal ground plane. `gps_top_plate` Ø60 → Ø96 with M4
+  nut traps; the ¼"-20 centre stud it assumed does not exist on this antenna
+- Fit checks: 11 `assert()`s (bed fit, sonar cone vs antenna/tee, nut traps vs socket, window
+  vs active area, brace ears vs yoke, hood swing). `scripts/check.sh` now **fails** on any
+  OpenSCAD `ERROR` — openscad exits 0 on a failed assert, so the old gate never saw them
+- Sonar/antenna/display dimensions live once in `params.scad`; the assembly proxies read them
+- Gallery: 4 new stills (`assembly_dual_rtk`, `closeup_sonar_baseline`, `closeup_display`,
+  `sensor_mounts`); every card's size re-synced to its STL (5 were stale, badge was missing)
+- `cad/render_hero.py`: reproducible README orbit GIF + social card (`SHOW="hero"`); both re-shot
+- GLB: `retro_sonar` + `retro_display` nodes; viewer lists all 40 parts and loads a fresh
+  decimated full-machine STL (the old one was the prototype-v1 model)
+
+**Software / firmware**
+- `safety.overhead_from_sonar()`: the mast-mounted probe reads distance above its face; this
+  adds the 1.370 m face height, treats the 0.20 m blind zone as blocked and no-echo as clear sky
+  (+3 tests → 52/52)
+- RC / electric-drive mower adapter: `docs/ADAPT-RC-MOWER.md` +
+  `firmware/ardupilot/profiles/rc-tracked.parm` (Pixhawk in front of the stock drive controller)
+- `rover_params.parm`: moving-baseline `GPS_POS1_Y/GPS_POS2_Y = ∓0.30` for the printed crossbar
+- Fixed: companion crashed on Python 3.9 (PEP 604 hints) → `from __future__ import annotations`
+- Fixed: route ids collided within one millisecond (flaky `test_teach_records_and_saves`;
+  `get_route` could return the wrong route)
+
+**Docs / ordering / repo**
+- Build weekends gain Weekend 4; BUILD, WIRING, PRINT_GUIDE, PRINT-QUEUE, vendor SOURCES updated
+- ORDER-SHEET: crossbar tube + Ø120 ground-plane disc appended at the end, so the order
+  tracker's saved checkmarks keep pointing at the same items (prices are estimates — verify)
+- Removed three scratch files that had been committed (`cad/.rebake.sh`, `cad/.t.scad`,
+  `cad/.brim_27776.scad`) and ignored their patterns
+- Print queue, tool checklist, substitution guide
 
 ## 2026-07-12 — Phase 3: the whole rig
 - Attachments designed + policy-coded with tests (45/45): self-dumping power bagger,

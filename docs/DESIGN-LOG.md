@@ -57,7 +57,8 @@ of logging it.
 | No-rut turns | planner emits U-turns (wide rows) or 3-point K-turns (tight rows) with headland insets; never pivots | the ZTR pivot shears the root mat under 615 lb — physics section in ATTACHMENTS.md |
 | Test suite 30 → 45 | every interlock and control law above has a test | policy without tests is a wish |
 | Printable mounting hardware | 8 new PRINT_ parts (boom base, blower cradle ×2, trimmer plate, duct adapter, dump clevis, TPMS cradle, sprayer-PWM mount) — bed-gated + brim-baked like the original 24 | "properly CADded down to the brim": attachments aren't real until their brackets print |
-| Sensor + screen mounts | 8 new PRINT_ parts: sonar collar (probe face-up above the antenna), split Touch Display 2 hood + braces + tilt yoke, dual-RTK crossbar tee + antenna plates | three BOM items (JSN-SR04T, Touch Display 2, 2nd ANN-MB-00) had no printed home; a 189.5 mm screen on a 145 mm bed forced the split hood |
+| Sensor + screen mounts | 8 new PRINT_ parts: sonar collar (probe face-up above the antenna), split Touch Display 2 hood + braces + tilt yoke, dual-RTK crossbar tee + antenna plates | three BOM items (JSN-SR04T, Touch Display 2, 2nd ANN-MB-00) had no printed home; a 189.32 mm screen on a 145 mm bed forced the split hood |
+| Datasheet-exact antenna | ANN-MB-00 modelled from u-blox UBX-18049862 Fig. 1: 82.0 × 60.0 × 22.5, 2× M4 on a 68.0 pitch, Ø120 ground plane; `gps_top_plate` grows Ø60 → Ø96 with M4 nut traps (the ¼"-20 centre stud it assumed doesn't exist on this antenna) | the old plate couldn't even hold the antenna's screw pattern — found by chasing every new part to the mm; interfaces now `assert()`ed in `sensor_mounts.scad` and gated by `check.sh` |
 
 ## Constraints A–Z (every one of these actually bit)
 

@@ -156,6 +156,22 @@ def test_safety_blocks_steep_incline():
     assert not ok and "steep" in why, "must block above max slope"
     assert safety.evaluate({"roll": 10, "pitch": 8})[0], "moderate slope is allowed"
 
+def test_overhead_from_sonar_adds_face_height():
+    f = safety.SONAR_FACE_HEIGHT_M
+    assert abs(safety.overhead_from_sonar(0.5) - (f + 0.5)) < 1e-9
+    # a branch 0.10 m above the face is BELOW the conservative mast clearance -> stop
+    assert not safety.evaluate({"overhead_m": safety.overhead_from_sonar(0.10)})[0]
+    assert safety.evaluate({"overhead_m": safety.overhead_from_sonar(1.0)})[0]
+
+def test_overhead_from_sonar_blind_zone_fails_safe():
+    assert safety.overhead_from_sonar(0.05) == safety.SONAR_FACE_HEIGHT_M
+    assert not safety.evaluate({"overhead_m": safety.overhead_from_sonar(0.05)})[0], \
+        "an echo inside the blind zone must stop the machine"
+
+def test_overhead_from_sonar_no_echo_is_clear_sky():
+    assert safety.overhead_from_sonar(None) > safety.MIN_OVERHEAD_M
+    assert safety.evaluate({"overhead_m": safety.overhead_from_sonar(None)})[0]
+
 def test_safety_blocks_low_branch():
     ok, why = safety.evaluate({"overhead_m": 1.0})
     assert not ok and "branch" in why, "must stop for overhead below mast clearance"

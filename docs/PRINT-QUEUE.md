@@ -35,7 +35,7 @@ factor) — **the slicer's number wins**. Print the brim-baked files in
 |---|---|---|---|---|
 | gps_clamp_a | 1 | 104.0 × 57.6 × 50.0 | 76 g | 4.2 h |
 | gps_clamp_b | 1 | 104.0 × 37.6 × 50.0 | 71 g | 3.9 h |
-| gps_top_plate | 1 | 60.0 × 60.0 × 24.0 | 15 g | 0.8 h |
+| gps_top_plate | 1 | 96.0 × 96.0 × 24.0 | 33 g | 1.8 h |
 | lidar_base_a | 1 | 60.0 × 88.8 × 28.4 | 48 g | 2.7 h |
 | lidar_base_b | 1 | 64.0 × 88.8 × 34.4 | 64 g | 3.6 h |
 | lidar_mast_lower | 1 | 82.0 × 82.0 × 112.0 | 72 g | 4.0 h |
@@ -61,11 +61,11 @@ factor) — **the slicer's number wins**. Print the brim-baked files in
 
 | Part | Qty | Bounding box (mm) | ~grams | ~hours |
 |---|---|---|---|---|
-| sonar_collar_a | 1 | 95.3 × 50.0 × 80.0 | 47 g | 2.6 h |
+| sonar_collar_a | 1 | 101.1 × 50.0 × 80.0 | 44 g | 2.5 h |
 | sonar_collar_b | 1 | 15.6 × 50.0 × 30.0 | 8 g | 0.4 h |
-| display_hood_l | 1 | 98.8 × 143.8 × 53.4 | 42 g | 2.3 h |
-| display_hood_r | 1 | 98.8 × 143.8 × 53.4 | 42 g | 2.3 h |
-| display_brace | 2 | 28.0 × 143.8 × 49.0 | 38 g | 2.1 h |
+| display_hood_l | 1 | 98.8 × 144.0 × 53.4 | 46 g | 2.5 h |
+| display_hood_r | 1 | 98.8 × 144.0 × 53.4 | 46 g | 2.5 h |
+| display_brace | 2 | 28.0 × 144.0 × 49.0 | 38 g | 2.1 h |
 | display_yoke | 1 | 110.6 × 40.0 × 96.0 | 37 g | 2.0 h |
 
 ## Upgrade — dual-antenna RTK heading (moving baseline)
@@ -73,6 +73,6 @@ factor) — **the slicer's number wins**. Print the brim-baked files in
 | Part | Qty | Bounding box (mm) | ~grams | ~hours |
 |---|---|---|---|---|
 | baseline_tee | 1 | 36.0 × 64.0 × 62.0 | 75 g | 4.2 h |
-| baseline_ant_plate | 2 | 60.0 × 76.0 × 36.0 | 46 g | 2.5 h |
+| baseline_ant_plate | 2 | 96.0 × 96.0 × 36.0 | 78 g | 4.3 h |
 
-**Totals: ≈ 1565 g (~1.6 kg spool budget) · ≈ 87 printer-hours** (mostly unattended; batch small parts per plate).
+**Totals: ≈ 1619 g (~1.6 kg spool budget) · ≈ 90 printer-hours** (mostly unattended; batch small parts per plate).

@@ -31,7 +31,7 @@ All 40 parts fit the bed (see `cad/stl/MANIFEST.csv`). Two ways to get a brim on
 | **GPS mast** |||||||
 | gps_clamp_a | 1 | clamp face down, socket up | 6 | under socket | ASA | 3 / 30% |
 | gps_clamp_b | 1 | clamp face down | 6 | no | ASA | 3 / 30% |
-| gps_top_plate | 1 | disc flat, socket up | 5 | no | ASA | 3 / 30% |
+| gps_top_plate | 1 | Ø96 disc flat, socket up (M4 nut traps face the bed side — pause-free, they're open) | 5 | no | ASA | 3 / 30% |
 | **LiDAR mast** |||||||
 | lidar_base_a | 1 | clamp flat face down | 6 | no | ASA | 3 / 30% |
 | lidar_base_b | 1 | clamp flat, platform up | 6 | under platform | ASA | 3 / 30% |
@@ -52,18 +52,18 @@ All 40 parts fit the bed (see `cad/stl/MANIFEST.csv`). Two ways to get a brim on
 | sonar_collar_a | 1 | collar end down, probe cup up | 5 | no (gusseted arm) | ASA | 4 / 40% |
 | sonar_collar_b | 1 | collar end down | 5 | no | ASA | 4 / 40% |
 | **Touchscreen hood** (Pi Touch Display 2) |||||||
-| display_hood_l | 1 | **back plane down, visor up** (144 mm — near the bed edge) | 2 | **touching build plate** — front lip | ASA | 3 / 25% |
+| display_hood_l | 1 | **back plane down, visor up** (144 mm — near the bed edge) | 2 | **touching build plate** — the 14.8 / 14.1 mm front lip | ASA | 3 / 25% |
 | display_hood_r | 1 | same as _l | 2 | touching build plate | ASA | 3 / 25% |
 | display_brace | 2 | bar flat, pivot ear up | 2 | no | ASA | 4 / 40% |
 | display_yoke | 1 | base down, uprights up | 5 | no (gusseted) | ASA | 4 / 40% |
 | **Dual-RTK baseline** (upgrade) |||||||
 | baseline_tee | 1 | mast socket down | 5 | no (teardrop crossbar bore) | ASA | 4 / 40% |
-| baseline_ant_plate | 2 | disc + tongue down, socket up | 5 | no | ASA | 3 / 30% |
+| baseline_ant_plate | 2 | Ø96 disc down, socket up (teardrop bore) | 5 | no | ASA | 3 / 30% |
 
 ## Batching (fit several per bed job)
 The Adventurer 3 bed is 150 mm, so you can gang small parts. Suggested plates (leave ~8 mm between parts; each part keeps its own brim):
 - **Plate A (ASA):** lapbar_yoke ×4 (both halves ×2 sides) + rail_anchor ×4 — print the steering set together.
-- **Plate B (ASA):** gps_clamp_a + gps_clamp_b + gps_top_plate + lidar_base_a + lidar_base_b.
+- **Plate B (ASA):** gps_clamp_a + gps_clamp_b + lidar_base_a + lidar_base_b; gps_top_plate (Ø96) prints on its own or with the camera parts.
 - **Plate C (ASA, tall — print alone or pairs):** lidar_mast_lower + lidar_mast_upper (both 112 mm; OK side by side).
 - **Plate D (ASA):** estop_pedestal_a (TALL — alone), then pedestal_b + face + relay_box + relay_lid + throttle_servo_bracket as a second job.
 - **Plate E (PETG):** equipment_plate, then upper_shelf, then box_foot ×4 + camera parts.

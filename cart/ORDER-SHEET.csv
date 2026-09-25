@@ -31,7 +31,6 @@ vendor,simpleRTK2B Budget (u-blox ZED-F9P),https://www.ardusimple.com/product/si
 vendor,ANN-MB-00 multiband GNSS antenna IP67,https://www.ardusimple.com/product/ann-mb-00-ip67/,ArduSimple,1,58.00,EUR 53.80
 vendor_upgrade,simpleRTK2Blite (2nd RTK board — moving-baseline heading),https://www.ardusimple.com/product/simplertk2blite/,ArduSimple,1,110.00,recommended: ~0.4deg true heading
 vendor_upgrade,ANN-MB-00 (2nd antenna for heading baseline >=50cm),https://www.ardusimple.com/product/ann-mb-00-ip67/,ArduSimple,1,58.00,print 2x gps_mast
-vendor_upgrade,20mm OD aluminium tube >=660mm (dual-RTK crossbar),search: 20mm OD aluminium round tube 1000mm,Amazon,1,15.00,price est. — verify; cut to BASELINE_L+60 (cad/sensor_mounts.scad)
 vendor,Raspberry Pi AI HAT+ (Hailo-8L 13 TOPS),https://www.pishop.us/product/raspberry-pi-ai-hat-13-tops/,PiShop,1,76.95,camera AI
 vendor,Raspberry Pi 5 8GB,https://www.pishop.us/product/raspberry-pi-5-8gb/,PiShop,1,80.00,companion computer
 vendor,Pi Camera Module 3 (front — obstacle + vision),https://www.pishop.us/product/raspberry-pi-camera-module-3/,PiShop,1,29.25,
@@ -45,3 +44,5 @@ attachments,DeWalt 60V FLEXVOLT trimmer (OWNED) + trigger relay + fixed-line spo
 attachments,Boom slew drive (worm-gear turntable + servo),search: worm gear turntable kit servo,Amazon,1,40.00,phase-3
 attachments,PWM relay module for FIMCO 12V pump,search: 12V PWM motor speed controller relay,Amazon,1,12.00,phase-3; sprayer owned already
 attachments,Gravely Power Bagger kit (rack + bins donor),dealer,Gravely dealer,1,,phase-3; dealer-priced
+vendor_upgrade,20mm OD aluminium tube >=650mm (dual-RTK crossbar),search: 20mm OD aluminium round tube 1000mm,Amazon,1,15.00,price est. - verify; cut to 628 mm (BAR_CUT echoed by cad/sensor_mounts.scad)
+vendor,120mm x 1.5mm aluminium disc (antenna ground plane; 2 for dual-RTK),search: 120mm aluminum disc 1.5mm,Amazon,1,9.00,price est. - verify; u-blox spec's the ANN-MB phase centre on a 120 mm metal ground plane; drill 2x 4.5 mm on a 68.0 mm pitch

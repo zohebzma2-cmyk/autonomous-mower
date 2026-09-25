@@ -120,10 +120,11 @@ PA-14P 6-pin Molex: Yellow=+V, Blue=wiper, White=GND; Black/Red = motor → BTS7
 |--------|-----------|
 | **RPLidar A1** | its USB adapter → **Pi 5 USB** |
 | **Front / rear cameras** | Pi 5 **CSI0 / CSI1** ribbon |
-| **Overhead ultrasonic (JSN-SR04T)** | VCC→5V, GND, **TRIG→Pi GPIO23**, **ECHO→Pi GPIO24 via 1k/2k divider** (5V→3V3) |
+| **Overhead ultrasonic (JSN-SR04T)** | VCC→5V, GND, **TRIG→Pi GPIO23**, **ECHO→Pi GPIO24 via 1k/2k divider** (5V→3V3). Probe rides the GPS mast face-up (`sonar_collar_a`); board in the brain box on its 2.5 m lead. Feed readings through `safety.overhead_from_sonar()` — it adds the 1.370 m face height |
 | **Throttle servo** | signal→Pixhawk SERVO5, V+→Buck #2 (5–6 V), GND |
 | **PTO relay** | coil: Pixhawk SERVO6 (+ e-stop interlock) ; contacts: 12 V ↔ PTO clutch |
 | **simpleRTK2B** | UART→Pixhawk GPS1 ; SMA→RTK antenna (coax) ; 5 V/GND |
+| **Touch Display 2** | DSI ribbon → Pi 5 DSI port (exits the hood's bottom cable notch) ; 5 V from Buck #1 via its power header |
 | **FlySky iA6B** | SBUS→Pixhawk RCIN ; 5 V/GND |
 
 ---

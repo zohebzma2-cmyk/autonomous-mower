@@ -49,6 +49,25 @@ module bolt_circle(pcd, n) {
     for (i=[0:n-1]) rotate([0,0,i*360/n]) translate([pcd/2,0,0]) children();
 }
 
+// ---- ANN-MB-00 antenna carrier disc (shared by gps_mast + sensor_mounts) ------
+// Disc of thickness th, z=0..th, top face = antenna seat. 2x M4 clearance holes on the
+// 68.0 mm pitch (X axis) with hex nut traps opening DOWN, plus two drains on the Y axis.
+module ann_mb_plate(th) {
+    difference() {
+        cylinder(d=ANT_PLATE_D, h=th);
+        for (s=[-1,1]) translate([s*ANT_HOLE_PITCH/2, 0, 0]) {
+            translate([0,0,-EPS]) cylinder(d=M4_CLEAR, h=th + 2*EPS);
+            translate([0,0,-EPS]) cylinder(d=M4_NUT_AF/cos(30) + SLOP, h=M4_NUT_TH + EPS, $fn=6);
+        }
+        for (s=[-1,1]) translate([0, s*ANT_PLATE_D*0.36, -EPS]) cylinder(d=4, h=th + 2*EPS);
+    }
+}
+// Proxy of the antenna itself (body + ears), ARP at the origin of the seat face.
+module ann_mb_body() {
+    rbox([ANT_W, ANT_W, ANT_H], 8);
+    linear_extrude(ANT_EAR_T) hull() for (s=[-1,1]) translate([s*ANT_HOLE_PITCH/2, 0]) circle(d=14);
+}
+
 // ---- Tube clamp  (THE key reusable piece for ANY ZTR lap bar) ---------------
 // A two-piece split clamp. `half`: "top" or "bottom". Handles round OR oval.
 // Produces a clamp body of given block size with a bore matching the tube,

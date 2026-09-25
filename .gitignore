@@ -7,8 +7,14 @@ cad/vendor/**/*.step
 # research scrape cache (raw scraped pages — not part of the project)
 .firecrawl/
 
-# scratch
+# scratch (temp .scad files the export/brim scripts write next to the sources)
 cad/.exp_mod*.scad
+cad/.brim_*.scad
+cad/.rb_*.scad
+cad/.t.scad
+cad/.rebake.sh
+__pycache__/
+*.pyc
 *.log
 .DS_Store
 

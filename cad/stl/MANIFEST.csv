@@ -8,7 +8,7 @@ PRINT_rail_anchor_bottom,stl/PRINT_rail_anchor_bottom.stl,57.0,71.1,46.0,YES
 PRINT_rail_anchor_top,stl/PRINT_rail_anchor_top.stl,57.0,28.4,46.0,YES
 PRINT_gps_clamp_a,stl/PRINT_gps_clamp_a.stl,104.0,57.6,50.0,YES
 PRINT_gps_clamp_b,stl/PRINT_gps_clamp_b.stl,104.0,37.6,50.0,YES
-PRINT_gps_top_plate,stl/PRINT_gps_top_plate.stl,60.0,60.0,24.0,YES
+PRINT_gps_top_plate,stl/PRINT_gps_top_plate.stl,96.0,96.0,24.0,YES
 PRINT_lidar_base_a,stl/PRINT_lidar_base_a.stl,60.0,88.8,28.4,YES
 PRINT_lidar_base_b,stl/PRINT_lidar_base_b.stl,64.0,88.8,34.4,YES
 PRINT_lidar_mast_lower,stl/PRINT_lidar_mast_lower.stl,82.0,82.0,112.0,YES
@@ -31,11 +31,11 @@ PRINT_dump_clevis,stl/PRINT_dump_clevis.stl,64.0,44.0,34.0,YES
 PRINT_sprayer_ctrl_mount,stl/PRINT_sprayer_ctrl_mount.stl,84.0,64.0,11.0,YES
 PRINT_tpms_cradle,stl/PRINT_tpms_cradle.stl,66.0,34.0,14.0,YES
 PRINT_trimmer_motor_plate,stl/PRINT_trimmer_motor_plate.stl,92.0,92.0,8.0,YES
-PRINT_baseline_ant_plate,stl/PRINT_baseline_ant_plate.stl,60.0,76.0,36.0,YES
+PRINT_baseline_ant_plate,stl/PRINT_baseline_ant_plate.stl,96.0,96.0,36.0,YES
 PRINT_baseline_tee,stl/PRINT_baseline_tee.stl,36.0,64.0,62.0,YES
-PRINT_display_brace,stl/PRINT_display_brace.stl,28.0,143.8,49.0,YES
-PRINT_display_hood_l,stl/PRINT_display_hood_l.stl,98.8,143.8,53.4,YES
-PRINT_display_hood_r,stl/PRINT_display_hood_r.stl,98.8,143.8,53.4,YES
+PRINT_display_brace,stl/PRINT_display_brace.stl,28.0,144.0,49.0,YES
+PRINT_display_hood_l,stl/PRINT_display_hood_l.stl,98.8,144.0,53.4,YES
+PRINT_display_hood_r,stl/PRINT_display_hood_r.stl,98.8,144.0,53.4,YES
 PRINT_display_yoke,stl/PRINT_display_yoke.stl,110.6,40.0,96.0,YES
-PRINT_sonar_collar_a,stl/PRINT_sonar_collar_a.stl,95.3,50.0,80.0,YES
+PRINT_sonar_collar_a,stl/PRINT_sonar_collar_a.stl,101.1,50.0,80.0,YES
 PRINT_sonar_collar_b,stl/PRINT_sonar_collar_b.stl,15.6,50.0,30.0,YES
