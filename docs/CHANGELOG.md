@@ -4,6 +4,27 @@ Milestones only — the blow-by-blow (with what forced every change) lives in
 [DESIGN-LOG.md](DESIGN-LOG.md).
 
 ## Unreleased
+**Coverage planner v2 — real yards: L/U shapes, keep-outs, the headland, and what a plan costs**
+
+![coverage planner](coverage-plan.svg)
+
+- **Bug fixed — legs across the notch:** the planner stitched every span of a sweep row together, so
+  in any non-convex yard the leg between spans drove straight across the gap (on a U-shaped yard, 29
+  of 65 legs; in a real yard that gap is a bed or the house). Rows are now grouped into **cells**
+  (boustrophedon cell decomposition) and cells are joined by transit legs that are checked against
+  the yard and **routed** around when blocked (Dijkstra over nudged yard corners + keep-out corners)
+- **Keep-out zones:** beds, trees, the shed — holes in the sweep for both planners; no-rut turns stay
+  a turn radius clear of them. `/api/zones/plan` takes `keepouts`; the touchscreen has **＋ Keep-out**
+- **Sonar hotspots → suggested keep-outs:** ≥ 3 obstacle stops within 1.5 m is a stump, not a dog;
+  `GET /api/obstacles/hotspots`, offered in the UI while drawing (never added silently)
+- **Plan stats before it moves:** lawn m² (minus keep-outs), path vs mowed length, turns, cells,
+  **minutes at CRUISE_SPEED**, and an honest **% covered** — which exposed the next item
+- **Perimeter laps:** the no-rut planner left the 1.2 m turn headland unmowed (10–14 % of a lawn). It
+  now finishes with laps around the yard and every keep-out (tractor order: headlands last). 40 × 40 m
+  lawn with a bed: 90.5 % → 100 % covered, 16.7 → 21.7 min
+- `missions.py` joins the mypy gate; `scripts/plan_figure.py` draws `docs/coverage-plan.svg` from the
+  real planner. Tests 54 → **63**; SITL end-to-end still green on ArduRover 4.7.1
+
 **MowerCarrier Rev A.1 — the carrier PCB is routed (roadmap #38/#39)**
 - `hardware/pcb/kicad/`: KiCad 9 project **generated from `design.py`** (schematic from KiCad's own
   symbols → placement → 30 A trunk as solid pours + track keepouts → Freerouting → fuse-clip + GND

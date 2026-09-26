@@ -59,6 +59,8 @@ direct sun — a sunlight-readable HDMI panel is the daytime upgrade (`cart/ORDE
 - [x] **v0 control plane** — web UI (iPad + kiosk), telemetry, arm/mode/mission/blade/E-STOP
 - [x] **Teach-and-repeat** — record waypoints via UI, run as a route
 - [x] **Coverage planner** — boundary → boustrophedon rows + **live % mowed** overlay
+- [x] **Planner v2** — non-convex yards (cell decomposition + routed transits), **keep-outs** (+ sonar
+      hotspot suggestions), perimeter laps for the no-rut headland, plan stats (m², minutes, % covered)
 - [x] **Safety** (`safety.py`) — incline cutoff, overhead/tree-limb stop, obstacle (18/19 tested)
 - [x] **Map view** — live position + heading + planned vs mowed path (OpenStreetMap)
 - [x] **Cameras** — front/rear feeds in the UI

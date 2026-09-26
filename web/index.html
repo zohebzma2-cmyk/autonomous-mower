@@ -79,7 +79,7 @@ footer{padding:40px 0 60px;color:var(--mut);font-size:14px;border-top:1px solid 
     <h2>What it does</h2>
     <div class="feat">
       <div class="card"><h4>Teach-and-repeat</h4><p>Drive the path once; it records the RTK route and repeats it autonomously.</p></div>
-      <div class="card"><h4>Draw-a-zone coverage</h4><p>Outline a boundary on the map; it auto-plans efficient back-and-forth mow rows and tracks % mowed live.</p></div>
+      <div class="card"><h4>Draw-a-zone coverage</h4><p>Outline a boundary on the map — L or U shapes included — mark keep-outs (beds, trees, spots the sonar keeps hitting), and it plans rows, no-rut turns and perimeter laps, shows m² / minutes / % covered, and tracks % mowed live.</p></div>
       <div class="card"><h4>Sees &amp; avoids</h4><p>360° LiDAR + camera AI stop for obstacles and people; an upward sensor stops before the mast hits a low branch.</p></div>
       <div class="card"><h4>Hill-safe</h4><p>The IMU enforces a rollover-slope cutoff and a mow-up/down strategy on grades.</p></div>
       <div class="card"><h4>Fail-to-neutral</h4><p>Loss of the e-stop or control signal drives the steering back to neutral and cuts power.</p></div>
@@ -108,7 +108,7 @@ footer{padding:40px 0 60px;color:var(--mut);font-size:14px;border-top:1px solid 
     <div class="feat">
       <div class="card"><h4>Parametric, exact-spec CAD</h4><p>Every component dimensioned to its real datasheet (down to the LiDAR's teardrop footprint and the actuator's 1/4″ clevis pin); change six numbers to fit a different mower.</p></div>
       <div class="card"><h4>Real safety engineering</h4><p>A multi-layer kill chain documented to the pin, plus a tested software safety policy (incline, overhead, obstacle) with a strict authority order.</p></div>
-      <div class="card"><h4>Tested control software</h4><p>Pure-Python companion with a 25-case test suite (coverage geometry, mission encoding, the full safety state machine) — green.</p></div>
+      <div class="card"><h4>Tested control software</h4><p>Pure-Python companion with a 63-case test suite (coverage geometry, keep-outs, mission encoding, the full safety state machine) — green, and driven end to end against real ArduRover firmware in SITL.</p></div>
       <div class="card"><h4>Full build package</h4><p>Wiring + pinout + kill-chain diagrams, ArduPilot params, ESP32 firmware, a printable parts manifest, and a phase-by-phase build manual.</p></div>
     </div>
     <div class="gal">

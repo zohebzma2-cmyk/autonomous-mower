@@ -55,6 +55,98 @@ def test_spacing_controls_density():
     _, coarse = missions.plan_coverage("t", SQUARE, spacing=3.0)
     assert len(fine) > len(coarse), "finer spacing must yield more rows"
 
+# ---------------------------------------------------------------- non-convex yards + keep-outs
+import math as _m
+_MLON = 111320.0 * _m.cos(_m.radians(42.806))
+def _ll(x, y):                       # local metres -> [lat, lon] near SQUARE
+    return [42.806 + y / 111320.0, -71.367 + x / _MLON]
+
+U_YARD = [_ll(0, 0), _ll(40, 0), _ll(40, 30), _ll(30, 30),
+          _ll(30, 10), _ll(10, 10), _ll(10, 30), _ll(0, 30)]      # 20 m notch (house) at the top
+SQ40 = [_ll(0, 0), _ll(40, 0), _ll(40, 40), _ll(0, 40)]
+BED = [_ll(15, 15), _ll(25, 15), _ll(25, 22), _ll(15, 22)]         # 10 x 7 m flower bed
+
+def _bad_legs(boundary, pts, keepouts=()):
+    poly, ref = missions._to_xy(boundary)
+    P = missions._xy(pts, ref)
+    H = [missions._xy(k, ref) for k in keepouts]
+    return sum(1 for a, b in zip(P, P[1:]) if not missions._clear(a, b, poly, H))
+
+def test_u_yard_legs_stay_in_the_yard():
+    # the old planner stitched each row's spans together: 29 of 65 legs crossed the notch
+    for planner in (missions.plan_coverage, missions.plan_coverage_turns):
+        rid, pts = planner("u", U_YARD, 1.5)
+        assert _bad_legs(U_YARD, pts) == 0, f"{planner.__name__}: a leg leaves the yard"
+        missions.delete_route(rid)
+
+def test_u_yard_both_arms_are_mowed():
+    rid, pts = missions.plan_coverage("u", U_YARD, 1.5)
+    arms = [(p[1] + 71.367) * _MLON for p in pts if (p[0] - 42.806) * 111320.0 > 12]
+    assert any(x < 10 for x in arms) and any(x > 30 for x in arms), \
+        "rows above the notch floor must cover both arms of the U"
+    missions.delete_route(rid)
+
+def test_keepout_is_never_entered():
+    for planner in (missions.plan_coverage, missions.plan_coverage_turns):
+        rid, pts = planner("bed", SQ40, 1.5, keepouts=[BED])
+        assert _bad_legs(SQ40, pts, [BED]) == 0, f"{planner.__name__}: drives through the bed"
+        missions.delete_route(rid)
+
+def test_keepout_rows_resume_beyond_it():
+    rid, pts = missions.plan_coverage("bed", SQ40, 1.5, keepouts=[BED])
+    poly, ref = missions._to_xy(SQ40)
+    bed_xy = missions._xy(BED, ref)
+    y_mid = sum(p[1] for p in bed_xy) / 4
+    xs = [x for x, y in missions._xy(pts, ref) if abs(y - y_mid) < 1.0]
+    bx = [p[0] for p in bed_xy]
+    assert any(x < min(bx) for x in xs) and any(x > max(bx) for x in xs), \
+        "rows level with the bed must be mowed on both sides of it"
+    missions.delete_route(rid)
+
+def test_keepout_validation():
+    for bad in ([_ll(1, 1), _ll(2, 2)],                             # < 3 points
+                [_ll(-5, -5), _ll(5, -5), _ll(5, 5)]):                # pokes outside the yard
+        try:
+            missions.plan_coverage("x", SQ40, 1.5, keepouts=[bad])
+            assert False, f"should reject keep-out {bad}"
+        except ValueError:
+            pass
+
+def test_obstacle_hotspots_cluster_repeats_only():
+    stump = [{"lat": _ll(20, 20)[0] + d * 1e-6, "lon": _ll(20, 20)[1]} for d in (0, 3, 6, 9)]
+    dog = [{"lat": _ll(5, 30)[0], "lon": _ll(5, 30)[1]}]
+    spots = missions.obstacle_hotspots(stump + dog)
+    assert len(spots) == 1 and spots[0]["hits"] == 4, f"one stump, the dog ignored: {spots}"
+    rid, pts = missions.plan_coverage("s", SQ40, 1.5, keepouts=[spots[0]["keepout"]])
+    assert _bad_legs(SQ40, pts, [spots[0]["keepout"]]) == 0, "the suggested keep-out must plan cleanly"
+    missions.delete_route(rid)
+    assert missions.obstacle_hotspots([]) == [] and missions.obstacle_hotspots([{"lat": None}]) == []
+
+def test_plan_stats_are_honest():
+    rid, pts = missions.plan_coverage("st", SQ40, 1.5, keepouts=[BED])
+    st = missions.get_route(rid)["stats"]
+    assert abs(st["lawn_m2"] - (1600 - 70)) <= 2, f"lawn = yard minus bed: {st}"
+    assert st["path_m"] >= st["mow_m"] > 0 and st["cells"] >= 2, st
+    assert 85 <= st["coverage_pct"] <= 100, f"rows at 1.5 m should cover the lawn: {st}"
+    assert abs(st["minutes"] - st["path_m"] / missions.CRUISE_MPS / 60) < 0.1, st
+    missions.delete_route(rid)
+
+def test_perimeter_laps_mow_the_headland():
+    for yard, ko in ((SQ40, [BED]), (U_YARD, [])):
+        rid0, _ = missions.plan_coverage_turns("p0", yard, 1.15, keepouts=ko, perimeter=False)
+        rid1, pts = missions.plan_coverage_turns("p1", yard, 1.15, keepouts=ko)
+        before = missions.get_route(rid0)["stats"]["coverage_pct"]
+        after = missions.get_route(rid1)["stats"]["coverage_pct"]
+        assert before < 92 and after >= 99, f"headland must be mowed: {before}% -> {after}%"
+        assert _bad_legs(yard, pts, ko) == 0, "perimeter laps must stay in the yard and out of keep-outs"
+        missions.delete_route(rid0); missions.delete_route(rid1)
+
+def test_offset_moves_inward():
+    sq = [(0, 0), (10, 0), (10, 10), (0, 10)]
+    inner = missions._offset(sq, 1.0)
+    assert all(abs(a - b) < 1e-9 for p, q in zip(inner, [(1, 1), (9, 1), (9, 9), (1, 9)])
+               for a, b in zip(p, q)), inner
+
 # ---------------------------------------------------------------- missions persistence
 def test_persistence_roundtrip():
     before = len(missions.list_routes())

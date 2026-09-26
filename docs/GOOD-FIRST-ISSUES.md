@@ -1,4 +1,12 @@
-# good-first-issue seeds (create with one command each — public write, so you run it)
+# good-first-issue seeds
+
+**Filed 2026-09-25:** [#3 machine profile](https://github.com/zohebzma2-cmyk/autonomous-mower/issues/3) ·
+[#4 badge](https://github.com/zohebzma2-cmyk/autonomous-mower/issues/4) ·
+[#5 translate the build manual](https://github.com/zohebzma2-cmyk/autonomous-mower/issues/5) ·
+[#6 try the sim](https://github.com/zohebzma2-cmyk/autonomous-mower/issues/6) ·
+[#9 edit a keep-out in the UI](https://github.com/zohebzma2-cmyk/autonomous-mower/issues/9) —
+all in the [good first issue](https://github.com/zohebzma2-cmyk/autonomous-mower/labels/good%20first%20issue) label.
+The commands they were created from, kept for re-seeding a fork:
 
 ```bash
 gh issue create --label "good first issue" -t "Add a machine profile for your ZTR (Toro / Bad Boy / Spartan / Scag)" \
