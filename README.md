@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-3fb950.svg)](LICENSE)
 [![Status: active build](https://img.shields.io/badge/status-active%20build-f0883e.svg)](#status--honest-limitations)
-[![Tests](https://img.shields.io/badge/tests-63%2F63-3fb950.svg)](software/tests)
+[![Tests](https://img.shields.io/badge/tests-69%2F69-3fb950.svg)](software/tests)
 [![Autopilot: ArduPilot Rover](https://img.shields.io/badge/autopilot-ArduPilot%20Rover-5ab0ff.svg)](https://ardupilot.org/rover)
 [![Discussions](https://img.shields.io/badge/community-Discussions-3fb950.svg)](https://github.com/zohebzma2-cmyk/autonomous-mower/discussions)
 
@@ -13,7 +13,7 @@
 
 Turn a seated zero-turn mower into a self-driving, iPad-controlled robot — **RTK GPS + LiDAR + cameras + on-device AI** — weatherproofed to live outdoors, and **reproducible on any ZTR** by re-measuring a handful of dimensions.
 
-> **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (63/63 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
+> **Status: 🔧 in active build.** Design, CAD, firmware, control software, and docs are complete and verified (69/69 tests). The machine is currently being built in person — parts on order, brackets printing, wiring the kill-chain first. This is a multi-month, safety-gated build, documented as it happens — not a plug-and-play kit.
 
 **Confirmed reference machine:** Gravely **ZT X 52** · ~2021 · **Kohler 7000** (24 hp, 725 cc) · electric PTO clutch.
 
@@ -89,7 +89,7 @@ autonomous-mower/
 ├── software/
 │   ├── companion/           ← Python: app.py (HTTP+SSE), safety.py, vision.py, missions.py, mav.py
 │   ├── ui/                  ← the control UI (iPad + on-unit kiosk)
-│   ├── tests/               ← 63 stdlib tests (safety, geofence, attachments, turns, coverage, keep-outs, vision, mission encoding)
+│   ├── tests/               ← 69 stdlib tests (safety, geofence, attachments, turns, coverage, keep-outs, vision, mission encoding)
 │   └── deploy/              ← systemd service + Chromium kiosk autostart
 ├── firmware/
 │   ├── lapbar_controller/   ← ESP32: FC-PWM → pot → BTS7960 position loop, fail-to-neutral
@@ -128,7 +128,7 @@ openscad assembly.scad          # see the whole machine
 ```bash
 python3 software/companion/app.py --sim --port 8080
 # open http://localhost:8080 — arm, draw a zone, run a coverage mission in simulation
-python3 software/tests/test_backend.py       # 63/63
+python3 software/tests/test_backend.py       # 69/69
 ./scripts/sitl.sh                 # the REAL ArduPilot Rover 4.7.1 firmware (SITL) behind the same UI
 ```
 
@@ -141,7 +141,7 @@ python3 software/tests/test_backend.py       # 63/63
 ## Training — all three, built in order
 
 1. **Teach-and-repeat** — drive the path once, it repeats the RTK track.
-2. **Boundary → auto-coverage** — drive the perimeter, the planner fills it with rows and uploads them as an ArduPilot AUTO mission. It handles real yards: L/U shapes (cell decomposition, routed transits), **keep-outs** (beds, trees, the shed — or spots the sonar keeps hitting), no-rut turns with **perimeter laps** for the headland, and shows m², minutes and % covered before it moves.
+2. **Boundary → auto-coverage** — drive the perimeter, the planner fills it with rows and uploads them as an ArduPilot AUTO mission. It handles real yards: L/U shapes (cell decomposition, routed transits), rows along the direction with the fewest turns, **keep-outs** (beds, trees, the shed — or spots the sonar keeps hitting), no-rut turns with **perimeter laps** for the headland, and shows m², minutes and % covered before it moves.
 
    ![coverage planner: before/after on a U-shaped yard, and a keep-out](docs/coverage-plan.svg)
 3. **AI learns the yard** — the camera/LiDAR model refines a semantic map over runs (Hailo).

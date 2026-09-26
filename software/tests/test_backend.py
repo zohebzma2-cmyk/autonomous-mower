@@ -37,7 +37,7 @@ def test_coverage_rows_fill_polygon():
 
 def test_coverage_is_boustrophedon():
     # each row (entry,exit) pair must reverse travel direction vs the previous row
-    _, pts = missions.plan_coverage("t", SQUARE, spacing=2.0)
+    _, pts = missions.plan_coverage("t", SQUARE, spacing=2.0, angle=0)   # rows east-west
     rows = [(pts[i], pts[i+1]) for i in range(0, len(pts), 2)]
     dirs = [1 if b[1] >= a[1] else -1 for a, b in rows]      # sign of lon travel
     assert all(dirs[i] != dirs[i+1] for i in range(len(dirs)-1)), \
@@ -127,25 +127,84 @@ def test_plan_stats_are_honest():
     st = missions.get_route(rid)["stats"]
     assert abs(st["lawn_m2"] - (1600 - 70)) <= 2, f"lawn = yard minus bed: {st}"
     assert st["path_m"] >= st["mow_m"] > 0 and st["cells"] >= 2, st
-    assert 85 <= st["coverage_pct"] <= 100, f"rows at 1.5 m should cover the lawn: {st}"
+    assert 80 <= st["coverage_pct"] <= 92, f"1.32 m deck on 1.5 m rows leaves strips (~88%): {st}"
     assert abs(st["minutes"] - st["path_m"] / missions.CRUISE_MPS / 60) < 0.1, st
     missions.delete_route(rid)
 
 def test_perimeter_laps_mow_the_headland():
-    for yard, ko in ((SQ40, [BED]), (U_YARD, [])):
+    diamond = [_ll(20, 0), _ll(40, 20), _ll(20, 40), _ll(0, 20)]
+    for yard, ko in ((SQ40, [BED]), (U_YARD, []), (diamond, [])):
         rid0, _ = missions.plan_coverage_turns("p0", yard, 1.15, keepouts=ko, perimeter=False)
         rid1, pts = missions.plan_coverage_turns("p1", yard, 1.15, keepouts=ko)
         before = missions.get_route(rid0)["stats"]["coverage_pct"]
         after = missions.get_route(rid1)["stats"]["coverage_pct"]
-        assert before < 92 and after >= 99, f"headland must be mowed: {before}% -> {after}%"
+        assert after >= 99.5 and after >= before, f"laps must finish the headland: {before}% -> {after}%"
         assert _bad_legs(yard, pts, ko) == 0, "perimeter laps must stay in the yard and out of keep-outs"
         missions.delete_route(rid0); missions.delete_route(rid1)
+    assert before < 95, f"a diamond's slanted headland is what the laps are for: {before}%"
+
+def test_coverage_is_measured_not_estimated():
+    # 1.32 m deck on rows 2.64 m apart cuts about half the lawn — the old
+    # estimate (rows x spacing) would have said 100%
+    rid, _ = missions.plan_coverage("half", SQ40, 2.64)
+    pct = missions.get_route(rid)["stats"]["coverage_pct"]
+    assert 45 <= pct <= 56, f"deck/spacing = 50%: measured {pct}%"
+    missions.delete_route(rid)
 
 def test_offset_moves_inward():
     sq = [(0, 0), (10, 0), (10, 10), (0, 10)]
     inner = missions._offset(sq, 1.0)
     assert all(abs(a - b) < 1e-9 for p, q in zip(inner, [(1, 1), (9, 1), (9, 9), (1, 9)])
                for a, b in zip(p, q)), inner
+
+def test_turns_stay_in_on_slanted_edges():
+    # a turn climbs a row over; on a slanted edge the yard is narrower there, and
+    # turns sized from their own row poked out: 75 of 251 legs on this trapezoid (#8)
+    for yard in ([_ll(0, 0), _ll(50, 0), _ll(35, 30), _ll(10, 30)],          # trapezoid
+                 [_ll(20, 0), _ll(40, 20), _ll(20, 40), _ll(0, 20)]):         # 45° diamond
+        rid, pts = missions.plan_coverage_turns("slant", yard, 1.15)
+        assert _bad_legs(yard, pts) == 0, "a turn leaves a slanted yard"
+        missions.delete_route(rid)
+
+def test_next_row_starts_where_the_turn_ends():
+    # after a turn the machine must drive forward into the next row, never back up
+    yard = [_ll(0, 0), _ll(50, 0), _ll(35, 30), _ll(10, 30)]
+    order, poly, holes, ref = missions._plan(yard, None, 1.15, inset=1.2, min_len=1.15, reach=1.2)
+    rid, pts = missions.plan_coverage_turns("slant", yard, 1.15, perimeter=False)
+    P = missions._xy(pts, ref)
+    for (x0, y0), (x1, y1), (x2, y2) in zip(P, P[1:], P[2:]):
+        if abs(y1 - y2) < 1e-6 and abs(y0 - y1) > 1e-6 and abs(x2 - x1) > 0.05:   # turn end -> row
+            back = (x1 - x0) * (x2 - x1) < 0 and abs(x1 - x0) > 0.05
+            assert not back, f"reverses into the row at ({x1:.1f},{y1:.1f})"
+    missions.delete_route(rid)
+
+L_YARD = [_ll(0, 0), _ll(40, 0), _ll(40, 15), _ll(15, 15), _ll(15, 40), _ll(0, 40)]
+
+def test_l_yard_inside_corner_is_routed():
+    # a long row and the short row above it share a cell; the straight leg
+    # between their ends cut the inside corner of the L
+    for angle in (0, 90, None):
+        rid, pts = missions.plan_coverage("L", L_YARD, 1.15, angle=angle)
+        assert _bad_legs(L_YARD, pts) == 0, f"angle {angle}: a leg cuts the L's corner"
+        missions.delete_route(rid)
+
+def test_sweep_angle_follows_a_long_thin_lawn():
+    strip = [_ll(0, 0), _ll(10, 0), _ll(10, 60), _ll(0, 60)]        # 10 m wide, 60 m north-south
+    rid_ew, _ = missions.plan_coverage_turns("ew", strip, 1.15, angle=0)
+    rid, pts = missions.plan_coverage_turns("auto", strip, 1.15)
+    ew, auto = missions.get_route(rid_ew)["stats"], missions.get_route(rid)["stats"]
+    assert auto["sweep_deg"] == 90.0, f"rows should run along the strip: {auto}"
+    assert auto["turns"] < ew["turns"] / 4, f"long rows, few turns: {auto['turns']} vs {ew['turns']}"
+    assert _bad_legs(strip, pts) == 0 and auto["coverage_pct"] >= 99.5, auto
+    missions.delete_route(rid_ew); missions.delete_route(rid)
+
+def test_sweep_angle_on_a_rotated_yard():
+    diamond = [_ll(20, 0), _ll(40, 20), _ll(20, 40), _ll(0, 20)]
+    rid, pts = missions.plan_coverage_turns("d", diamond, 1.15)
+    st = missions.get_route(rid)["stats"]
+    assert st["sweep_deg"] in (45.0, 135.0), f"rows should follow the diamond's edges: {st}"
+    assert _bad_legs(diamond, pts) == 0 and st["coverage_pct"] >= 99.5, st
+    missions.delete_route(rid)
 
 # ---------------------------------------------------------------- missions persistence
 def test_persistence_roundtrip():
