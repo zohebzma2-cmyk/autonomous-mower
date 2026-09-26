@@ -1,0 +1,8 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "Connector_Generic") (type "KiCad") (uri "${KICAD9_SYMBOL_DIR}/Connector_Generic.kicad_sym") (options "") (descr ""))
+	(lib (name "Device") (type "KiCad") (uri "${KICAD9_SYMBOL_DIR}/Device.kicad_sym") (options "") (descr ""))
+	(lib (name "Mechanical") (type "KiCad") (uri "${KICAD9_SYMBOL_DIR}/Mechanical.kicad_sym") (options "") (descr ""))
+	(lib (name "Relay") (type "KiCad") (uri "${KICAD9_SYMBOL_DIR}/Relay.kicad_sym") (options "") (descr ""))
+	(lib (name "Transistor_FET") (type "KiCad") (uri "${KICAD9_SYMBOL_DIR}/Transistor_FET.kicad_sym") (options "") (descr ""))
+)

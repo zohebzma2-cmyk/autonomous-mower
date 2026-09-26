@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT
+# ArduPilot Rover: DRIVE LAYER for an RC / electric-drive mower (tracked or wheeled).
+# The Pixhawk sits between the RC receiver and the mower's existing drive controller.
+# No lap-bar actuators, no ESP32. Full guide: docs/ADAPT-RC-MOWER.md
+#
+# Load order: ../rover_params.parm (RTK, fence, failsafes, modes), then THIS file
+# (it overrides the drive block). Channel numbers are examples. Match your wiring.
+
+# ---- PROFILE A (preferred): one input per track, ArduPilot mixes ----
+SERVO1_FUNCTION,73     # throttleLeft  -> left-track input of the drive controller
+SERVO3_FUNCTION,74     # throttleRight -> right-track input
+# ---- PROFILE B: machine mixes internally (comment A out, uncomment these) ----
+# SERVO1_FUNCTION,26   # GroundSteering -> steering input
+# SERVO3_FUNCTION,70   # Throttle       -> throttle input
+
+# Pulse range: MEASURE on the bench (docs/ADAPT-RC-MOWER.md section 1)
+SERVO1_MIN,1000
+SERVO1_TRIM,1500
+SERVO1_MAX,2000
+SERVO3_MIN,1000
+SERVO3_TRIM,1500
+SERVO3_MAX,2000
+# SERVO1_REVERSED,1    # flip a side if it runs backwards in MANUAL
+
+MOT_PWM_TYPE,0         # normal servo PWM
+MOT_SAFE_DISARM,0      # keep sending NEUTRAL pulses while disarmed (not silence)
+
+# ---- engine / blade clutch / cut height stay on the transmitter ----
+# If they must route through the Pixhawk, pass the stick straight through:
+# SERVO5_FUNCTION,55   # RCIN5 passthrough (e.g. engine start)
+# SERVO6_FUNCTION,56   # RCIN6 passthrough (blade clutch). Keep blades DISCONNECTED until go/no-go
+
+# ---- software e-stop on a transmitter switch (on top of the hardware kill) ----
+RC7_OPTION,31          # Motor Emergency Stop (NOT ch 8: MODE_CH defaults to 8 and 4.7 refuses to arm on the conflict)
+
+# ---- tracks + turf: avoid pivot-in-place scrubbing ----
+WP_PIVOT_ANGLE,0       # 0 = never pivot; use arc turns (raise to e.g. 60 if you need pivots)
+CRUISE_SPEED,1.0       # m/s, start slow on a 300+ kg machine
+WP_SPEED,1.0
+WP_RADIUS,0.8
+ATC_TURN_MAX_G,0.3

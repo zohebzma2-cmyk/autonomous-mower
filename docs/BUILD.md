@@ -67,8 +67,8 @@ A 52" deck spins ~3 lb of steel at ~18,000 fpm tip speed. An autonomous bug here
 
 - **±2 cm** with RTK vs ±3 m plain GPS — the difference between mowing rows and driving into the house.
 - **Corrections (NTRIP):** stream RTCM3 from a base. Cheapest: a free public **CORS / state-DOT NTRIP** mount within ~20 km, over a phone hotspot. If none nearby, add a second simpleRTK2B as your own base (~+$150) for full independence.
-- **Heading (the precision lever):** a single antenna gives cm *position* but heading comes from motion — it wanders at low speed and during pivots, smearing row alignment (~10 cm cross-track). The **dual-antenna moving-baseline** kit (now in the order, `★` in `cart/ORDER.md`) gives **true ~0.4° heading** → a few-cm tracking. Mount the **two antennas on a baseline ≥ 0.5 m** (print 2× `gps_mast`), both on ground planes, clear of metal. Config: the moving-baseline block in `firmware/ardupilot/rover_params.parm`.
-- Each antenna goes **high on a mast, on a ground plane**, clear of the engine/metal (multipath). The ZT X has no ROPS — mount the masts to seat-frame / fabricated posts (`gps_mast.scad`).
+- **Heading (the precision lever):** a single antenna gives cm *position* but heading comes from motion — it wanders at low speed and during pivots, smearing row alignment (~10 cm cross-track). The **dual-antenna moving-baseline** kit (now in the order, `★` in `cart/ORDER.md`) gives **true ~0.4° heading** → a few-cm tracking. Mount the **two antennas 600 mm apart** on the printed crossbar (`baseline_tee` + 2× `baseline_ant_plate`, `cad/sensor_mounts.scad`; 20 mm tube cut to 628 mm), each on a Ø120 aluminium ground plane, clear of metal. `GPS1_POS_Y/GPS2_POS_Y = ∓0.30`. Config: the moving-baseline block in `firmware/ardupilot/rover_params.parm`.
+- Each antenna goes **high on a mast, on a Ø120 mm metal ground plane** (the size u-blox specifies the ANN-MB phase centre on), fixed by its two M4 ears (68.0 mm pitch) to the Ø96 printed plate, clear of the engine/metal (multipath). The ZT X has no ROPS — mount the masts to seat-frame / fabricated posts (`gps_mast.scad`).
 - **Realistic precision:** ±2 cm position (RTK fixed, open sky); ~few-cm cross-track *with* dual-antenna heading, ~10 cm with single; degrades to decimeters under tree canopy (GPS physics) — the planned row overlap (~17 cm) absorbs it so coverage stays complete.
 
 ---
@@ -76,7 +76,7 @@ A 52" deck spins ~3 lb of steel at ~18,000 fpm tip speed. An autonomous bug here
 ## 4. Perception & safety sensors — obstacle, height, incline, cameras
 
 - **RPLidar A1 (2D, 360°) — horizontal obstacle:** Pi reads the scan; anything inside a stop-zone (~2 m) in the path → HOLD. Simple, reliable, runs first.
-- **Overhead clearance — tree-limb / height detection:** the horizontal LiDAR **cannot see overhead**, so a **forward/up-facing JSN-SR04T waterproof ultrasonic** (or VL53L1X ToF) watches the height above/ahead. If clearance drops below the machine's tallest point (the **GPS mast**, ~1.6 m incl. margin) → STOP, so the mast/antenna never strikes a low branch. (`safety.MIN_OVERHEAD_M`.)
+- **Overhead clearance — tree-limb / height detection:** the horizontal LiDAR **cannot see overhead**, so a **forward/up-facing JSN-SR04T waterproof ultrasonic** (or VL53L1X ToF) watches the height above/ahead. It mounts **face-up on the GPS mast** (`sonar_collar_a`), level with the antenna top, 85 mm off the mast axis so its ±37.5° cone clears the antenna; `safety.overhead_from_sonar()` converts its reading to height above ground. If clearance drops below the machine's tallest point (the **GPS mast**, ~1.6 m incl. margin) → STOP, so the mast/antenna never strikes a low branch. (`safety.MIN_OVERHEAD_M`.)
 - **Incline / hill safety — IMU (no new hardware):** the Pixhawk IMU gives roll/pitch. A **max-slope cutoff (~15°, the ZTR side-slope rollover limit)** refuses to arm or move above it (`safety.MAX_SLOPE_DEG`), with a 12° caution band. **Mowing strategy on slopes: drive up/down the fall line, not across** (side-slope is the rollover axis) — the coverage planner orients rows accordingly on graded zones.
 - **Cameras (front + rear):** 2× Pi Camera 3 (Pi 5 has two CSI ports), shown as **live feeds in the control UI**. Front feeds Hailo vision (grass-vs-not, obstacle classification, row-edge following); rear is situational. Phase-3 AI runs on the Hailo so the Pi CPU stays free.
 - **Sensor-fusion order of authority:** physical E-stop > RC kill > **incline cutoff** > **overhead stop** > LiDAR obstacle > ArduPilot nav > camera-AI hints. AI never *adds* motion authority; it only refines or vetoes. This policy lives in `software/companion/safety.py` (unit-tested).
@@ -93,7 +93,7 @@ A 52" deck spins ~3 lb of steel at ~18,000 fpm tip speed. An autonomous bug here
 | AI | **Hailo runtime + a segmentation model** | vision inference |
 | Corrections | **NTRIP client** (in Mission Planner or on Pi) | RTK RTCM3 |
 
-Key ArduPilot params (starting point, tune on machine): `FRAME_CLASS=2` (rover), skid steering enabled, `SERVO1/SERVO3` = left/right throttle to the H-bridge, `GPS_TYPE`=RTK, `FENCE_ENABLE=1`, `FS_*` failsafes → HOLD, `RC_OPTIONS` kill switch, `MOT_PWM` for actuator endpoints.
+Key ArduPilot params (starting point, tune on machine): `FRAME_CLASS=2` (rover), skid steering enabled, `SERVO1/SERVO3` = left/right throttle to the H-bridge, `GPS1_TYPE`=RTK, `FENCE_ENABLE=1`, `FS_*` failsafes → HOLD, `RCx_OPTION=31` (motor emergency stop) on a transmitter switch, `MOT_PWM` for actuator endpoints.
 
 ---
 

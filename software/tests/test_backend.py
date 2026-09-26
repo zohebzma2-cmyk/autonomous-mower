@@ -121,6 +121,13 @@ def test_teach_records_and_saves():
     r = missions.get_route(rid); assert r and r["name"] == "Test path"
     missions.delete_route(rid)
 
+def test_route_ids_unique_within_same_ms():
+    a = missions.add_taught("a", [[42.8060, -71.3675], [42.8061, -71.3675]])
+    b = missions.add_taught("b", [[42.8060, -71.3675], [42.8061, -71.3675]])
+    assert a != b, "back-to-back saves must get distinct ids"
+    assert missions.get_route(b)["name"] == "b"
+    missions.delete_route(a); missions.delete_route(b)
+
 def test_run_route_requires_armed_and_valid_id():
     reset(); app.S.update(gps_fix="rtk_fixed")
     rid = missions.add_taught("r", [[42.8060, -71.3675], [42.8061, -71.3675]])
@@ -148,6 +155,22 @@ def test_safety_blocks_steep_incline():
     ok, why = safety.evaluate({"roll": 20, "pitch": 2})
     assert not ok and "steep" in why, "must block above max slope"
     assert safety.evaluate({"roll": 10, "pitch": 8})[0], "moderate slope is allowed"
+
+def test_overhead_from_sonar_adds_face_height():
+    f = safety.SONAR_FACE_HEIGHT_M
+    assert abs(safety.overhead_from_sonar(0.5) - (f + 0.5)) < 1e-9
+    # a branch 0.10 m above the face is BELOW the conservative mast clearance -> stop
+    assert not safety.evaluate({"overhead_m": safety.overhead_from_sonar(0.10)})[0]
+    assert safety.evaluate({"overhead_m": safety.overhead_from_sonar(1.0)})[0]
+
+def test_overhead_from_sonar_blind_zone_fails_safe():
+    assert safety.overhead_from_sonar(0.05) == safety.SONAR_FACE_HEIGHT_M
+    assert not safety.evaluate({"overhead_m": safety.overhead_from_sonar(0.05)})[0], \
+        "an echo inside the blind zone must stop the machine"
+
+def test_overhead_from_sonar_no_echo_is_clear_sky():
+    assert safety.overhead_from_sonar(None) > safety.MIN_OVERHEAD_M
+    assert safety.evaluate({"overhead_m": safety.overhead_from_sonar(None)})[0]
 
 def test_safety_blocks_low_branch():
     ok, why = safety.evaluate({"overhead_m": 1.0})
@@ -185,10 +208,37 @@ def test_vision_grass_only_clear_with_coverage():
 # ---------------------------------------------------------------- MAVLink mission encoding
 def test_mission_items_encoding():
     items = mav.to_mission_items([[42.806, -71.367], [42.807, -71.368]])
-    assert len(items) == 2
-    assert items[0]["lat"] == int(round(42.806 * 1e7)) and items[0]["lon"] == int(round(-71.367 * 1e7))
-    assert items[0]["command"] == 16 and items[0]["frame"] == 3 and items[0]["current"] == 1
-    assert items[1]["current"] == 0, "only the first item is 'current'"
+    assert len(items) == 3, "seq 0 is ArduPilot's HOME slot + one item per waypoint"
+    assert [it["seq"] for it in items] == [0, 1, 2]
+    assert items[1]["lat"] == int(round(42.806 * 1e7)) and items[1]["lon"] == int(round(-71.367 * 1e7))
+    assert items[2]["lat"] == int(round(42.807 * 1e7)), "route order preserved after HOME"
+    assert items[1]["command"] == 16 and items[1]["frame"] == 3
+
+def test_upload_mission_reads_replies_from_queue():
+    """The pump owns the link; upload_mission must answer requests fed through the queue."""
+    import queue, types
+    sent = []
+    q = queue.Queue()
+    def req(seq): return types.SimpleNamespace(get_type=lambda: "MISSION_REQUEST_INT", seq=seq)
+    def on_count(*a):                     # the autopilot answers COUNT with requests + ACK
+        sent.append(("count", a[2]))
+        for s in range(a[2]): q.put(req(s))
+        q.put(types.SimpleNamespace(get_type=lambda: "MISSION_ACK", type=0))
+    fake_mav = types.SimpleNamespace(mission_count_send=on_count,
+                                     mission_item_int_send=lambda *a: sent.append(("item", a[2])))
+    m = types.SimpleNamespace(mav=fake_mav, target_system=1, target_component=1)
+    q.put(req(9))                         # stale reply from an earlier upload: must be dropped
+    assert mav.upload_mission(m, [[42.806, -71.367], [42.807, -71.368]], q, timeout=1)
+    assert sent == [("count", 3), ("item", 0), ("item", 1), ("item", 2)]
+    assert not mav.upload_mission(m, [[42.8, -71.3]], queue.Queue(), timeout=0.05), "no replies = timeout"
+
+def test_fence_items_encoding():
+    sq = [[42.806, -71.3675], [42.806, -71.367], [42.8064, -71.367]]
+    items = mav.to_fence_items(sq)
+    assert [it["seq"] for it in items] == [0, 1, 2]
+    assert all(it["command"] == 5001 and it["p1"] == 3.0 for it in items), "inclusion vertices, count in param1"
+    assert items[2]["lat"] == int(round(42.8064 * 1e7))
+    assert mav.to_fence_items(sq[:2]) == [], "a fence needs >= 3 vertices"
 
 def test_mission_items_empty():
     assert mav.to_mission_items([]) == []

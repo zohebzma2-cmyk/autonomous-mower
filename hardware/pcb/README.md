@@ -10,7 +10,12 @@ onto one board that every off-board module plugs into by connector.
 | **Board** | 120 × 100 mm, 2-layer FR4, **2 oz copper** (high-current pours) |
 | **Fab/assembly** | JLCPCB (economic PCBA for SMD; hand-solder the THT connectors) |
 | **License** | MIT (hardware too — remix it) |
-| **Status** | Rev A design package — schematic + placement + netlist + BOM, ready to route in KiCad |
+| **Status** | **Rev A.1 routed** — generated KiCad 9 project in [`kicad/`](kicad/) (ERC 0 · DRC 0 errors · parity 0), Gerbers in `kicad/fab/`. **Human pre-fab review pending: [`kicad/REVIEW.md`](kicad/REVIEW.md)** |
+
+![MowerCarrier Rev A.1 — 3D render of the routed board](render-iso.png)
+
+*Rev A.1 as generated. The schematic and layout drawings below are exported from the KiCad
+project by `kicad/gen_kicad.sh`, so they always match the board.*
 
 ![schematic](schematic.svg)
 
@@ -28,12 +33,13 @@ terminals, and 2.54 mm headers.
 
 ## Board sections
 
-1. **12 V input & protection** — XT60 in → reverse-polarity P-FET (Q1) → 30 A
-   main fuse → +12 V bus. A TVS clamps automotive load-dump; a bulk cap steadies
-   the rail.
+1. **12 V input & protection** — XT60 in → reverse-polarity P-FET (Q1, on a 9 K/W
+   Fischer SK104 heatsink) → 20 A main fuse → +12 V bus. A TVS clamps load-dump
+   transients; a bulk cap steadies the rail.
 2. **Fused branches** — individually fused feeds to Buck #1 (Pi), Buck #2
-   (ESP32/servo/sensors), the PM02 (Pixhawk), and the 10 A drive-relay leg.
-3. **Safety kill-chain** — two 40 A relays (K1 DRIVE, K2 PTO) wired as a
+   (ESP32/servo/sensors, and the e-stop feed), the PM02 (Pixhawk), the 10 A
+   drive-relay leg and the 7.5 A PTO-relay leg.
+3. **Safety kill-chain** — two 30 A relays (K1 DRIVE, K2 PTO) wired as a
    **hardware-AND-software gate**: the relay coil's **high side** runs through the
    E-STOP NC contact (hardware kill) and its **low side** through a MOSFET the
    controller drives (software enable). *Either* dropping cuts power instantly.
@@ -42,33 +48,35 @@ terminals, and 2.54 mm headers.
    every firmware net (`lapbar_controller.ino`) breaks out to screw terminals and
    pin headers: FC PWM in, pot feedback, BTS7960 logic ×2, status LEDs.
 
-Exact connectivity is in **[netlist.md](netlist.md)**; parts in
-**[BOM.md](BOM.md)**; how to order in **[FABRICATION.md](FABRICATION.md)**.
+Exact connectivity + parts live in **[kicad/design.py](kicad/design.py)** (the grouped BOM
+with LCSC numbers is `kicad/fab/mowercarrier-bom.csv`); pre-fab checklist in
+**[kicad/REVIEW.md](kicad/REVIEW.md)**; how to order in **[FABRICATION.md](FABRICATION.md)**.
+`netlist.md` / `BOM.md` are the Rev A originals, kept for history.
 
 ![placement](layout.svg)
 
 ## Design rules (KiCad / JLCPCB)
 
-- 2-layer, 1.6 mm FR4, **2 oz copper**. Bottom = GND pour; top = signal + power.
-- **Power zone** (left ~42 mm): pour wide ≥3 mm / poured copper for the 30 A and
-  10 A paths; keep the reverse-P-FET and fuse in this zone.
+- 2-layer, 1.6 mm FR4, **2 oz copper**. GND poured on both layers; the trunk
+  (+12V_IN bottom, +12V_RP top, +12V_BUS bottom) is solid pours with track keepouts.
+- **Power zone** (left): fuse column over the bottom bus pour, output terminals on
+  the left edge, Q1 + heatsink on the top edge.
 - Min trace/space 6/6 mil is plenty for signals; power is poured, not traced.
 - 4× M3 mounting holes, 5 mm in from each corner.
 - Clearance ≥ 2 mm around the relays; keep relay coil-driver flyback diodes
   right at the coil pins.
 
-## Reproduce / edit the drawings
+## Reproduce / edit
 
 ```bash
-python3 gen_schematic.py   # -> schematic.svg
-python3 gen_layout.py      # -> layout.svg
+./scripts/setup-dev.sh --kicad      # KiCad 9, Java 25, Freerouting 1.9.0
+hardware/pcb/kicad/gen_kicad.sh     # design.py -> schematic, PCB, fab/, drawings, renders
+./scripts/check.sh --full           # ERC + DRC + "regenerates byte-identically" gate
 ```
 
-Both are dependency-free (stdlib SVG). The schematic is a **block/net-level**
-drawing for review; the authoritative net connectivity for routing lives in
-`netlist.md`. Rev A is meant to be opened in **KiCad**, symbols/footprints
-assigned from the BOM, and routed — the hard part (what connects to what, the
-safety topology, the part choices) is done.
+Edit `kicad/design.py` (parts, nets) or `kicad/gen_pcb.py` (placement, pours), never the
+generated `.kicad_*` files. Generation is deterministic: an unchanged design reproduces the
+board byte for byte.
 
 ## Safety note
 

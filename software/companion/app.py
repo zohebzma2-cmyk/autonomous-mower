@@ -289,6 +289,9 @@ def handle_command(cmd, args=None):
         ok, why = safety.can_arm(d)          # refuse to arm on a dangerous slope
         if not ok:
             return False, why
+        if S.mav_cmd:                        # autopilot decides: ARMED shows when its heartbeat
+            S.update(msg="arm requested")    # says so; a refusal arrives as STATUSTEXT ("Arm: …")
+            return True, "arm requested"
         S.update(armed=True, msg="armed")
         return True, "armed"
     if cmd == "disarm":
@@ -347,6 +350,17 @@ def handle_command(cmd, args=None):
     return False, f"unknown command {cmd}"
 
 # ---------------------------------------------------------------- sim physics
+def ignition_loop():
+    """--mav mode: MAVLink has no ignition, and sim_loop (which finishes the crank) isn't
+    running, so a crank would otherwise hang in "crank" forever after any E-STOP. Until the
+    starter/magneto relay driver reports back, complete the crank after ~1 s like the sim."""
+    while True:
+        time.sleep(1.0)
+        d = S.snapshot()
+        if d["engine"] == "crank":
+            S.update(engine="run", engine_rpm=2800, choke=max(0.0, d["choke"] - 0.5), msg="engine running")
+
+
 def sim_loop():
     t = 0.0
     while True:
@@ -408,7 +422,9 @@ def sim_loop():
         if d["mission"] == "running":
             allow, reason = safety.evaluate({**d, **upd})            # incline/overhead/obstacle/estop
             if not allow:
-                upd.update(speed=0.0, msg=reason)                    # software safety HOLD
+                upd.update(speed=0.0, msg=reason, _held=True)        # software safety HOLD
+            elif d.get("_held"):                                     # hold cleared: say so, don't leave a
+                upd.update(_held=False, msg="mission resumed")       # stale "holding" msg while moving
             elif S.active_route and S.route_idx < len(S.active_route):
                 tgt = S.active_route[S.route_idx]
                 lat, lon, hdg, reached = missions.step_towards(d["lat"], d["lon"], tgt, STEP)
@@ -651,6 +667,7 @@ def main():
             from mav import run_mavlink
             threading.Thread(target=run_mavlink, args=(args.mav, S, handle_command),
                              daemon=True).start()
+            threading.Thread(target=ignition_loop, daemon=True).start()
             print(f"[companion] MAVLink mode → {args.mav}")
         except Exception as e:
             print(f"[companion] MAVLink unavailable ({e}); falling back to sim")

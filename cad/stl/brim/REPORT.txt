@@ -8,7 +8,7 @@ PRINT_rail_anchor_bottom           6     57.0     69.0      1456  YES
 PRINT_rail_anchor_top              6     57.0     69.0      1456  YES
 PRINT_gps_clamp_a                  6    104.0    116.0      2152  YES
 PRINT_gps_clamp_b                  6    104.0    116.0      1184  YES
-PRINT_gps_top_plate                5     60.0     70.0       944  YES
+PRINT_gps_top_plate                5     96.0    106.0       944  YES
 PRINT_lidar_base_a                 6     60.0     72.0       480  YES
 PRINT_lidar_base_b                 6     64.0     72.0       976  YES
 PRINT_lidar_mast_lower             8     82.0     98.0       972  YES
@@ -31,3 +31,11 @@ PRINT_dump_clevis                  5     64.0     74.0       976  YES
 PRINT_sprayer_ctrl_mount           5     84.0     94.0      1088  YES
 PRINT_tpms_cradle                  5     66.0     76.0      1944  YES
 PRINT_trimmer_motor_plate          5     92.0    102.0      1816  YES
+PRINT_baseline_ant_plate           5     96.0    106.0       944  YES
+PRINT_baseline_tee                 5     36.0     46.0       976  YES
+PRINT_display_brace                2     28.0     32.0      1472  YES
+PRINT_display_hood_l               2     98.8    102.8      3420  YES
+PRINT_display_hood_r               2     98.8    102.8      3412  YES
+PRINT_display_yoke                 5    110.6    120.6       972  YES
+PRINT_sonar_collar_a               5    101.1    111.1      2470  YES
+PRINT_sonar_collar_b               5     15.6     25.6      1460  YES

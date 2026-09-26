@@ -12,16 +12,17 @@
 //  PRINTED PIECES (each fits the 150x150x150 bed, < 145 mm every axis):
 //    A) PRINT_gps_clamp_a()  — front clamp half + vertical mast socket
 //    B) PRINT_gps_clamp_b()  — rear clamp half
-//    C) PRINT_gps_top_plate() — antenna plate that caps the mast top
+//    C) PRINT_gps_top_plate() — Ø96 antenna plate that caps the mast top; takes the
+//       u-blox ANN-MB-00 on its 2x M4 ears (68.0 mm pitch, UBX-18049862 Fig. 1)
 //
 //  USER-SUPPLIED (not printed):
 //    - 60 mm SQUARE steel ROPS post (the thing we clamp to)
 //    - 20 mm OD aluminium tube = the mast (cut to the height you want)
-//    - 2x M5 clamp bolts + nuts, 1x M4 set screw, 1x 1/4"-20 antenna stud
+//    - 2x M5 clamp bolts + nuts, 1x M4 set screw, 2x M4 x 16 antenna screws + nuts
 //
-//  GROUND-PLANE NOTE:  Most survey / helical RTK antennas want a metal
-//  ground plane under them. Add a ~100 mm steel or aluminium-foil-faced disc
-//  sandwiched between this plate and the antenna for best fix quality.
+//  GROUND-PLANE NOTE:  u-blox specifies the ANN-MB phase centre on a Ø120 mm
+//  METAL ground plane. Sandwich a Ø120 x 1.5 mm aluminium disc (drilled 2x Ø4.5
+//  on the 68.0 pitch) between this plate and the antenna.
 //
 //  PRINT: ASA or PETG, 4+ walls, 40%+ infill. Clamp + thru-bolts carry load;
 //  for safety also drill the ROPS post and add a thru-pin on final install.
@@ -45,10 +46,8 @@ SOCKET_OD   = MAST_OD + 2*SOCKET_WALL;    // mast socket outside diameter
 MAST_BORE   = MAST_OD + CLEAR_FIT;        // sliding fit for the mast tube
 SOCK_Y      = BY/2 + SOCKET_OD/2 - 8;     // socket sits on the front face
 
-PLATE_TH    = 6;                          // antenna plate thickness
-CAP_DEPTH   = 18;                         // how deep the mast enters the cap
-DRAIN_PCD   = GPS_ANT_DIA * 0.66;         // drain/weight-hole bolt circle
-DRAIN_D     = 4;
+PLATE_TH    = GPS_PLATE_TH;               // antenna plate thickness (params.scad)
+CAP_DEPTH   = GPS_CAP_DEPTH;                         // how deep the mast enters the cap
 
 // ============================================================================
 //  SPLIT CLAMP  —  grips the 60 mm SQUARE ROPS post, two M5 bolts pull together
@@ -107,23 +106,17 @@ module clamp_half(half="a") {
 module top_plate() {
     difference() {
         union() {
-            // antenna disc
-            cylinder(d=GPS_ANT_DIA, h=PLATE_TH);
+            // antenna carrier disc — ANN-MB-00 2x M4 on the 68.0 mm pitch, nut traps below
+            ann_mb_plate(PLATE_TH);
             // cap socket underneath (receives the mast top)
             translate([0,0,-CAP_DEPTH]) cylinder(d=SOCKET_OD, h=CAP_DEPTH + EPS);
         }
-        // center clearance hole for the 1/4"-20 antenna stud (GPS_ANT_BOLT)
-        translate([0,0,-EPS])
-            cylinder(d=GPS_ANT_BOLT + CLEAR_FIT, h=PLATE_TH + 2*EPS);
         // blind mast bore in the cap (mast butts the plate underside)
-        translate([0,0,-CAP_DEPTH])
+        translate([0,0,-CAP_DEPTH - EPS])
             cylinder(d=MAST_BORE, h=CAP_DEPTH + EPS);
         // M4 set-screw into the cap socket (locks the mast top)
         translate([0, SOCKET_OD/2 + EPS, -CAP_DEPTH/2])
             rotate([90,0,0]) cylinder(d=M4_TAP, h=SOCKET_WALL + MAST_OD/2 + 2);
-        // 3 drainage / weight-saving holes through the disc
-        bolt_circle(DRAIN_PCD, 3)
-            translate([0,0,-EPS]) cylinder(d=DRAIN_D, h=PLATE_TH + 2*EPS);
     }
 }
 

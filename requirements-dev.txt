@@ -1,0 +1,13 @@
+# Dev tooling for the whole repo — `scripts/setup-dev.sh` installs these into .venv.
+# The companion itself stays stdlib-only in sim mode (software/companion/requirements.txt).
+pymavlink>=2.4.40          # companion --mav (SITL / real Pixhawk)
+mypy>=1.10                 # typed policy modules (mypy.ini)
+# CAD pipeline: GLB builder, orbit GIF / social card, STL decimation
+numpy<2                    # fast-simplification wheels are built against numpy 1.x
+trimesh>=4.0
+fast-simplification>=0.1.7
+pygltflib>=1.16
+pillow>=10.0
+# docs site
+mkdocs-material>=9.5
+mkdocs<2                   # 2.0 drops plugins/hooks (docs/_hooks/repo_links.py)

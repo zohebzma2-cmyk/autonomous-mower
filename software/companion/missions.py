@@ -45,7 +45,11 @@ def delete_route(rid):
 
 def _add(route):
     db = _load()
-    route["id"] = "r%d" % int(time.time() * 1000)
+    taken = {r["id"] for r in db["routes"]}
+    ms = int(time.time() * 1000)
+    while "r%d" % ms in taken:          # two saves in the same ms must not share an id
+        ms += 1
+    route["id"] = "r%d" % ms
     route["created"] = int(time.time())
     route["n"] = len(route["points"])
     db["routes"].append(route)

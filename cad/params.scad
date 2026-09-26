@@ -92,10 +92,18 @@ FC_HOLE_D = 3.2;                         // M3 clearance
 RTK_L = 68.58; RTK_W = 53.34; RTK_H = 12; // official PCB drawing (was rounded 69x53)
 RTK_HOLE_D = 3.2;                         // 3x M3 on Arduino-Uno pattern; SMA + 2x microUSB on short edges
 
-// --- GPS antenna puck (survey/helical, center-bolt mount) [V] ---
-// ★ Dual-antenna moving-baseline heading: print 2x gps_mast and mount the two antennas on
-//   a baseline >= 0.5 m apart (e.g. front-centre + rear-centre), both clear of metal.
-GPS_ANT_DIA = 60; GPS_ANT_H = 22; GPS_ANT_BOLT = 6.4;  // 1/4"-20 center stud
+// --- GNSS antenna: u-blox ANN-MB-00 (the BOM antenna) — EXACT from datasheet UBX-18049862 R05, Fig. 1 ---
+// 82.0 x 60.0 x 22.5 mm body; mounts by magnet OR 2x M4 through two Ø4.5 ear holes 68.0 apart on the
+// 82 mm axis (ears 6.0 thick). ARP = body centre. u-blox spec'd the phase centre on a Ø120 METAL ground
+// plane — sandwich a Ø120 x 1-1.5 mm aluminium disc between antenna and printed plate.
+ANT_L = 82.0; ANT_W = 60.0; ANT_H = 22.5;
+ANT_HOLE_PITCH = 68.0; ANT_HOLE_D = 4.5; ANT_EAR_T = 6.0;
+ANT_GROUND_PLANE_D = 120; ANT_GROUND_PLANE_T = 1.5;   // [BUY] aluminium disc
+GPS_PLATE_TH = 6;         // gps_top_plate disc thickness (shared with the sonar stack-up)
+GPS_CAP_DEPTH = 18;       // gps_top_plate mast-cap socket depth below the disc
+ANT_PLATE_D = 96;         // printed carrier disc: ~10 mm of wall outside each M4 nut trap
+// ★ Dual-antenna moving-baseline heading: print the baseline tee + 2 antenna plates
+//   (sensor_mounts.scad) — a BASELINE_L crossbar on the GPS mast, both antennas clear of metal.
 
 // --- RPLidar A1M8 (2D 360 scanner) — EXACT from Slamtec LD108 datasheet (Fig 5-2) ---
 // Base is a TEARDROP, not a circle: footprint 96.74 (L) x 70.28 (W) mm; turret Ø70.04;
@@ -114,6 +122,19 @@ LIDAR_DIA = 96.74; LIDAR_HOLE_N = 4;   // legacy aliases (plate sized to the lon
 CAM_L = 25; CAM_W = 24; CAM_H = 11.5;   // standard Z=11.5 (wide=12.4); lens barrel Ø5.75 std / 6.95 wide
 CAM_HOLE_DX = 21; CAM_HOLE_DY = 14.5; CAM_HOLE_D = 2.2;  // vert pitch 14.5 (the "12.5" is optical half-width)
 
+// --- Raspberry Pi Touch Display 2, 7" (SC1635) — outline + active area from the product listing
+//     (189.32 x 120.24; active 154.56 x 86.94); 15 mm depth from raspberrypi.com docs ---
+TD2_L = 189.32; TD2_W = 120.24; TD2_H = 15;
+TD2_ACTIVE_L = 154.56; TD2_ACTIVE_W = 86.94;
+TD2_WINDOW_MARGIN = 3;  // [V] per side around the active area (centring of the active area not published)
+// --- JSN-SR04T waterproof ultrasonic probe (overhead clearance) — ProtoSupplies measured listing ---
+// Body Ø21.5 x 19 mm, flange ring Ø25, vendor-recommended mounting hole Ø23 (rubber rings grip it).
+// Beam +/-37.5 deg. Board 41 x 28 x 20 lives in the brain box (2.5 m lead).  [V] caliper on arrival.
+JSN_BODY_D = 21.5; JSN_BODY_L = 19; JSN_FLANGE_D = 25; JSN_HOLE_D = 23; JSN_HALF_ANGLE = 37.5;
+SONAR_OFFSET = 85;        // probe axis from the GPS-mast axis (cup clears the Ø120 ground plane)
+SONAR_COLLAR_H = 30;      // mast collar height
+// --- Moving-baseline crossbar (dual-antenna heading upgrade) ---
+BASELINE_L = 600;       // antenna ARP centre-to-centre (>= 500 for ~0.4 deg heading); tube cut length is echoed by sensor_mounts.scad
 // --- DC-DC buck converter module (qty 2) [V] ---
 BUCK_L = 65; BUCK_W = 37; BUCK_H = 24; BUCK_HOLE_D = 3.2; BUCK_HOLE_INSET = 4;
 

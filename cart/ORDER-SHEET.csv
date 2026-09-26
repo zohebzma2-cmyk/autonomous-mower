@@ -44,3 +44,5 @@ attachments,DeWalt 60V FLEXVOLT trimmer (OWNED) + trigger relay + fixed-line spo
 attachments,Boom slew drive (worm-gear turntable + servo),search: worm gear turntable kit servo,Amazon,1,40.00,phase-3
 attachments,PWM relay module for FIMCO 12V pump,search: 12V PWM motor speed controller relay,Amazon,1,12.00,phase-3; sprayer owned already
 attachments,Gravely Power Bagger kit (rack + bins donor),dealer,Gravely dealer,1,,phase-3; dealer-priced
+vendor_upgrade,20mm OD aluminium tube >=650mm (dual-RTK crossbar),search: 20mm OD aluminium round tube 1000mm,Amazon,1,15.00,price est. - verify; cut to 628 mm (BAR_CUT echoed by cad/sensor_mounts.scad)
+vendor,120mm x 1.5mm aluminium disc (antenna ground plane; 2 for dual-RTK),search: 120mm aluminum disc 1.5mm,Amazon,1,9.00,price est. - verify; u-blox spec's the ANN-MB phase centre on a 120 mm metal ground plane; drill 2x 4.5 mm on a 68.0 mm pitch

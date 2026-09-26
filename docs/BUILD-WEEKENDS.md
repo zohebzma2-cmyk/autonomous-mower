@@ -17,5 +17,10 @@ Have: weekend-3 prints, masts, LiDAR, cameras, ultrasonic.
 Do: masts on; BUILD.md §11 go/no-go — teach-and-repeat in an open area, wheels-on, BLADES STILL OFF.
 Finish with: the machine re-driving your taught path within a few cm.
 
+## Weekend 4 — sonar + on-unit screen (+ dual-RTK if ordered)
+Have: weekend-4 prints (`sonar_collar_a/b`, `display_hood_l/r`, `display_brace` ×2, `display_yoke`), Ø120 × 1.5 mm aluminium ground plane(s), Touch Display 2.
+Do: sonar collar 2 mm under the antenna cap, probe face-up; hood halves bolted at the seam, braces into the heat-set tabs, yoke on the brain-box lid. Dual-RTK: tee + 628 mm crossbar + both antenna plates, then the moving-baseline block in `rover_params.parm`.
+Finish with: a hand held over the mast stops the machine (`LOW BRANCH`), and the screen readable in direct sun.
+
 ## Later — Phase 3 attachments
 Per docs/ATTACHMENTS.md, one attachment at a time, each behind its interlock tests.

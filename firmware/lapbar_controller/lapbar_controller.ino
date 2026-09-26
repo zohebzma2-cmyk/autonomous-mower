@@ -27,8 +27,11 @@ const int PIN_ESTOP = 25;
 // BTS7960 #1 (LEFT):  RPWM, LPWM (PWM via LEDC), R_EN, L_EN (digital enable)
 const int L_RPWM = 16, L_LPWM = 17, L_REN = 18, L_LEN = 19;
 // BTS7960 #2 (RIGHT)
-const int R_RPWM = 26, R_LPWM = 27, R_REN = 14, R_LEN = 12;
+const int R_RPWM = 26, R_LPWM = 27, R_REN = 14, R_LEN = 33;   // was GPIO12: a boot strapping pin (MTDI)
 const int PIN_LED = 2;      // onboard status LED
+// MowerCarrier Rev A.1: drives Q2's gate -> DRIVE relay K1 coil (in series with e-stop NC1).
+// 10k pulldown on the board: K1 (motor V+) stays OFF while the ESP32 boots/resets.
+const int PIN_DRIVE_EN = 32;
 
 // ---- tuning ----------------------------------------------------------------
 const int   PWM_MIN = 1000, PWM_MID = 1500, PWM_MAX = 2000;  // FC servo PWM (us)
@@ -55,19 +58,36 @@ void IRAM_ATTR isrR() {
 
 // ---- LEDC PWM channels for the 4 BTS7960 PWM pins --------------------------
 const int CH_L_R = 0, CH_L_L = 1, CH_R_R = 2, CH_R_L = 3;
+const int CH_PIN[4] = {L_RPWM, L_LPWM, R_RPWM, R_LPWM};   // channel -> pin
+// ESP32 Arduino core 3.x replaced ledcSetup/ledcAttachPin and writes by PIN; 2.x writes by
+// channel. These two shims keep the sketch's channel numbering and build on both.
+void pwmAttach(int pin, int ch) {                      // 20 kHz, 8-bit
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttachChannel(pin, 20000, 8, ch);
+#else
+  ledcSetup(ch, 20000, 8); ledcAttachPin(pin, ch);
+#endif
+}
+void pwmWrite(int ch, int duty) {
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcWrite(CH_PIN[ch], duty);
+#else
+  ledcWrite(ch, duty);
+#endif
+}
 void setupDriver(int rpwm, int lpwm, int ren, int len, int chR, int chL) {
   pinMode(ren, OUTPUT); pinMode(len, OUTPUT);
   digitalWrite(ren, HIGH); digitalWrite(len, HIGH);     // enable both half-bridges
-  ledcSetup(chR, 20000, 8); ledcAttachPin(rpwm, chR);   // 20 kHz, 8-bit
-  ledcSetup(chL, 20000, 8); ledcAttachPin(lpwm, chL);
+  pwmAttach(rpwm, chR);
+  pwmAttach(lpwm, chL);
 }
 // duty: -255..255  (+ = extend, - = retract)
 void drive(int chR, int chL, int duty) {
   duty = constrain(duty, -DUTY_MAX, DUTY_MAX);
-  if (duty >= 0) { ledcWrite(chR, duty); ledcWrite(chL, 0); }
-  else           { ledcWrite(chR, 0);    ledcWrite(chL, -duty); }
+  if (duty >= 0) { pwmWrite(chR, duty); pwmWrite(chL, 0); }
+  else           { pwmWrite(chR, 0);    pwmWrite(chL, -duty); }
 }
-void disableAll() { ledcWrite(CH_L_R,0); ledcWrite(CH_L_L,0); ledcWrite(CH_R_R,0); ledcWrite(CH_R_L,0);
+void disableAll() { pwmWrite(CH_L_R,0); pwmWrite(CH_L_L,0); pwmWrite(CH_R_R,0); pwmWrite(CH_R_L,0);
   digitalWrite(L_REN,LOW); digitalWrite(L_LEN,LOW); digitalWrite(R_REN,LOW); digitalWrite(R_LEN,LOW); }
 void enableAll() { digitalWrite(L_REN,HIGH); digitalWrite(L_LEN,HIGH); digitalWrite(R_REN,HIGH); digitalWrite(R_LEN,HIGH); }
 
@@ -92,12 +112,15 @@ int targetFromPwm(int us, int potMin, int potMax) {
 void setup() {
   Serial.begin(115200);
   pinMode(PIN_PWM_L, INPUT); pinMode(PIN_PWM_R, INPUT);
+  pinMode(PIN_DRIVE_EN, OUTPUT); digitalWrite(PIN_DRIVE_EN, LOW);   // motor power off until ready
   pinMode(PIN_ESTOP, INPUT_PULLUP); pinMode(PIN_LED, OUTPUT);
   attachInterrupt(PIN_PWM_L, isrL, CHANGE);
   attachInterrupt(PIN_PWM_R, isrR, CHANGE);
   setupDriver(L_RPWM, L_LPWM, L_REN, L_LEN, CH_L_R, CH_L_L);
   setupDriver(R_RPWM, R_LPWM, R_REN, R_LEN, CH_R_R, CH_R_L);
   Serial.println("lapbar_controller ready");
+  // Bridges + PWM capture are configured, so boot-time pin glitches can no longer move the
+  // bars: let K1 energise (the e-stop NC contact is still in series with its coil).
 }
 
 void loop() {
@@ -106,6 +129,9 @@ void loop() {
   bool lostL = (now - lastEdgeL) > FAILSAFE_MS;
   bool lostR = (now - lastEdgeR) > FAILSAFE_MS;
   bool fail  = estop || lostL || lostR;
+  // DRIVE_EN stays HIGH through a software failsafe: fail-to-neutral NEEDS motor power to
+  // centre the bars. The e-stop cuts K1 in hardware regardless (and grounds the magneto).
+  digitalWrite(PIN_DRIVE_EN, estop ? LOW : HIGH);
 
   int potL = analogRead(PIN_POT_L), potR = analogRead(PIN_POT_R);
   int tgtL = fail ? (POT_L_MIN+POT_L_MAX)/2 : targetFromPwm(pulseL, POT_L_MIN, POT_L_MAX);

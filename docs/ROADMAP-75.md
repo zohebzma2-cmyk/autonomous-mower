@@ -3,6 +3,7 @@
 Brainstormed 2026-07-12 · **scored the same day: 65 ✅ shipped (3 adapted, noted inline) ·
 6 📦 artifact-complete awaiting a user action (posting/sending is yours) · 4 🔒 gated on the
 physical build or a KiCad install — every gated item ships its maximal artifact today.**
+**Update 2026-09-25: 67 ✅ · 6 📦 · 2 🔒** — #38/#39 (KiCad project + ERC/DRC gate) shipped once KiCad was installed.
 
 ## A. The 3D experience (immersive)
 
@@ -49,8 +50,8 @@ physical build or a KiCad install — every gated item ships its maximal artifac
 35. ✅ Issue templates: build-report / adaptation-report (different-mower) / safety-concern (prioritized).
 36. 📦 `good first issue` seeds: add a caster-wheel variant, port badge to your mower brand, translate BUILD.md. **[seeds in docs/GOOD-FIRST-ISSUES.md — one command each, public write is yours]**
 37. ✅ Docs site (mkdocs-material) so BUILD.md isn't a 40-screen scroll.
-38. 🔒 KiCad project for MowerCarrier Rev A — turn the netlist/SVG package into real gerbers. **[route-up pack in hardware/pcb/kicad/ — needs a KiCad install]**
-39. 🔒 PCB DRC + ERC in CI once KiCad files exist. **[the two kicad-cli gate commands documented — follows #38]**
+38. ✅ KiCad project for MowerCarrier Rev A — turn the netlist/SVG package into real gerbers. **[done 2026-09-25: generated Rev A.1 project + Gerbers in hardware/pcb/kicad/ — 7 netlist errors fixed on the way; human pre-fab review pending (kicad/REVIEW.md)]**
+39. ✅ PCB DRC + ERC in CI once KiCad files exist. **[scripts/check.sh: ERC clean + DRC zero errors with schematic parity]**
 40. ✅ Simulation harness README — one command: sim + UI + fake GPS track.
 41. ✅ Unit-test the safety policy against a table of scenario fixtures (incline+overhead+estop permutations).
 42. ✅ Type-annotate + mypy the companion (it's stdlib-only; cheap win).
