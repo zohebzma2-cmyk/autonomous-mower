@@ -157,7 +157,7 @@ The upgrade that matters is **dual-antenna moving-baseline heading**. One RTK an
 | Position | **±2 cm** RTK-fixed (u-blox ZED-F9P) |
 | Heading | **~0.4°** moving-baseline (dual antenna) |
 | Cross-track | few cm, row to row |
-| On-device AI | **13 TOPS** (Hailo-8L), INT8, < 30 ms, no cloud |
+| On-device AI | **13 TOPS** (Hailo-8L), INT8, < 30 ms target, no cloud (model training is hardware-gated) |
 
 ---
 
@@ -193,7 +193,7 @@ Open [`cad/params.scad`](cad/params.scad) → **SECTION 1**, re-measure the lap 
 
 ## Status & honest limitations
 
-Design + CAD + firmware + control software + docs are complete and verified (49/49 tests). The build is **in progress in person**. Remaining work is hardware-gated: SITL/on-FC validation of the MAVLink handshake, training the Hailo `.hef` model, and the future fleet/RaaS layer. See [`docs/BUILD.md §12`](docs/BUILD.md).
+Design + CAD + firmware + control software + docs are complete and verified (69/69 tests). The build is **in progress in person**. Remaining work is hardware-gated: SITL/on-FC validation of the MAVLink handshake, training the Hailo `.hef` model, and the future fleet/RaaS layer. See [`docs/BUILD.md §12`](docs/BUILD.md).
 
 ## Related open-source mowers & rovers
 
